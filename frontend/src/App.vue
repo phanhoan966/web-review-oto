@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
 const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
-
-onMounted(() => {
-  auth.hydrate()
-})
 
 async function logout() {
   await auth.logout()

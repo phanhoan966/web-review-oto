@@ -15,13 +15,15 @@ interface AuthState {
   user: UserProfile | null
   loading: boolean
   error: string | null
+  hydrated: boolean
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     user: null,
     loading: false,
-    error: null
+    error: null,
+    hydrated: false
   }),
   getters: {
     isAuthenticated: (state) => Boolean(state.user)
@@ -81,7 +83,12 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
       } finally {
         this.loading = false
+        this.hydrated = true
       }
+    },
+    async ensureHydrated() {
+      if (this.hydrated) return
+      await this.hydrate()
     },
     async forgotPassword(email: string) {
       await client.post('/auth/forgot-password', { email })

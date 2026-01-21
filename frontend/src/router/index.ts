@@ -23,8 +23,11 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const auth = useAuthStore()
+  if (!auth.hydrated) {
+    await auth.hydrate()
+  }
   if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password' || to.name === 'admin-login') && auth.isAuthenticated) {
     next({ name: 'feed' })
     return
