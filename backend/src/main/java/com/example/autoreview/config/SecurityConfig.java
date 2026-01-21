@@ -1,6 +1,7 @@
 package com.example.autoreview.config;
 
 import com.example.autoreview.security.JwtAuthenticationFilter;
+import com.example.autoreview.security.Roles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,8 +39,15 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/reviews/**", "/brands/**", "/reviewers/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/admin/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/reviews", "/reviews/most-viewed", "/reviews/*/comments", "/brands/**", "/reviewers/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/reviews").hasAuthority(Roles.USER)
+                        .requestMatchers(HttpMethod.PUT, "/reviews/**").hasAuthority(Roles.USER)
+                        .requestMatchers(HttpMethod.POST, "/reviews/*/comments").hasAuthority(Roles.USER)
+                        .requestMatchers(HttpMethod.DELETE, "/comments/**").hasAnyAuthority(Roles.USER, Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/reviews/pending").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/reviews/*/approve", "/reviews/*/reject").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
+                        .requestMatchers("/admin/**").hasAnyAuthority(Roles.MANAGER, Roles.SYSTEM_ADMIN)
                         .anyRequest().authenticated())
                 .authenticationProvider(daoAuthenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
