@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 export interface ViewedItem {
   id: number
   title: string
@@ -16,7 +18,7 @@ defineProps<{ items: ViewedItem[] }>()
   <section class="widget surface">
     <header class="widget-header">Xem nhiều nhất</header>
     <div class="items">
-      <div v-for="item in items" :key="item.id" class="row">
+      <RouterLink v-for="item in items" :key="item.id" class="row" :to="`/reviews/${item.id}`">
         <img class="thumb" :src="item.heroImageUrl" :alt="item.title" />
         <div class="info">
           <div class="title">{{ item.title }}</div>
@@ -24,7 +26,7 @@ defineProps<{ items: ViewedItem[] }>()
             ❤ {{ item.likes || 0 }} • 💬 {{ item.commentsCount || 0 }} • ⭐ {{ item.rating || '4.6' }}
           </div>
         </div>
-      </div>
+      </RouterLink>
     </div>
   </section>
 </template>

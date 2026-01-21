@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 
 export interface ReviewCardData {
   id: number
@@ -42,30 +43,38 @@ function formatRelativeTime(value?: string) {
 </script>
 
 <template>
-  <article class="card surface">
-    <div class="hero">
-      <img :src="review.heroImageUrl" :alt="review.title" />
-    </div>
-    <div class="content">
-      <h2>{{ review.title }}</h2>
-      <div class="author">
-        <img class="avatar" :src="review.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
-        <div>
-          <div class="name">{{ review.authorName }}</div>
-          <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
+  <RouterLink class="card-link" :to="`/reviews/${review.id}`">
+    <article class="card surface">
+      <div class="hero">
+        <img :src="review.heroImageUrl" :alt="review.title" />
+      </div>
+      <div class="content">
+        <h2>{{ review.title }}</h2>
+        <div class="author">
+          <img class="avatar" :src="review.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
+          <div>
+            <div class="name">{{ review.authorName }}</div>
+            <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
+          </div>
+        </div>
+        <p class="excerpt">{{ review.excerpt }}</p>
+        <div class="metrics">
+          <div class="pill">❤ {{ review.likes ?? 0 }}</div>
+          <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
+          <div class="pill">👁 {{ review.views ?? 0 }} views</div>
         </div>
       </div>
-      <p class="excerpt">{{ review.excerpt }}</p>
-      <div class="metrics">
-        <div class="pill">❤ {{ review.likes ?? 0 }}</div>
-        <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
-        <div class="pill">👁 {{ review.views ?? 0 }} views</div>
-      </div>
-    </div>
-  </article>
+    </article>
+  </RouterLink>
 </template>
 
 <style scoped lang="scss">
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .card {
   padding: 18px;
   border-radius: 24px;

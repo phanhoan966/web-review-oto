@@ -47,6 +47,11 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.mostViewed(limit));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ReviewDto> detail(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.getPublic(id));
+    }
+
     @PostMapping
     public ResponseEntity<ReviewDto> create(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody CreateReviewRequest request) {
         return ResponseEntity.ok(reviewService.create(userDetails.getUsername(), request));

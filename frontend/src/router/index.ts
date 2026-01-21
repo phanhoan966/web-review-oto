@@ -5,6 +5,8 @@ import RegisterView from '../views/RegisterView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import AdminLoginView from '../views/AdminLoginView.vue'
 import CreateReviewView from '../views/CreateReviewView.vue'
+import ProfileView from '../views/ProfileView.vue'
+import ReviewDetailView from '../views/ReviewDetailView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -15,7 +17,9 @@ const router = createRouter({
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView },
     { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
-    { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } }
+    { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },
+    { path: '/reviews/:id', name: 'review-detail', component: ReviewDetailView },
+    { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } }
   ]
 })
 

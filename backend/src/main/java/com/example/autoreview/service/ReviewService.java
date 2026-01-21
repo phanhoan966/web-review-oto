@@ -57,6 +57,15 @@ public class ReviewService {
     }
 
     @Transactional
+    public ReviewDto getPublic(Long id) {
+        Review review = reviewRepository.findByIdAndStatus(id, ReviewStatus.APPROVED)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
+        reviewRepository.save(review);
+        return DtoMapper.toReviewDto(review);
+    }
+
+    @Transactional
     public ReviewDto create(String authorEmail, CreateReviewRequest request) {
         User author = userRepository.findByEmail(authorEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         VehicleBrand brand = vehicleBrandRepository.findById(request.getBrandId()).orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Brand not found"));
