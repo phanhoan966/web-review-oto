@@ -2,14 +2,12 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import client from '../api/client'
-import { useAuthStore } from '../stores/auth'
 
 interface BrandOption {
   id: number
   name: string
 }
 
-const auth = useAuthStore()
 const router = useRouter()
 const loading = ref(false)
 const brands = ref<BrandOption[]>([])
