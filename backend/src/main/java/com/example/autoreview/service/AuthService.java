@@ -100,6 +100,16 @@ public class AuthService {
         return response;
     }
 
+    public AuthResponse me(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        AuthResponse response = new AuthResponse(DtoMapper.toUserProfile(user));
+        response.getUser().setAvatarUrl(user.getAvatarUrl());
+        response.getUser().setFollowers(user.getFollowers());
+        response.getUser().setRating(user.getRating());
+        response.getUser().setReviewCount(user.getReviewCount());
+        return response;
+    }
+
     public String issueToken(String email) {
         return jwtUtil.generateToken(email, findUserRoles(email));
     }

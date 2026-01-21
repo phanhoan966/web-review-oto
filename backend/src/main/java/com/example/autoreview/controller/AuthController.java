@@ -66,6 +66,13 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal UserDetails userDetails) {
+        AuthResponse response = authService.me(userDetails.getUsername());
+        String token = authService.issueToken(userDetails.getUsername());
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(response);
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request);

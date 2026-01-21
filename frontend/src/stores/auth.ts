@@ -69,6 +69,19 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       await client.post('/auth/logout')
       this.user = null
+      this.error = null
+    },
+    async hydrate() {
+      this.loading = true
+      this.error = null
+      try {
+        const { data } = await client.get('/auth/me')
+        this.user = data.user
+      } catch (error: any) {
+        this.user = null
+      } finally {
+        this.loading = false
+      }
     },
     async forgotPassword(email: string) {
       await client.post('/auth/forgot-password', { email })
