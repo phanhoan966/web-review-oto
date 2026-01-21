@@ -40,6 +40,19 @@ export const useAuthStore = defineStore('auth', {
         this.loading = false
       }
     },
+    async adminLogin(email: string, password: string) {
+      this.loading = true
+      this.error = null
+      try {
+        const { data } = await client.post('/auth/admin/login', { email, password })
+        this.user = data.user
+      } catch (error: any) {
+        this.error = error.response?.data?.message || 'Đăng nhập thất bại'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
     async register(username: string, email: string, password: string) {
       this.loading = true
       this.error = null
