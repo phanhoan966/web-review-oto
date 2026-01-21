@@ -1,0 +1,73 @@
+<script setup lang="ts">
+export interface ViewedItem {
+  id: number
+  title: string
+  heroImageUrl: string
+  likes?: number
+  commentsCount?: number
+  views?: number
+  rating?: number
+}
+
+defineProps<{ items: ViewedItem[] }>()
+</script>
+
+<template>
+  <section class="widget surface">
+    <header class="widget-header">Xem nhiều nhất</header>
+    <div class="items">
+      <div v-for="item in items" :key="item.id" class="row">
+        <img class="thumb" :src="item.heroImageUrl" :alt="item.title" />
+        <div class="info">
+          <div class="title">{{ item.title }}</div>
+          <div class="meta">
+            ❤ {{ item.likes || 0 }} • 💬 {{ item.commentsCount || 0 }} • ⭐ {{ item.rating || '4.6' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+
+<style scoped lang="scss">
+.widget {
+  padding: 16px;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+
+.widget-header {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+
+.items {
+  display: grid;
+  gap: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.thumb {
+  width: 80px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
