@@ -143,6 +143,9 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public List<CommentDto> listComments(Long reviewId) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        if (review.getStatus() != ReviewStatus.APPROVED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
+        }
         return commentRepository.findByReviewOrderByCreatedAtAsc(review).stream().map(DtoMapper::toCommentDto).toList();
     }
 

@@ -1,11 +1,13 @@
 package com.example.autoreview.config;
 
 import com.example.autoreview.entity.Review;
+import com.example.autoreview.entity.ReviewStatus;
 import com.example.autoreview.entity.User;
 import com.example.autoreview.entity.VehicleBrand;
 import com.example.autoreview.repository.ReviewRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.repository.VehicleBrandRepository;
+import com.example.autoreview.security.Roles;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -23,43 +25,81 @@ public class DataInitializer {
             if (userRepository.count() > 0) {
                 return;
             }
+            Instant now = Instant.now();
+
             User enak = new User();
             enak.setUsername("Enak");
             enak.setEmail("enak@example.com");
             enak.setPasswordHash(passwordEncoder.encode("password123"));
-            enak.getRoles().add("ROLE_USER");
+            enak.getRoles().add(Roles.USER);
             enak.setFollowers(85);
             enak.setRating(4.8);
             enak.setReviewCount(48);
             enak.setAvatarUrl("https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=60");
-            enak.setCreatedAt(Instant.now());
-            enak.setUpdatedAt(Instant.now());
+            enak.setCreatedAt(now);
+            enak.setUpdatedAt(now);
 
             User alone = new User();
             alone.setUsername("Alone100");
             alone.setEmail("alone@example.com");
             alone.setPasswordHash(passwordEncoder.encode("password123"));
-            alone.getRoles().add("ROLE_USER");
+            alone.getRoles().add(Roles.USER);
             alone.setFollowers(50);
             alone.setRating(4.7);
             alone.setReviewCount(50);
             alone.setAvatarUrl("https://images.unsplash.com/photo-1502764613149-7f1d229e2305?auto=format&fit=crop&w=200&q=60");
-            alone.setCreatedAt(Instant.now());
-            alone.setUpdatedAt(Instant.now());
+            alone.setCreatedAt(now);
+            alone.setUpdatedAt(now);
 
             User toeto = new User();
             toeto.setUsername("toetkoihil999");
             toeto.setEmail("toet@example.com");
             toeto.setPasswordHash(passwordEncoder.encode("password123"));
-            toeto.getRoles().add("ROLE_USER");
+            toeto.getRoles().add(Roles.USER);
             toeto.setFollowers(32);
             toeto.setRating(4.6);
             toeto.setReviewCount(32);
             toeto.setAvatarUrl("https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=60");
-            toeto.setCreatedAt(Instant.now());
-            toeto.setUpdatedAt(Instant.now());
+            toeto.setCreatedAt(now);
+            toeto.setUpdatedAt(now);
 
-            userRepository.saveAll(List.of(enak, alone, toeto));
+            User admin = new User();
+            admin.setUsername("AdminUser");
+            admin.setEmail("admin@example.com");
+            admin.setPasswordHash(passwordEncoder.encode("password123"));
+            admin.getRoles().add(Roles.ADMIN);
+            admin.setFollowers(10);
+            admin.setRating(5.0);
+            admin.setReviewCount(3);
+            admin.setAvatarUrl("https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=200&q=60");
+            admin.setCreatedAt(now);
+            admin.setUpdatedAt(now);
+
+            User manager = new User();
+            manager.setUsername("ManagerUser");
+            manager.setEmail("manager@example.com");
+            manager.setPasswordHash(passwordEncoder.encode("password123"));
+            manager.getRoles().add(Roles.MANAGER);
+            manager.setFollowers(12);
+            manager.setRating(4.9);
+            manager.setReviewCount(4);
+            manager.setAvatarUrl("https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=60");
+            manager.setCreatedAt(now);
+            manager.setUpdatedAt(now);
+
+            User sysAdmin = new User();
+            sysAdmin.setUsername("SysAdmin");
+            sysAdmin.setEmail("sysadmin@example.com");
+            sysAdmin.setPasswordHash(passwordEncoder.encode("password123"));
+            sysAdmin.getRoles().add(Roles.SYSTEM_ADMIN);
+            sysAdmin.setFollowers(15);
+            sysAdmin.setRating(5.0);
+            sysAdmin.setReviewCount(6);
+            sysAdmin.setAvatarUrl("https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60");
+            sysAdmin.setCreatedAt(now);
+            sysAdmin.setUpdatedAt(now);
+
+            userRepository.saveAll(List.of(enak, alone, toeto, admin, manager, sysAdmin));
 
             VehicleBrand ford = new VehicleBrand();
             ford.setName("Ford");
@@ -93,7 +133,10 @@ public class DataInitializer {
             civic.setLikes(24);
             civic.setCommentsCount(12);
             civic.setViews(900);
-            civic.setPublishedAt(Instant.now().minus(3, ChronoUnit.HOURS));
+            civic.setStatus(ReviewStatus.APPROVED);
+            civic.setCreatedAt(now.minus(3, ChronoUnit.DAYS));
+            civic.setUpdatedAt(now.minus(3, ChronoUnit.HOURS));
+            civic.setPublishedAt(now.minus(3, ChronoUnit.HOURS));
             civic.setAuthor(enak);
             civic.setBrand(honda);
 
@@ -109,7 +152,10 @@ public class DataInitializer {
             camry.setLikes(32);
             camry.setCommentsCount(15);
             camry.setViews(850);
-            camry.setPublishedAt(Instant.now().minus(5, ChronoUnit.HOURS));
+            camry.setStatus(ReviewStatus.APPROVED);
+            camry.setCreatedAt(now.minus(2, ChronoUnit.DAYS));
+            camry.setUpdatedAt(now.minus(5, ChronoUnit.HOURS));
+            camry.setPublishedAt(now.minus(5, ChronoUnit.HOURS));
             camry.setAuthor(alone);
             camry.setBrand(toyota);
 
@@ -125,7 +171,10 @@ public class DataInitializer {
             ranger.setLikes(28);
             ranger.setCommentsCount(18);
             ranger.setViews(760);
-            ranger.setPublishedAt(Instant.now().minus(1, ChronoUnit.DAYS));
+            ranger.setStatus(ReviewStatus.APPROVED);
+            ranger.setCreatedAt(now.minus(5, ChronoUnit.DAYS));
+            ranger.setUpdatedAt(now.minus(1, ChronoUnit.DAYS));
+            ranger.setPublishedAt(now.minus(1, ChronoUnit.DAYS));
             ranger.setAuthor(toeto);
             ranger.setBrand(ford);
 
