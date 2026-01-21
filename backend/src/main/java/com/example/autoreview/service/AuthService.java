@@ -13,6 +13,7 @@ import com.example.autoreview.mapper.DtoMapper;
 import com.example.autoreview.repository.PasswordResetTokenRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.security.JwtUtil;
+import com.example.autoreview.security.Roles;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -80,7 +82,22 @@ public class AuthService {
         response.getUser().setFollowers(user.getFollowers());
         response.getUser().setRating(user.getRating());
         response.getUser().setReviewCount(user.getReviewCount());
-        return responseWithToken(response, token);
+        return response;
+    }
+
+    public AuthResponse loginAdmin(LoginRequest request) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+        if (!hasAdminRole(user)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+        }
+        String token = jwtUtil.generateToken(authentication.getName(), findUserRoles(request.getEmail()));
+        AuthResponse response = new AuthResponse(DtoMapper.toUserProfile(user));
+        response.getUser().setAvatarUrl(user.getAvatarUrl());
+        response.getUser().setFollowers(user.getFollowers());
+        response.getUser().setRating(user.getRating());
+        response.getUser().setReviewCount(user.getReviewCount());
+        return response;
     }
 
     public String issueToken(String email) {
@@ -119,16 +136,26 @@ public class AuthService {
         passwordResetTokenRepository.save(token);
     }
 
+    @Transactional
+    public void changePassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new BadCredentialsException("Current password invalid");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+    }
+
+    private boolean hasAdminRole(User user) {
+        Set<String> roles = user.getRoles();
+        return roles.contains(Roles.ADMIN) || roles.contains(Roles.MANAGER) || roles.contains(Roles.SYSTEM_ADMIN);
+    }
+
     private Set<String> findUserRoles(String email) {
         return userRepository.findByEmail(email)
                 .map(User::getRoles)
                 .orElse(Set.of());
-    }
-
-    private AuthResponse responseWithToken(AuthResponse response, String token) {
-        UserProfileDto profile = response.getUser();
-        profile.setAvatarUrl(profile.getAvatarUrl());
-        return response;
     }
 
     private String hash(String input) {

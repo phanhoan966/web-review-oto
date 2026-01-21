@@ -19,6 +19,7 @@ public class ReviewDto {
     private String fuelType;
     private String priceSegment;
     private Instant publishedAt;
+    private String status;
 
     public Long getId() {
         return id;
@@ -146,5 +147,13 @@ public class ReviewDto {
 
     public void setPublishedAt(Instant publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,9 +1,11 @@
 package com.example.autoreview.mapper;
 
 import com.example.autoreview.dto.BrandDto;
+import com.example.autoreview.dto.CommentDto;
 import com.example.autoreview.dto.ReviewDto;
 import com.example.autoreview.dto.ReviewerDto;
 import com.example.autoreview.dto.UserProfileDto;
+import com.example.autoreview.entity.Comment;
 import com.example.autoreview.entity.Review;
 import com.example.autoreview.entity.User;
 import com.example.autoreview.entity.VehicleBrand;
@@ -41,9 +43,22 @@ public class DtoMapper {
         dto.setFuelType(review.getFuelType());
         dto.setPriceSegment(review.getPriceSegment());
         dto.setPublishedAt(review.getPublishedAt());
+        dto.setStatus(review.getStatus() != null ? review.getStatus().name() : null);
         if (review.getAuthor() != null) {
             dto.setAuthorName(review.getAuthor().getUsername());
             dto.setAuthorAvatar(review.getAuthor().getAvatarUrl());
+        }
+        return dto;
+    }
+
+    public static CommentDto toCommentDto(Comment comment) {
+        CommentDto dto = new CommentDto();
+        dto.setId(comment.getId());
+        dto.setContent(comment.getContent());
+        dto.setCreatedAt(comment.getCreatedAt());
+        if (comment.getAuthor() != null) {
+            dto.setAuthorName(comment.getAuthor().getUsername());
+            dto.setAuthorAvatar(comment.getAuthor().getAvatarUrl());
         }
         return dto;
     }

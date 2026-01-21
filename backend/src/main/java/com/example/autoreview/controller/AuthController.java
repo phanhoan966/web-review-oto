@@ -3,6 +3,7 @@ package com.example.autoreview.controller;
 import com.example.autoreview.dto.AuthResponse;
 import com.example.autoreview.dto.ForgotPasswordRequest;
 import com.example.autoreview.dto.LoginRequest;
+import com.example.autoreview.dto.PasswordChangeRequest;
 import com.example.autoreview.dto.RegisterRequest;
 import com.example.autoreview.dto.ResetPasswordRequest;
 import com.example.autoreview.service.AuthService;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,6 +46,13 @@ public class AuthController {
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(response);
     }
 
+    @PostMapping("/admin/login")
+    public ResponseEntity<AuthResponse> adminLogin(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.loginAdmin(request);
+        String token = authService.issueToken(request.getEmail());
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(response);
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", "")
@@ -65,6 +75,12 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody PasswordChangeRequest request) {
+        authService.changePassword(userDetails.getUsername(), request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 
