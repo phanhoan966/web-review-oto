@@ -30,7 +30,7 @@ public class AuthController {
     private final boolean cookieSecure;
     private final String cookieSameSite;
 
-    public AuthController(AuthService authService, @Value("${app.jwt.expiration-minutes}") long expirationMinutes, @Value("${app.cookie.secure:true}") boolean cookieSecure, @Value("${app.cookie.same-site:None}") String cookieSameSite) {
+    public AuthController(AuthService authService, @Value("${app.jwt.expiration-minutes}") long expirationMinutes, @Value("${app.cookie.secure:false}") boolean cookieSecure, @Value("${app.cookie.same-site:Lax}") String cookieSameSite) {
         this.authService = authService;
         this.expirationMinutes = expirationMinutes;
         this.cookieSecure = cookieSecure;
