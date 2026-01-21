@@ -15,6 +15,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,12 +30,14 @@ public class AuthController {
     private final long expirationMinutes;
     private final boolean cookieSecure;
     private final String cookieSameSite;
+    private final String cookieDomain;
 
-    public AuthController(AuthService authService, @Value("${app.jwt.expiration-minutes}") long expirationMinutes, @Value("${app.cookie.secure:false}") boolean cookieSecure, @Value("${app.cookie.same-site:Lax}") String cookieSameSite) {
+    public AuthController(AuthService authService, @Value("${app.jwt.expiration-minutes}") long expirationMinutes, @Value("${app.cookie.secure:false}") boolean cookieSecure, @Value("${app.cookie.same-site:Lax}") String cookieSameSite, @Value("${app.cookie.domain:}") String cookieDomain) {
         this.authService = authService;
         this.expirationMinutes = expirationMinutes;
         this.cookieSecure = cookieSecure;
         this.cookieSameSite = cookieSameSite;
+        this.cookieDomain = cookieDomain;
     }
 
     @PostMapping("/register")
@@ -60,13 +63,16 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", "")
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("AUTH_TOKEN", "")
                 .path("/")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .maxAge(0)
-                .sameSite(cookieSameSite)
-                .build();
+                .sameSite(cookieSameSite);
+        if (StringUtils.hasText(cookieDomain)) {
+            builder.domain(cookieDomain);
+        }
+        ResponseCookie cookie = builder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.noContent().build();
     }
@@ -100,13 +106,15 @@ public class AuthController {
     }
 
     private String buildAuthCookie(String token) {
-        return ResponseCookie.from("AUTH_TOKEN", token)
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("AUTH_TOKEN", token)
                 .path("/")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .maxAge(expirationMinutes * 60)
-                .sameSite(cookieSameSite)
-                .build()
-                .toString();
+                .sameSite(cookieSameSite);
+        if (StringUtils.hasText(cookieDomain)) {
+            builder.domain(cookieDomain);
+        }
+        return builder.build().toString();
     }
 }
