@@ -253,6 +253,7 @@ function formatDate(value?: string) {
           <div class="reply-head">Cho review của bạn về xe</div>
           <form class="comment-form" @submit.prevent>
             <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+            <div v-if="commentsError" class="form-error">{{ commentsError }}</div>
             <div class="comment-actions">
               <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
                 {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
@@ -506,6 +507,12 @@ function formatDate(value?: string) {
   font-size: 15px;
   resize: vertical;
   background: #f9fafb;
+}
+
+.form-error {
+  color: #b91c1c;
+  font-weight: 700;
+  margin-top: 6px;
 }
 
 .comment-actions {
