@@ -187,6 +187,10 @@ button.ghost:hover {
   display: grid;
   grid-template-columns: 46px 1fr;
   align-items: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
 }
 
 .avatar {
