@@ -95,8 +95,15 @@ public class ReviewController {
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<CommentDto> addComment(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request, @Valid @RequestBody CreateCommentRequest commentRequest) {
-        String email = userDetails != null ? userDetails.getUsername() : extractEmailFromRequest(request);
+    public ResponseEntity<CommentDto> addComment(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request, @Valid @RequestBody CreateCommentRequest commentRequest) {
+        String email = null;
+        if (principal instanceof UserDetails userDetails) {
+            email = userDetails.getUsername();
+        } else if (principal instanceof String subject) {
+            email = subject;
+        } else {
+            email = extractEmailFromRequest(request);
+        }
         return ResponseEntity.ok(reviewService.addComment(id, email, commentRequest));
     }
 
