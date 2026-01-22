@@ -6,7 +6,7 @@ import com.example.autoreview.dto.LoginRequest;
 import com.example.autoreview.dto.PasswordChangeRequest;
 import com.example.autoreview.dto.RegisterRequest;
 import com.example.autoreview.dto.ResetPasswordRequest;
-import com.example.autoreview.security.JwtUtil;
+import com.example.autoreview.security.CurrentUserResolver;
 import com.example.autoreview.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +35,7 @@ public class AuthController {
     private final boolean cookieSecure;
     private final String cookieSameSite;
     private final String cookieDomain;
-    private final JwtUtil jwtUtil;
+    private final CurrentUserResolver currentUserResolver;
 
     public AuthController(
           AuthService authService,
@@ -44,7 +44,7 @@ public class AuthController {
           @Value("${app.cookie.secure:false}") boolean cookieSecure,
           @Value("${app.cookie.same-site:Lax}") String cookieSameSite,
           @Value("${app.cookie.domain:}") String cookieDomain,
-          JwtUtil jwtUtil
+          CurrentUserResolver currentUserResolver
     ) {
         this.authService = authService;
         this.expirationMinutes = expirationMinutes;
@@ -52,7 +52,7 @@ public class AuthController {
         this.cookieSecure = cookieSecure;
         this.cookieSameSite = cookieSameSite;
         this.cookieDomain = cookieDomain;
-        this.jwtUtil = jwtUtil;
+        this.currentUserResolver = currentUserResolver;
     }
 
     @PostMapping("/register")
@@ -116,7 +116,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request, HttpServletResponse response) {
-        String email = userDetails != null ? userDetails.getUsername() : extractEmailFromRequest(request);
+        String email = currentUserResolver.resolveEmail(userDetails, request);
         if (!StringUtils.hasText(email)) {
             response.addHeader(HttpHeaders.SET_COOKIE, buildClearAuthCookie());
             response.addHeader(HttpHeaders.SET_COOKIE, buildClearRefreshCookie());
@@ -144,22 +144,6 @@ public class AuthController {
     public ResponseEntity<Void> changePassword(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody PasswordChangeRequest request) {
         authService.changePassword(userDetails.getUsername(), request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.noContent().build();
-    }
-
-    private String extractEmailFromRequest(HttpServletRequest request) {
-        if (request.getCookies() == null) {
-            return null;
-        }
-        for (Cookie cookie : request.getCookies()) {
-            if ("AUTH_TOKEN".equals(cookie.getName())) {
-                try {
-                    return jwtUtil.parse(cookie.getValue()).getSubject();
-                } catch (Exception ignored) {
-                    return null;
-                }
-            }
-        }
-        return null;
     }
 
     private String extractRefreshToken(HttpServletRequest request) {

@@ -6,9 +6,8 @@ import com.example.autoreview.dto.CreateReviewRequest;
 import com.example.autoreview.dto.ReviewDto;
 import com.example.autoreview.dto.ReviewListResponse;
 import com.example.autoreview.dto.UpdateReviewRequest;
-import com.example.autoreview.security.JwtUtil;
+import com.example.autoreview.security.CurrentUserResolver;
 import com.example.autoreview.service.ReviewService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,11 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final JwtUtil jwtUtil;
+    private final CurrentUserResolver currentUserResolver;
 
-    public ReviewController(ReviewService reviewService, JwtUtil jwtUtil) {
+    public ReviewController(ReviewService reviewService, CurrentUserResolver currentUserResolver) {
         this.reviewService = reviewService;
-        this.jwtUtil = jwtUtil;
+        this.currentUserResolver = currentUserResolver;
     }
 
     @GetMapping
@@ -96,14 +94,7 @@ public class ReviewController {
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<CommentDto> addComment(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request, @Valid @RequestBody CreateCommentRequest commentRequest) {
-        String email = null;
-        if (principal instanceof UserDetails userDetails) {
-            email = userDetails.getUsername();
-        } else if (principal instanceof String subject) {
-            email = subject;
-        } else {
-            email = extractEmailFromRequest(request);
-        }
+        String email = currentUserResolver.resolveEmail(principal, request);
         return ResponseEntity.ok(reviewService.addComment(id, email, commentRequest));
     }
 
@@ -112,24 +103,4 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.listComments(id, page, size));
     }
 
-    private String extractEmailFromRequest(HttpServletRequest request) {
-        String bearer = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
-            try {
-                return jwtUtil.parse(bearer.substring(7)).getSubject();
-            } catch (Exception ignored) {
-            }
-        }
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("AUTH_TOKEN".equals(cookie.getName())) {
-                    try {
-                        return jwtUtil.parse(cookie.getValue()).getSubject();
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        }
-        return null;
-    }
 }
