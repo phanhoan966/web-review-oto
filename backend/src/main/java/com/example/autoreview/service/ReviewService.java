@@ -147,7 +147,10 @@ public class ReviewService {
         if (review.getStatus() != ReviewStatus.APPROVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Cannot comment on unapproved review");
         }
-        User author = userRepository.findByEmail(authorEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        User author = null;
+        if (authorEmail != null) {
+            author = userRepository.findByEmail(authorEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        }
         Comment comment = new Comment();
         comment.setContent(request.getContent());
         comment.setAuthor(author);

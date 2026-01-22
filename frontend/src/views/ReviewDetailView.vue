@@ -22,12 +22,29 @@ interface ReviewDetail {
   authorAvatar?: string
 }
 
+interface CommentDetail {
+  id: number
+  content: string
+  authorName?: string
+  authorAvatar?: string
+  createdAt?: string
+}
+
 const route = useRoute()
 const review = ref<ReviewDetail | null>(null)
 const loading = ref(false)
 const errorMsg = ref('')
 
-onMounted(load)
+const comments = ref<CommentDetail[]>([])
+const commentsVisible = ref(false)
+const commentsLoading = ref(false)
+const commentsError = ref('')
+const newComment = ref('')
+const submitting = ref(false)
+
+onMounted(() => {
+  load()
+})
 
 async function load() {
   loading.value = true
@@ -40,6 +57,49 @@ async function load() {
   } finally {
     loading.value = false
   }
+}
+
+async function loadComments() {
+  commentsVisible.value = true
+  commentsLoading.value = true
+  commentsError.value = ''
+  try {
+    const { data } = await client.get<CommentDetail[]>(`/reviews/${route.params.id}/comments`)
+    comments.value = data
+  } catch (error: any) {
+    commentsError.value = error.response?.data?.message || 'Không tải được bình luận'
+    comments.value = []
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+async function submitComment() {
+  const content = newComment.value.trim()
+  if (!content) {
+    commentsError.value = 'Vui lòng nhập nội dung bình luận'
+    return
+  }
+  submitting.value = true
+  commentsError.value = ''
+  try {
+    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content })
+    comments.value = [data, ...comments.value]
+    newComment.value = ''
+    commentsVisible.value = true
+    if (review.value) {
+      review.value.commentsCount = (review.value.commentsCount ?? 0) + 1
+    }
+  } catch (error: any) {
+    commentsError.value = error.response?.data?.message || 'Gửi bình luận thất bại'
+  } finally {
+    submitting.value = false
+  }
+}
+
+function formatDate(value?: string) {
+  if (!value) return ''
+  return new Date(value).toLocaleString('vi-VN')
 }
 </script>
 
@@ -73,6 +133,45 @@ async function load() {
         <span>💬 {{ review.commentsCount ?? 0 }}</span>
         <span>👁 {{ review.views ?? 0 }} lượt xem</span>
       </div>
+
+      <section class="comments">
+        <div class="comments-head">
+          <div>
+            <h3>Bình luận</h3>
+            <p class="muted">Bất kỳ ai cũng có thể chia sẻ cảm nghĩ và xem bình luận</p>
+          </div>
+          <button class="ghost" type="button" @click="loadComments" :disabled="commentsLoading">
+            {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
+          </button>
+        </div>
+
+        <form class="comment-form" @submit.prevent="submitComment">
+          <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+          <button class="primary" type="submit" :disabled="submitting">
+            {{ submitting ? 'Đang gửi...' : 'Gửi bình luận' }}
+          </button>
+        </form>
+
+        <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
+        <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
+        <div v-else-if="commentsVisible">
+          <div v-if="!comments.length" class="status">Chưa có bình luận</div>
+          <div v-else class="comment-list">
+            <div v-for="comment in comments" :key="comment.id" class="comment-item">
+              <div class="comment-avatar">
+                <img :src="comment.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
+              </div>
+              <div class="comment-content">
+                <div class="comment-meta">
+                  <strong>{{ comment.authorName || 'Ẩn danh' }}</strong>
+                  <span class="muted">{{ formatDate(comment.createdAt) }}</span>
+                </div>
+                <p>{{ comment.content }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </article>
   </div>
 </template>
@@ -172,10 +271,75 @@ h1 {
   font-weight: 600;
 }
 
+.comments {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.comments-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.comment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  font-size: 15px;
+  resize: vertical;
+}
+
+.comment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.comment-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+}
+
+.comment-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-content {
+  display: grid;
+  gap: 6px;
+}
+
+.comment-meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.comment-content p {
+  margin: 0;
+  color: #1f2a3d;
+}
+
 .status {
   text-align: center;
   color: var(--muted);
-  padding: 24px 0;
+  padding: 12px 0;
 }
 
 .error {

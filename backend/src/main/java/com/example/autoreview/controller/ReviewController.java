@@ -90,7 +90,8 @@ public class ReviewController {
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<CommentDto> addComment(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody CreateCommentRequest request) {
-        return ResponseEntity.ok(reviewService.addComment(id, userDetails.getUsername(), request));
+        String email = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(reviewService.addComment(id, email, request));
     }
 
     @GetMapping("/{id}/comments")
