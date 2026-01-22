@@ -47,16 +47,21 @@ async function logout() {
           <RouterLink v-else to="/admin/login">Admin</RouterLink>
         </nav>
         <div class="actions">
+          <button class="icon-btn" aria-label="Chuyển chế độ">☾</button>
+          <button class="icon-btn" aria-label="Thông báo">🔔</button>
+          <span class="badge"></span>
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
           <RouterLink v-if="!auth.isAuthenticated" class="primary" to="/register">Đăng ký</RouterLink>
           <div v-else class="user-menu" ref="menuRef">
             <button class="avatar-btn" @click.stop="toggleMenu">
-              <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
+              <div class="avatar-ring">
+                <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
+              </div>
             </button>
             <div v-if="menuOpen" class="dropdown surface">
-              <RouterLink class="item" to="/profile" @click="menuOpen = false">Hồ sơ</RouterLink>
-              <RouterLink class="item" to="/profile" @click="menuOpen = false">Tài khoản</RouterLink>
-              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false">Nhiệm vụ</RouterLink>
+              <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">👤</span>Hồ sơ</RouterLink>
+              <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">📧</span>Tài khoản</RouterLink>
+              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false"><span class="ico">📋</span>Nhiệm vụ</RouterLink>
               <button class="logout" @click="logout">Đăng xuất</button>
             </div>
           </div>
@@ -120,6 +125,28 @@ async function logout() {
   gap: 10px;
 }
 
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, #f8fbff, #eef2ff);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.badge {
+  width: 10px;
+  height: 10px;
+  background: #7c3aed;
+  border-radius: 50%;
+  margin-left: -14px;
+  margin-right: 6px;
+  box-shadow: 0 0 0 4px #f7f9fc;
+}
+
 .ghost,
 .primary,
 button.ghost {
@@ -159,9 +186,17 @@ button.ghost:hover {
   justify-content: center;
 }
 
+.avatar-ring {
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fe8fb6, #a173ff);
+  display: grid;
+  place-items: center;
+}
+
 .avatar {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background-size: cover;
   background-position: center;
