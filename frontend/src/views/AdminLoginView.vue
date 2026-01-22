@@ -11,7 +11,7 @@ const router = useRouter()
 async function submit() {
   try {
     await auth.adminLogin(email.value, password.value)
-    router.push({ name: 'feed' })
+    router.push({ name: 'admin-dashboard' })
   } catch (error) {}
 }
 </script>

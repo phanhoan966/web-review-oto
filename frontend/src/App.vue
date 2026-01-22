@@ -22,7 +22,8 @@ async function logout() {
           <RouterLink to="/">Trang chủ</RouterLink>
           <RouterLink v-if="auth.isAuthenticated" to="/reviews/new">Tạo bài</RouterLink>
           <RouterLink v-if="auth.isAuthenticated" to="/profile">Hồ sơ</RouterLink>
-          <RouterLink to="/admin/login">Admin</RouterLink>
+          <RouterLink v-if="auth.isAuthenticated" to="/admin/dashboard">Dashboard</RouterLink>
+          <RouterLink v-else to="/admin/login">Admin</RouterLink>
         </nav>
         <div class="actions">
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
