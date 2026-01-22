@@ -48,7 +48,7 @@ const pageSize = 10
 const hasMore = ref(true)
 
 const commentsSection = ref<HTMLElement | null>(null)
-const highlightComments = ref(false)
+const highlightedIds = ref<Set<number>>(new Set())
 let highlightTimer: number | undefined
 
 const auth = useAuthStore()
@@ -75,7 +75,7 @@ async function load() {
   }
 }
 
-async function loadComments(reset = false, autoScroll = true) {
+async function loadComments(reset = false, autoScroll = true, highlightNew = true) {
   if (reset) {
     page.value = 0
     hasMore.value = true
@@ -101,7 +101,9 @@ async function loadComments(reset = false, autoScroll = true) {
       await nextTick()
       commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-    triggerHighlight()
+    if (highlightNew) {
+      markHighlighted(data)
+    }
   } catch (error: any) {
     commentsError.value = error.response?.data?.message || 'Không tải được bình luận'
     if (reset) {
@@ -173,7 +175,7 @@ async function submitComment() {
     comments.value = [data, ...comments.value]
     newComment.value = ''
     commentsVisible.value = true
-    triggerHighlight()
+    markHighlighted([data])
     if (review.value) {
       review.value.commentsCount = (review.value.commentsCount ?? 0) + 1
     }
@@ -184,13 +186,13 @@ async function submitComment() {
   }
 }
 
-function triggerHighlight() {
-  highlightComments.value = true
+function markHighlighted(items: CommentDetail[]) {
+  highlightedIds.value = new Set(items.map((c) => c.id))
   if (highlightTimer) {
     clearTimeout(highlightTimer)
   }
   highlightTimer = window.setTimeout(() => {
-    highlightComments.value = false
+    highlightedIds.value = new Set()
   }, 3000)
 }
 
@@ -273,8 +275,13 @@ function formatDate(value?: string) {
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
           <div v-else-if="commentsVisible">
             <div v-if="!comments.length" class="status">Chưa có bình luận</div>
-            <div v-else class="comment-list" :class="{ flash: highlightComments }">
-              <div v-for="comment in comments" :key="comment.id" class="comment-item">
+            <div v-else class="comment-list">
+              <div
+                v-for="comment in comments"
+                :key="comment.id"
+                class="comment-item"
+                :class="{ flash: highlightedIds.has(comment.id) }"
+              >
                 <div class="comment-avatar">
                   <img :src="comment.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
                 </div>
@@ -547,22 +554,6 @@ function formatDate(value?: string) {
   gap: 12px;
 }
 
-.comment-list.flash .comment-item {
-  animation: flash 3s ease;
-}
-
-@keyframes flash {
-  0% {
-    background: #fff7ed;
-  }
-  30% {
-    background: #fff7ed;
-  }
-  100% {
-    background: #f8fafc;
-  }
-}
-
 .comment-item {
   display: flex;
   gap: 12px;
@@ -570,6 +561,22 @@ function formatDate(value?: string) {
   border-radius: 12px;
   background: #f8fafc;
   border: 1px solid #edf2f7;
+}
+
+.comment-item.flash {
+  animation: flash 3s ease;
+}
+
+@keyframes flash {
+  0% {
+    background: #fff7ed;
+  }
+  40% {
+    background: #fff7ed;
+  }
+  100% {
+    background: #f8fafc;
+  }
 }
 
 .comment-avatar img {
