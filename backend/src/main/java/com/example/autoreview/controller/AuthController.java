@@ -31,6 +31,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final long expirationMinutes;
+    private final long refreshDays;
     private final boolean cookieSecure;
     private final String cookieSameSite;
     private final String cookieDomain;
@@ -39,6 +40,7 @@ public class AuthController {
     public AuthController(
           AuthService authService,
           @Value("${app.jwt.expiration-minutes}") long expirationMinutes,
+          @Value("${app.jwt.refresh-days:30}") long refreshDays,
           @Value("${app.cookie.secure:false}") boolean cookieSecure,
           @Value("${app.cookie.same-site:Lax}") String cookieSameSite,
           @Value("${app.cookie.domain:}") String cookieDomain,
@@ -46,6 +48,7 @@ public class AuthController {
     ) {
         this.authService = authService;
         this.expirationMinutes = expirationMinutes;
+        this.refreshDays = refreshDays;
         this.cookieSecure = cookieSecure;
         this.cookieSameSite = cookieSameSite;
         this.cookieDomain = cookieDomain;
@@ -53,61 +56,76 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
-        String token = authService.issueToken(request.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(response);
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = authService.register(request);
+        String email = authResponse.getUser().getEmail();
+        String accessToken = authService.issueToken(email);
+        String refreshToken = authService.issueRefreshToken(email);
+        response.addHeader(HttpHeaders.SET_COOKIE, buildAuthCookie(accessToken));
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken));
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        String token = authService.issueToken(request.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(response);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = authService.login(request);
+        String email = authResponse.getUser().getEmail();
+        String accessToken = authService.issueToken(email);
+        String refreshToken = authService.issueRefreshToken(email);
+        response.addHeader(HttpHeaders.SET_COOKIE, buildAuthCookie(accessToken));
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken));
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/admin/login")
-    public ResponseEntity<AuthResponse> adminLogin(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.loginAdmin(request);
-        String token = authService.issueToken(request.getEmail());
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(response);
+    public ResponseEntity<AuthResponse> adminLogin(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+        AuthResponse authResponse = authService.loginAdmin(request);
+        String email = authResponse.getUser().getEmail();
+        String accessToken = authService.issueToken(email);
+        String refreshToken = authService.issueRefreshToken(email);
+        response.addHeader(HttpHeaders.SET_COOKIE, buildAuthCookie(accessToken));
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken));
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletResponse response) {
-        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("AUTH_TOKEN", "")
-            .path("/")
-            .httpOnly(true)
-            .secure(cookieSecure)
-            .maxAge(0)
-            .sameSite(cookieSameSite);
-        if (StringUtils.hasText(cookieDomain)) {
-            builder.domain(cookieDomain);
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refresh = extractRefreshToken(request);
+        if (StringUtils.hasText(refresh)) {
+            authService.revokeRefreshToken(refresh);
         }
-        ResponseCookie cookie = builder.build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, buildClearAuthCookie());
+        response.addHeader(HttpHeaders.SET_COOKIE, buildClearRefreshCookie());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest request, HttpServletResponse response) {
+        String rawRefresh = extractRefreshToken(request);
+        if (!StringUtils.hasText(rawRefresh)) {
+            return ResponseEntity.status(401).build();
+        }
+        String email = authService.consumeRefreshToken(rawRefresh);
+        AuthResponse authResponse = authService.me(email);
+        String accessToken = authService.issueToken(email);
+        String refreshToken = authService.issueRefreshToken(email);
+        response.addHeader(HttpHeaders.SET_COOKIE, buildAuthCookie(accessToken));
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken));
+        return ResponseEntity.ok(authResponse);
     }
 
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me(@AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request, HttpServletResponse response) {
         String email = userDetails != null ? userDetails.getUsername() : extractEmailFromRequest(request);
         if (!StringUtils.hasText(email)) {
-            ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("AUTH_TOKEN", "")
-                    .path("/")
-                    .httpOnly(true)
-                    .secure(cookieSecure)
-                    .maxAge(0)
-                    .sameSite(cookieSameSite);
-            if (StringUtils.hasText(cookieDomain)) {
-                builder.domain(cookieDomain);
-            }
-            response.addHeader(HttpHeaders.SET_COOKIE, builder.build().toString());
+            response.addHeader(HttpHeaders.SET_COOKIE, buildClearAuthCookie());
+            response.addHeader(HttpHeaders.SET_COOKIE, buildClearRefreshCookie());
             return ResponseEntity.status(401).build();
         }
         AuthResponse authResponse = authService.me(email);
         String token = authService.issueToken(email);
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, buildAuthCookie(token)).body(authResponse);
+        response.addHeader(HttpHeaders.SET_COOKIE, buildAuthCookie(token));
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/forgot-password")
@@ -144,6 +162,18 @@ public class AuthController {
         return null;
     }
 
+    private String extractRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+        for (Cookie cookie : request.getCookies()) {
+            if ("REFRESH_TOKEN".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
+    }
+
     private String buildAuthCookie(String token) {
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("AUTH_TOKEN", token)
             .path("/")
@@ -151,6 +181,45 @@ public class AuthController {
             .secure(cookieSecure)
             .maxAge(expirationMinutes * 60)
             .sameSite(cookieSameSite);
+        if (StringUtils.hasText(cookieDomain)) {
+            builder.domain(cookieDomain);
+        }
+        return builder.build().toString();
+    }
+
+    private String buildRefreshCookie(String token) {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("REFRESH_TOKEN", token)
+                .path("/")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .maxAge(refreshDays * 24 * 60 * 60)
+                .sameSite(cookieSameSite);
+        if (StringUtils.hasText(cookieDomain)) {
+            builder.domain(cookieDomain);
+        }
+        return builder.build().toString();
+    }
+
+    private String buildClearAuthCookie() {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("AUTH_TOKEN", "")
+                .path("/")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .maxAge(0)
+                .sameSite(cookieSameSite);
+        if (StringUtils.hasText(cookieDomain)) {
+            builder.domain(cookieDomain);
+        }
+        return builder.build().toString();
+    }
+
+    private String buildClearRefreshCookie() {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("REFRESH_TOKEN", "")
+                .path("/")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .maxAge(0)
+                .sameSite(cookieSameSite);
         if (StringUtils.hasText(cookieDomain)) {
             builder.domain(cookieDomain);
         }

@@ -7,10 +7,12 @@ import com.example.autoreview.dto.RegisterRequest;
 import com.example.autoreview.dto.ResetPasswordRequest;
 import com.example.autoreview.dto.UserProfileDto;
 import com.example.autoreview.entity.PasswordResetToken;
+import com.example.autoreview.entity.RefreshToken;
 import com.example.autoreview.entity.User;
 import com.example.autoreview.exception.ApiException;
 import com.example.autoreview.mapper.DtoMapper;
 import com.example.autoreview.repository.PasswordResetTokenRepository;
+import com.example.autoreview.repository.RefreshTokenRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.security.JwtUtil;
 import com.example.autoreview.security.Roles;
@@ -23,6 +25,7 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,16 +40,20 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final long refreshExpirationDays;
 
-    public AuthService(UserRepository userRepository, PasswordResetTokenRepository passwordResetTokenRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthenticationManager authenticationManager) {
+    public AuthService(UserRepository userRepository, PasswordResetTokenRepository passwordResetTokenRepository, RefreshTokenRepository refreshTokenRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthenticationManager authenticationManager, @Value("${app.jwt.refresh-days:30}") long refreshExpirationDays) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.refreshExpirationDays = refreshExpirationDays;
     }
 
     @Transactional
@@ -69,49 +76,64 @@ public class AuthService {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
-        UserProfileDto profile = DtoMapper.toUserProfile(user);
-        return new AuthResponse(profile);
+        return buildAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        String token = jwtUtil.generateToken(authentication.getName(), findUserRoles(request.getEmail()));
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
-        AuthResponse response = new AuthResponse(DtoMapper.toUserProfile(user));
-        response.getUser().setAvatarUrl(user.getAvatarUrl());
-        response.getUser().setFollowers(user.getFollowers());
-        response.getUser().setRating(user.getRating());
-        response.getUser().setReviewCount(user.getReviewCount());
-        return response;
+        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+        return buildAuthResponse(user);
     }
 
     public AuthResponse loginAdmin(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+        User user = userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
         if (!hasAdminRole(user)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
         }
-        String token = jwtUtil.generateToken(authentication.getName(), findUserRoles(request.getEmail()));
-        AuthResponse response = new AuthResponse(DtoMapper.toUserProfile(user));
-        response.getUser().setAvatarUrl(user.getAvatarUrl());
-        response.getUser().setFollowers(user.getFollowers());
-        response.getUser().setRating(user.getRating());
-        response.getUser().setReviewCount(user.getReviewCount());
-        return response;
+        return buildAuthResponse(user);
     }
 
     public AuthResponse me(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
-        AuthResponse response = new AuthResponse(DtoMapper.toUserProfile(user));
-        response.getUser().setAvatarUrl(user.getAvatarUrl());
-        response.getUser().setFollowers(user.getFollowers());
-        response.getUser().setRating(user.getRating());
-        response.getUser().setReviewCount(user.getReviewCount());
-        return response;
+        return buildAuthResponse(user);
     }
 
     public String issueToken(String email) {
         return jwtUtil.generateToken(email, findUserRoles(email));
+    }
+
+    @Transactional
+    public String issueRefreshToken(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        refreshTokenRepository.deleteByExpiresAtBefore(Instant.now());
+        refreshTokenRepository.deleteByUser(user);
+        String raw = UUID.randomUUID().toString() + UUID.randomUUID().toString();
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setTokenHash(hash(raw));
+        refreshToken.setUser(user);
+        refreshToken.setExpiresAt(Instant.now().plus(refreshExpirationDays, ChronoUnit.DAYS));
+        refreshTokenRepository.save(refreshToken);
+        return raw;
+    }
+
+    @Transactional
+    public String consumeRefreshToken(String rawToken) {
+        refreshTokenRepository.deleteByExpiresAtBefore(Instant.now());
+        RefreshToken token = refreshTokenRepository.findByTokenHash(hash(rawToken))
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
+        if (token.getExpiresAt().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(token);
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        }
+        String email = token.getUser().getEmail();
+        refreshTokenRepository.delete(token);
+        return email;
+    }
+
+    @Transactional
+    public void revokeRefreshToken(String rawToken) {
+        refreshTokenRepository.findByTokenHash(hash(rawToken)).ifPresent(refreshTokenRepository::delete);
     }
 
     @Transactional
@@ -166,6 +188,15 @@ public class AuthService {
         return userRepository.findByEmail(email)
                 .map(User::getRoles)
                 .orElse(Set.of());
+    }
+
+    private AuthResponse buildAuthResponse(User user) {
+        AuthResponse response = new AuthResponse(DtoMapper.toUserProfile(user));
+        response.getUser().setAvatarUrl(user.getAvatarUrl());
+        response.getUser().setFollowers(user.getFollowers());
+        response.getUser().setRating(user.getRating());
+        response.getUser().setReviewCount(user.getReviewCount());
+        return response;
     }
 
     private String hash(String input) {
