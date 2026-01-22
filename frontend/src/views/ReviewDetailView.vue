@@ -85,6 +85,11 @@ function openModal(mode: 'auth' | 'anon') {
   replyMode.value = mode
   modalError.value = ''
   modalEmail.value = auth.user?.email || ''
+  if (mode === 'auth' && auth.user) {
+    modalVisible.value = false
+    submitComment()
+    return
+  }
   modalVisible.value = true
 }
 
@@ -221,7 +226,6 @@ function formatDate(value?: string) {
         <section class="card comments">
           <div class="comments-head">
             <h3>Bình luận</h3>
-            <p class="muted">Bất kỳ ai cũng có thể xem và bình luận</p>
           </div>
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
@@ -235,7 +239,7 @@ function formatDate(value?: string) {
                 <div class="comment-content">
                   <div class="comment-meta">
                     <strong>{{ comment.authorName || 'Ẩn danh' }}</strong>
-                    <span class="muted">{{ formatDate(comment.createdAt) }}</span>
+                    <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                   </div>
                   <p>{{ comment.content }}</p>
                 </div>
@@ -616,6 +620,10 @@ function formatDate(value?: string) {
 .modal-error {
   color: #b91c1c;
   font-weight: 700;
+}
+
+.date-time-comment {
+  font-size: smaller;
 }
 
 </style>
