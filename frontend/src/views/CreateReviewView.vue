@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import client from '../api/client'
 
@@ -13,6 +13,7 @@ const loading = ref(false)
 const brands = ref<BrandOption[]>([])
 const form = ref({
   title: '',
+  slug: '',
   excerpt: '',
   content: '',
   heroImageUrl: '',
@@ -22,7 +23,15 @@ const form = ref({
   priceSegment: '',
   brandId: ''
 })
+const heroPreview = ref('')
 const errorMsg = ref('')
+
+watch(
+  () => form.value.title,
+  (val) => {
+    form.value.slug = slugify(val)
+  }
+)
 
 onMounted(loadBrands)
 
@@ -33,6 +42,28 @@ async function loadBrands() {
   } catch (error) {
     brands.value = []
   }
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .trim()
+}
+
+function onHeroFile(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    heroPreview.value = reader.result as string
+    form.value.heroImageUrl = heroPreview.value
+  }
+  reader.readAsDataURL(file)
 }
 
 async function submit() {
@@ -68,32 +99,56 @@ async function submit() {
         <label>Tiêu đề</label>
         <input v-model="form.title" required maxlength="200" />
 
+        <label>Slug SEO (tự sinh từ tiêu đề)</label>
+        <input v-model="form.slug" readonly />
+        <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}</p>
+
         <label>Tóm tắt</label>
         <textarea v-model="form.excerpt" required maxlength="256" rows="2" />
 
         <label>Nội dung</label>
         <textarea v-model="form.content" required maxlength="2048" rows="6" />
 
-        <label>Ảnh hero (URL)</label>
-        <input v-model="form.heroImageUrl" placeholder="https://..." />
+        <label>Ảnh đại diện (upload hoặc dán URL)</label>
+        <div class="hero-row">
+          <input v-model="form.heroImageUrl" placeholder="https://..." />
+          <label class="upload-btn">
+            Upload
+            <input type="file" accept="image/*" @change="onHeroFile" />
+          </label>
+        </div>
+        <div v-if="form.heroImageUrl || heroPreview" class="hero-preview">
+          <img :src="heroPreview || form.heroImageUrl" alt="preview" />
+        </div>
 
-        <label>Mẫu xe</label>
-        <input v-model="form.vehicleModel" />
+        <div class="row">
+          <div>
+            <label>Hãng xe</label>
+            <select v-model="form.brandId" required>
+              <option value="" disabled>Chọn hãng</option>
+              <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label>Mẫu xe</label>
+            <input v-model="form.vehicleModel" />
+          </div>
+        </div>
 
-        <label>Năm</label>
-        <input v-model="form.vehicleYear" type="number" />
-
-        <label>Nhiên liệu</label>
-        <input v-model="form.fuelType" />
-
-        <label>Phân khúc giá</label>
-        <input v-model="form.priceSegment" />
-
-        <label>Hãng xe</label>
-        <select v-model="form.brandId" required>
-          <option value="" disabled>Chọn hãng</option>
-          <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
-        </select>
+        <div class="row">
+          <div>
+            <label>Năm</label>
+            <input v-model="form.vehicleYear" type="number" />
+          </div>
+          <div>
+            <label>Nhiên liệu</label>
+            <input v-model="form.fuelType" />
+          </div>
+          <div>
+            <label>Phân khúc giá</label>
+            <input v-model="form.priceSegment" />
+          </div>
+        </div>
 
         <button type="submit" :disabled="loading">{{ loading ? 'Đang gửi...' : 'Gửi' }}</button>
         <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
@@ -112,12 +167,12 @@ async function submit() {
 }
 
 .form-card {
-  width: min(720px, 100%);
+  width: min(780px, 100%);
   padding: 28px;
   border-radius: 20px;
   box-shadow: var(--shadow);
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
 h1 {
@@ -132,7 +187,60 @@ h1 {
 
 form {
   display: grid;
+  gap: 12px;
+}
+
+.small {
+  font-size: 13px;
+}
+
+.hero-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 10px;
+  align-items: center;
+}
+
+.upload-btn {
+  padding: 10px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  background: #f9fbff;
+  color: #1f2a3d;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.hero-preview {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  background: #f7f9fc;
+}
+
+.hero-preview img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  max-height: 260px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
 }
 
 label {

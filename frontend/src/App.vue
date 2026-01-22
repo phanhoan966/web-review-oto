@@ -55,15 +55,15 @@ async function logout() {
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
           <RouterLink v-if="!auth.isAuthenticated" class="primary" to="/register">Đăng ký</RouterLink>
           <div v-else class="user-menu" ref="menuRef">
-            <button class="avatar-btn" @click.stop="toggleMenu">
-              <div class="avatar-ring">
-                <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
+            <button class="author" @click.stop="toggleMenu">
+              <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">
+                {{ auth.user?.avatarUrl ? '' : initials }}
               </div>
             </button>
             <div v-if="menuOpen" class="dropdown surface">
-              <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">👤</span>Hồ sơ</RouterLink>
-              <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">📧</span>Tài khoản</RouterLink>
-              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false"><span class="ico">📋</span>Nhiệm vụ</RouterLink>
+              <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">👤 </span>Hồ sơ</RouterLink>
+              <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">📧 </span>Tài khoản</RouterLink>
+              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false"><span class="ico">📋 </span>Nhiệm vụ</RouterLink>
               <button class="logout" @click="logout">Đăng xuất</button>
             </div>
           </div>
@@ -183,29 +183,17 @@ button.ghost:hover {
   position: relative;
 }
 
-.avatar-btn {
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-ring {
-  padding: 2px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #fe8fb6, #a173ff);
+.author {
   display: grid;
-  place-items: center;
-  box-shadow: 0 8px 20px rgba(161, 115, 255, 0.22);
+  grid-template-columns: 46px 1fr;
+  align-items: center;
 }
 
 .avatar {
   width: 46px;
   height: 46px;
   border-radius: 50%;
+  border: 2px solid #eef2f7;
   background-size: cover;
   background-position: center;
   display: grid;
@@ -213,8 +201,40 @@ button.ghost:hover {
   font-weight: 800;
   color: #0f172a;
   background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
-  border: 1px solid #e5e7eb;
 }
+
+// .avatar-btn {
+//   border: none;
+//   background: transparent;
+//   padding: 0;
+//   cursor: pointer;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+// }
+
+// .avatar-ring {
+//   padding: 2px;
+//   border-radius: 50%;
+//   background: linear-gradient(135deg, #fe8fb6, #a173ff);
+//   display: grid;
+//   place-items: center;
+//   box-shadow: 0 8px 20px rgba(161, 115, 255, 0.22);
+// }
+
+// .avatar {
+//   width: 46px;
+//   height: 46px;
+//   border-radius: 50%;
+//   background-size: cover;
+//   background-position: center;
+//   display: grid;
+//   place-items: center;
+//   font-weight: 800;
+//   color: #0f172a;
+//   background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
+//   border: 1px solid #e5e7eb;
+// }
 
 .dropdown {
   position: absolute;
