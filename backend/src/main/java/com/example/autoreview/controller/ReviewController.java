@@ -42,6 +42,14 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getFeed(brand, fuelType, priceSegment, page, size));
     }
 
+    @GetMapping("/mine")
+    public ResponseEntity<ReviewListResponse> mine(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(reviewService.listByAuthor(userDetails.getUsername(), page, size));
+    }
+
     @GetMapping("/most-viewed")
     public ResponseEntity<List<ReviewDto>> mostViewed(@RequestParam(defaultValue = "5") int limit) {
         return ResponseEntity.ok(reviewService.mostViewed(limit));

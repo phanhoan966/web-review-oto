@@ -21,4 +21,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findByStatus(com.example.autoreview.entity.ReviewStatus status, Pageable pageable);
 
     Optional<Review> findByIdAndStatus(Long id, ReviewStatus status);
+
+    Page<Review> findByAuthorEmailOrderByCreatedAtDesc(String email, Pageable pageable);
 }

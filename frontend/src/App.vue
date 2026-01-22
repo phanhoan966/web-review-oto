@@ -194,17 +194,12 @@ button.ghost:hover {
 }
 
 .avatar {
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 2px solid #eef2f7;
   background-size: cover;
   background-position: center;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  color: #0f172a;
-  background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
+  background-repeat: no-repeat;
 }
 
 .dropdown {

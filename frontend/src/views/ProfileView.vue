@@ -1,12 +1,42 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import client from '../api/client'
+import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const reviews = ref<(ReviewCardData & { status?: string })[]>([])
+const loading = ref(false)
+const errorMsg = ref('')
+
+onMounted(async () => {
+  await auth.ensureHydrated()
+  if (auth.isAuthenticated) {
+    loadReviews()
+  }
+})
 
 function goCreate() {
   router.push({ name: 'review-create' })
+}
+
+async function loadReviews() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const { data } = await client.get('/reviews/mine', { params: { page: 0, size: 12 } })
+    reviews.value = data.reviews || []
+    if (!reviews.value.length) {
+      errorMsg.value = 'Bạn chưa có bài nào. Bắt đầu viết bài đầu tiên!'
+    }
+  } catch (error) {
+    errorMsg.value = 'Không tải được danh sách bài viết.'
+    reviews.value = []
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -40,6 +70,21 @@ function goCreate() {
         <button class="primary" @click="goCreate">Tạo bài review</button>
         <RouterLink class="ghost" to="/reviews/new">Soạn ngay</RouterLink>
       </div>
+
+      <section class="mine">
+        <div class="mine-head">
+          <h3>Bài viết của bạn</h3>
+          <span class="muted">Hiển thị tối đa 12 bài gần nhất</span>
+        </div>
+        <div v-if="loading" class="loading">Đang tải...</div>
+        <div v-else-if="errorMsg" class="empty muted">{{ errorMsg }}</div>
+        <div v-else class="list">
+          <div v-for="item in reviews" :key="item.id" class="review-wrap">
+            <ReviewCard :review="item" />
+            <div class="status-pill" :class="item.status?.toLowerCase() || 'pending'">{{ item.status || 'PENDING' }}</div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div v-else class="card surface empty">
@@ -63,7 +108,7 @@ function goCreate() {
 }
 
 .card {
-  width: min(720px, 100%);
+  width: min(900px, 100%);
   padding: 28px;
   border-radius: 20px;
   box-shadow: var(--shadow);
@@ -107,6 +152,10 @@ h1 {
   gap: 12px;
 }
 
+.mine .muted {
+  font-size: 14px;
+}
+
 .value {
   font-size: 24px;
   font-weight: 800;
@@ -140,6 +189,60 @@ h1 {
 .ghost {
   background: #f7f9fc;
   color: #1f2a3d;
+}
+
+.mine {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.mine-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+}
+
+.review-wrap {
+  position: relative;
+}
+
+.status-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  background: #f4f4f5;
+  color: #111827;
+}
+
+.status-pill.approved {
+  background: #e0f7e9;
+  color: #0f5132;
+}
+
+.status-pill.pending {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.status-pill.rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.loading {
+  color: var(--muted);
 }
 
 .empty {

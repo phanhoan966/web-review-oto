@@ -51,6 +51,14 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public ReviewListResponse listByAuthor(String email, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Review> reviews = reviewRepository.findByAuthorEmailOrderByCreatedAtDesc(email, pageable);
+        List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        return new ReviewListResponse(dtos, reviews.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
     public List<ReviewDto> mostViewed(int limit) {
         PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "views"));
         return reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();
@@ -87,6 +95,8 @@ public class ReviewService {
         review.setCommentsCount(0);
         review.setViews(0);
         reviewRepository.save(review);
+        author.setReviewCount((author.getReviewCount() == null ? 0 : author.getReviewCount()) + 1);
+        userRepository.save(author);
         return DtoMapper.toReviewDto(review);
     }
 
