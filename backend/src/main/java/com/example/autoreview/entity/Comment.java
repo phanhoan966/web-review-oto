@@ -24,8 +24,8 @@ public class Comment {
 
     private Instant createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
 
     @ManyToOne(fetch = FetchType.LAZY)

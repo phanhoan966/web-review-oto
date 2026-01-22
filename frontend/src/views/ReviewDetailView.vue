@@ -509,3 +509,5 @@ function formatDate(value?: string) {
 .error {
   color: #b91c1c;
 }
+
+</style>

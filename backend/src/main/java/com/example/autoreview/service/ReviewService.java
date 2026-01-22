@@ -151,15 +151,19 @@ public class ReviewService {
         if (authorEmail != null) {
             author = userRepository.findByEmail(authorEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         }
-        Comment comment = new Comment();
-        comment.setContent(request.getContent());
-        comment.setAuthor(author);
-        comment.setReview(review);
-        comment.setCreatedAt(Instant.now());
-        Comment saved = commentRepository.save(comment);
-        review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);
-        reviewRepository.save(review);
-        return DtoMapper.toCommentDto(saved);
+        try {
+            Comment comment = new Comment();
+            comment.setContent(request.getContent());
+            comment.setAuthor(author);
+            comment.setReview(review);
+            comment.setCreatedAt(Instant.now());
+            Comment saved = commentRepository.save(comment);
+            review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);
+            reviewRepository.save(review);
+            return DtoMapper.toCommentDto(saved);
+        } catch (Exception ex) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Không thể lưu bình luận");
+        }
     }
 
     @Transactional(readOnly = true)
