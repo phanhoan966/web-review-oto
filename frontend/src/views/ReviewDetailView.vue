@@ -84,21 +84,8 @@ async function loadComments() {
 function openModal(mode: 'auth' | 'anon') {
   replyMode.value = mode
   modalError.value = ''
-  if (mode === 'auth') {
-    if (!auth.user) {
-      commentsError.value = 'Bạn cần đăng nhập để trả lời'
-      return
-    }
-    modalEmail.value = auth.user.email
-    modalVisible.value = true
-  } else {
-    modalEmail.value = auth.user?.email || ''
-    if (!auth.user) {
-      modalVisible.value = true
-    } else {
-      submitComment()
-    }
-  }
+  modalEmail.value = auth.user?.email || ''
+  modalVisible.value = true
 }
 
 function validateEmail(value: string) {
@@ -114,7 +101,8 @@ async function submitComment() {
 
   if (replyMode.value === 'auth') {
     if (!auth.user) {
-      commentsError.value = 'Bạn cần đăng nhập để trả lời'
+      modalError.value = 'Bạn cần đăng nhập để trả lời'
+      modalVisible.value = true
       return
     }
     if (!validateEmail(modalEmail.value) || modalEmail.value !== auth.user.email) {
@@ -124,9 +112,14 @@ async function submitComment() {
     }
   }
 
-  if (replyMode.value === 'anon' && !auth.user) {
+  if (replyMode.value === 'anon') {
     if (!validateEmail(modalEmail.value)) {
       modalError.value = 'Email không hợp lệ'
+      modalVisible.value = true
+      return
+    }
+    if (auth.user && modalEmail.value !== auth.user.email) {
+      modalError.value = 'Email không đúng với tài khoản của bạn'
       modalVisible.value = true
       return
     }
@@ -137,6 +130,10 @@ async function submitComment() {
   modalVisible.value = false
   try {
     const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content })
+    if (replyMode.value === 'auth' && auth.user) {
+      data.authorName = auth.user.username
+      data.authorAvatar = auth.user.avatarUrl
+    }
     comments.value = [data, ...comments.value]
     newComment.value = ''
     commentsVisible.value = true
