@@ -51,7 +51,7 @@ function formatRelativeTime(value?: string) {
       <div class="content">
         <h2>{{ review.title }}</h2>
         <div class="author">
-          <img class="avatar" :src="review.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
+          <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
           <div>
             <div class="name">{{ review.authorName }}</div>
             <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>

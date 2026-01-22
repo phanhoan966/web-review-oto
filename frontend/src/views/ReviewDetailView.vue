@@ -32,8 +32,8 @@ interface CommentDetail {
   createdAt?: string
 }
 
-const defaultAvatar = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'
-const anonAvatar = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'
+const defaultAvatar = 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'
+const anonAvatar = 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'
 
 const route = useRoute()
 const review = ref<ReviewDetail | null>(null)
@@ -217,7 +217,7 @@ function formatDate(value?: string) {
         <article class="card">
           <header class="post-head">
             <div class="author-block">
-              <img class="avatar" :src="review.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
+              <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
               <div>
                 <div class="name-row">
                   <strong>{{ review.authorName || 'Reviewer' }}</strong>
@@ -354,7 +354,7 @@ function formatDate(value?: string) {
 
 <style scoped lang="scss">
 .page {
-  background: #f5f6f8;
+  background: var(--bg);
   min-height: 100vh;
   padding: 20px 0 40px;
 }
@@ -372,9 +372,9 @@ function formatDate(value?: string) {
 }
 
 .card {
-  background: #fff;
+  background: var(--surface);
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+  box-shadow: var(--shadow);
   padding: 18px;
 }
 
@@ -427,7 +427,7 @@ function formatDate(value?: string) {
   line-height: 1;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #f3f4f6;
+  background: var(--chip-bg);
   cursor: pointer;
 }
 
@@ -440,11 +440,11 @@ function formatDate(value?: string) {
 .excerpt {
   margin: 6px 0;
   font-size: 16px;
-  color: #2f3c4f;
+  color: var(--text);
 }
 
 .body {
-  color: #1f2a3d;
+  color: var(--text);
   line-height: 1.7;
   white-space: pre-wrap;
 }
@@ -471,13 +471,14 @@ function formatDate(value?: string) {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  font-size: smaller;
 }
 
 .chip {
   padding: 6px 10px;
   border-radius: 12px;
-  background: #eef2ff;
-  color: #1d4ed8;
+  background: var(--chip-bg);
+  color: var(--primary);
   font-weight: 700;
 }
 
@@ -489,12 +490,12 @@ function formatDate(value?: string) {
 }
 
 .pill {
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border: 1px solid var(--pill-border);
+  background: var(--pill-bg);
   border-radius: 999px;
   padding: 8px 12px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text);
 }
 
 .reply-head {
@@ -510,15 +511,16 @@ function formatDate(value?: string) {
 .comment-form textarea {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 12px;
   font-size: 15px;
   resize: vertical;
-  background: #f9fafb;
+  background: var(--pill-bg);
+  color: var(--text);
 }
 
 .form-error {
-  color: #b91c1c;
+  color: var(--error);
   font-weight: 700;
   margin-top: 6px;
 }
@@ -542,7 +544,7 @@ function formatDate(value?: string) {
 }
 
 .primary {
-  background: #0ea5e9;
+  background: linear-gradient(135deg, var(--accent), var(--primary));
   color: #fff;
   border: none;
   padding: 10px 16px;
@@ -551,9 +553,9 @@ function formatDate(value?: string) {
 }
 
 .ghost {
-  background: #f3f4f6;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background: var(--chip-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   padding: 8px 14px;
   border-radius: 999px;
   font-weight: 700;
@@ -574,8 +576,8 @@ function formatDate(value?: string) {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #edf2f7;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
 }
 
 .comment-item.flash {
@@ -584,13 +586,13 @@ function formatDate(value?: string) {
 
 @keyframes flash {
   0% {
-    background: #fff7ed;
+    background: var(--highlight);
   }
   40% {
-    background: #fff7ed;
+    background: var(--highlight);
   }
   100% {
-    background: #f8fafc;
+    background: var(--chip-bg);
   }
 }
 
@@ -614,7 +616,7 @@ function formatDate(value?: string) {
 
 .comment-content p {
   margin: 0;
-  color: #1f2a3d;
+  color: var(--text);
 }
 
 .side {
@@ -631,8 +633,9 @@ function formatDate(value?: string) {
   width: 100%;
   padding: 10px 14px;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border: 1px solid var(--pill-border);
+  background: var(--pill-bg);
+  color: var(--text);
 }
 
 .side-title {
@@ -652,7 +655,7 @@ function formatDate(value?: string) {
   margin: 0;
   display: grid;
   gap: 8px;
-  color: #1f2937;
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -663,33 +666,36 @@ function formatDate(value?: string) {
 }
 
 .error {
-  color: #b91c1c;
+  color: var(--error);
 }
 
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--modal-backdrop);
   display: grid;
   place-items: center;
   z-index: 20;
 }
 
 .modal-card {
-  background: #fff;
+  background: var(--surface);
   padding: 18px;
   border-radius: 16px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   width: min(420px, 90vw);
   display: grid;
   gap: 10px;
+  border: 1px solid var(--border);
 }
 
 .modal-card input {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
+  background: var(--pill-bg);
+  color: var(--text);
 }
 
 .modal-actions {
@@ -699,7 +705,7 @@ function formatDate(value?: string) {
 }
 
 .modal-error {
-  color: #b91c1c;
+  color: var(--error);
   font-weight: 700;
 }
 

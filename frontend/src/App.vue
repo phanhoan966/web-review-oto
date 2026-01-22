@@ -2,15 +2,25 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
+import { useUiStore } from './stores/ui'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const router = useRouter()
 const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
 const menuOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 
+if (typeof window !== 'undefined') {
+  ui.initTheme()
+}
+
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
+}
+
+function toggleTheme() {
+  ui.toggleTheme()
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -47,7 +57,7 @@ async function logout() {
           <RouterLink v-else to="/admin/login">Admin</RouterLink>
         </nav>
         <div class="actions">
-          <button class="icon-btn" aria-label="Chuyển chế độ">☾</button>
+          <button class="icon-btn" aria-label="Chuyển chế độ" @click="toggleTheme">{{ ui.theme === 'dark' ? '☀' : '☾' }}</button>
           <div class="notify">
             <button class="icon-btn" aria-label="Thông báo">🔔</button>
             <span class="badge"></span>
@@ -85,7 +95,7 @@ async function logout() {
   top: 0;
   z-index: 10;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--header-bg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -111,13 +121,13 @@ async function logout() {
   a {
     padding: 8px 10px;
     border-radius: 12px;
-    color: #1f2a3d;
+    color: var(--text);
     font-weight: 600;
     transition: background-color 0.2s ease;
   }
   a.router-link-active {
-    background: #e8f2ff;
-    color: #0d6efd;
+    background: var(--chip-bg);
+    color: var(--primary);
   }
 }
 
@@ -136,22 +146,23 @@ async function logout() {
   height: 38px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: linear-gradient(135deg, #f8fbff, #eef2ff);
+  background: var(--icon-surface);
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  color: var(--text);
 }
 
 .badge {
   width: 10px;
   height: 10px;
-  background: #7c3aed;
+  background: var(--accent);
   border-radius: 50%;
   position: absolute;
   top: -2px;
   right: -2px;
-  box-shadow: 0 0 0 4px #f7f9fc;
+  box-shadow: 0 0 0 4px var(--surface);
 }
 
 .ghost,
@@ -162,13 +173,13 @@ button.ghost {
   padding: 9px 14px;
   border-radius: 12px;
   font-weight: 700;
-  color: #1f2a3d;
+  color: var(--text);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .primary {
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  background: linear-gradient(135deg, var(--accent), var(--primary));
   border: none;
   color: #fff;
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
@@ -176,7 +187,7 @@ button.ghost {
 
 .ghost:hover,
 button.ghost:hover {
-  background: #f3f5f9;
+  background: var(--chip-bg);
 }
 
 .user-menu {
@@ -209,17 +220,18 @@ button.ghost:hover {
   min-width: 220px;
   padding: 12px;
   border-radius: 16px;
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
   display: grid;
   gap: 8px;
-  background: #fff;
+  background: var(--surface);
+  border: 1px solid var(--border);
   z-index: 20;
 }
 
 .item {
   padding: 10px 12px;
   border-radius: 12px;
-  color: #1f2a3d;
+  color: var(--text);
   border: 1px solid transparent;
   display: flex;
   align-items: center;
@@ -227,7 +239,7 @@ button.ghost:hover {
 }
 
 .item:hover {
-  background: #f7f9fc;
+  background: var(--chip-bg);
   border-color: var(--border);
 }
 
@@ -235,9 +247,9 @@ button.ghost:hover {
   margin-top: 4px;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #d1d9e6;
-  background: #f8f0ff;
-  color: #7c3aed;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--primary);
   font-weight: 800;
   cursor: pointer;
 }

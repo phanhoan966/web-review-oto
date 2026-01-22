@@ -17,7 +17,7 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
     <div class="list">
       <div v-for="reviewer in reviewers" :key="reviewer.id" class="row">
         <div class="avatar-wrap">
-          <img :src="reviewer.avatarUrl || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
+          <img :src="reviewer.avatarUrl || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
         </div>
         <div class="info">
           <div class="name">{{ reviewer.displayName }}</div>
