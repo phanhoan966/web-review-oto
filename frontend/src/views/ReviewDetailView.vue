@@ -151,7 +151,7 @@ function formatDate(value?: string) {
         </article>
 
         <section class="card reply">
-          <div class="reply-head">Đăng câu trả lời của bạn</div>
+          <div class="reply-head">Cho review của bạn về xe</div>
           <form class="comment-form" @submit.prevent="submitComment">
             <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
             <div class="comment-actions">
@@ -168,7 +168,6 @@ function formatDate(value?: string) {
         <section class="card comments">
           <div class="comments-head">
             <h3>Bình luận</h3>
-            <p class="muted">Bất kỳ ai cũng có thể xem và bình luận</p>
           </div>
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
