@@ -55,6 +55,7 @@ const modalError = ref('')
 
 onMounted(() => {
   load()
+  loadComments(true)
 })
 
 async function load() {
@@ -246,7 +247,7 @@ function formatDate(value?: string) {
 
         <section class="card comments">
           <div class="comments-head">
-            <h3>Bình luận</h3>
+            <h3>Bình luận ({{ comments.length }})</h3>
           </div>
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
