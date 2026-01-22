@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import client from '../api/client'
 import { useAuthStore } from '../stores/auth'
@@ -47,6 +47,10 @@ const page = ref(0)
 const pageSize = 10
 const hasMore = ref(true)
 
+const commentsSection = ref<HTMLElement | null>(null)
+const highlightComments = ref(false)
+let highlightTimer: number | undefined
+
 const auth = useAuthStore()
 const replyMode = ref<'auth' | 'anon'>('auth')
 const modalVisible = ref(false)
@@ -55,7 +59,7 @@ const modalError = ref('')
 
 onMounted(() => {
   load()
-  loadComments(true)
+  loadComments(true, false)
 })
 
 async function load() {
@@ -71,7 +75,7 @@ async function load() {
   }
 }
 
-async function loadComments(reset = false) {
+async function loadComments(reset = false, autoScroll = true) {
   if (reset) {
     page.value = 0
     hasMore.value = true
@@ -93,6 +97,11 @@ async function loadComments(reset = false) {
     } else {
       page.value += 1
     }
+    if (autoScroll) {
+      await nextTick()
+      commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    triggerHighlight()
   } catch (error: any) {
     commentsError.value = error.response?.data?.message || 'Không tải được bình luận'
     if (reset) {
@@ -164,6 +173,7 @@ async function submitComment() {
     comments.value = [data, ...comments.value]
     newComment.value = ''
     commentsVisible.value = true
+    triggerHighlight()
     if (review.value) {
       review.value.commentsCount = (review.value.commentsCount ?? 0) + 1
     }
@@ -172,6 +182,16 @@ async function submitComment() {
   } finally {
     submitting.value = false
   }
+}
+
+function triggerHighlight() {
+  highlightComments.value = true
+  if (highlightTimer) {
+    clearTimeout(highlightTimer)
+  }
+  highlightTimer = window.setTimeout(() => {
+    highlightComments.value = false
+  }, 3000)
 }
 
 function formatDate(value?: string) {
@@ -245,7 +265,7 @@ function formatDate(value?: string) {
           </form>
         </section>
 
-        <section class="card comments">
+        <section class="card comments" ref="commentsSection">
           <div class="comments-head">
             <h3>Bình luận ({{ comments.length }})</h3>
           </div>
@@ -253,7 +273,7 @@ function formatDate(value?: string) {
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
           <div v-else-if="commentsVisible">
             <div v-if="!comments.length" class="status">Chưa có bình luận</div>
-            <div v-else class="comment-list">
+            <div v-else class="comment-list" :class="{ flash: highlightComments }">
               <div v-for="comment in comments" :key="comment.id" class="comment-item">
                 <div class="comment-avatar">
                   <img :src="comment.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
@@ -266,7 +286,7 @@ function formatDate(value?: string) {
                   <p>{{ comment.content }}</p>
                 </div>
               </div>
-              <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false)">Xem thêm bình luận</button>
+              <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false, true)">Xem thêm bình luận</button>
             </div>
           </div>
         </section>
@@ -525,6 +545,22 @@ function formatDate(value?: string) {
 .comment-list {
   display: grid;
   gap: 12px;
+}
+
+.comment-list.flash .comment-item {
+  animation: flash 3s ease;
+}
+
+@keyframes flash {
+  0% {
+    background: #fff7ed;
+  }
+  30% {
+    background: #fff7ed;
+  }
+  100% {
+    background: #f8fafc;
+  }
 }
 
 .comment-item {
