@@ -29,11 +29,15 @@ async function logout() {
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
           <RouterLink v-if="!auth.isAuthenticated" class="primary" to="/register">Đăng ký</RouterLink>
           <div v-else class="user-box">
-            <RouterLink class="chip" to="/profile">
-              <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
-              <div class="name">{{ auth.user?.username }}</div>
-            </RouterLink>
-            <button class="ghost" @click="logout">Đăng xuất</button>
+            <div class="user-meta">
+              <div class="user-name">{{ auth.user?.username }}</div>
+              <div class="user-sub">{{ auth.user?.email }}</div>
+              <div class="user-actions">
+                <RouterLink class="mini" to="/profile">Hồ sơ</RouterLink>
+                <button class="mini ghost" @click="logout">Đăng xuất</button>
+              </div>
+            </div>
+            <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
           </div>
         </div>
       </div>
@@ -123,22 +127,44 @@ button.ghost:hover {
 .user-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #f7f9fc;
 }
 
-.chip {
+.user-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.user-sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.user-actions {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.mini {
   padding: 6px 10px;
-  border-radius: 14px;
-  background: #f7f9fc;
+  border-radius: 10px;
+  font-weight: 700;
   border: 1px solid var(--border);
+  background: #fff;
 }
 
 .avatar {
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background-size: cover;
   background-position: center;
@@ -146,10 +172,7 @@ button.ghost:hover {
   place-items: center;
   font-weight: 800;
   color: #0d6efd;
-}
-
-.name {
-  font-weight: 700;
+  background: linear-gradient(135deg, #e8f2ff, #f8fbff);
 }
 
 @media (max-width: 720px) {
