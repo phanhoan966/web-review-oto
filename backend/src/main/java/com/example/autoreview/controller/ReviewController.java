@@ -113,15 +113,20 @@ public class ReviewController {
     }
 
     private String extractEmailFromRequest(HttpServletRequest request) {
-        if (request.getCookies() == null) {
-            return null;
+        String bearer = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
+            try {
+                return jwtUtil.parse(bearer.substring(7)).getSubject();
+            } catch (Exception ignored) {
+            }
         }
-        for (Cookie cookie : request.getCookies()) {
-            if ("AUTH_TOKEN".equals(cookie.getName())) {
-                try {
-                    return jwtUtil.parse(cookie.getValue()).getSubject();
-                } catch (Exception ignored) {
-                    return null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("AUTH_TOKEN".equals(cookie.getName())) {
+                    try {
+                        return jwtUtil.parse(cookie.getValue()).getSubject();
+                    } catch (Exception ignored) {
+                    }
                 }
             }
         }
