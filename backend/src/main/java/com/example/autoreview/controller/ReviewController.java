@@ -6,13 +6,17 @@ import com.example.autoreview.dto.CreateReviewRequest;
 import com.example.autoreview.dto.ReviewDto;
 import com.example.autoreview.dto.ReviewListResponse;
 import com.example.autoreview.dto.UpdateReviewRequest;
+import com.example.autoreview.security.JwtUtil;
 import com.example.autoreview.service.ReviewService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,9 +31,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final JwtUtil jwtUtil;
 
-    public ReviewController(ReviewService reviewService) {
+    public ReviewController(ReviewService reviewService, JwtUtil jwtUtil) {
         this.reviewService = reviewService;
+        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping
@@ -89,13 +95,29 @@ public class ReviewController {
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<CommentDto> addComment(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody CreateCommentRequest request) {
-        String email = userDetails != null ? userDetails.getUsername() : null;
-        return ResponseEntity.ok(reviewService.addComment(id, email, request));
+    public ResponseEntity<CommentDto> addComment(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, HttpServletRequest request, @Valid @RequestBody CreateCommentRequest commentRequest) {
+        String email = userDetails != null ? userDetails.getUsername() : extractEmailFromRequest(request);
+        return ResponseEntity.ok(reviewService.addComment(id, email, commentRequest));
     }
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(reviewService.listComments(id, page, size));
+    }
+
+    private String extractEmailFromRequest(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+        for (Cookie cookie : request.getCookies()) {
+            if ("AUTH_TOKEN".equals(cookie.getName())) {
+                try {
+                    return jwtUtil.parse(cookie.getValue()).getSubject();
+                } catch (Exception ignored) {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 }
