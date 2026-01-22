@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public class ReviewDto {
     private Long id;
+    private Long authorId;
     private String title;
     private String excerpt;
     private String content;
