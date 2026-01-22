@@ -48,8 +48,10 @@ async function logout() {
         </nav>
         <div class="actions">
           <button class="icon-btn" aria-label="Chuyển chế độ">☾</button>
-          <button class="icon-btn" aria-label="Thông báo">🔔</button>
-          <span class="badge"></span>
+          <div class="notify">
+            <button class="icon-btn" aria-label="Thông báo">🔔</button>
+            <span class="badge"></span>
+          </div>
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
           <RouterLink v-if="!auth.isAuthenticated" class="primary" to="/register">Đăng ký</RouterLink>
           <div v-else class="user-menu" ref="menuRef">
@@ -122,7 +124,11 @@ async function logout() {
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.notify {
+  position: relative;
 }
 
 .icon-btn {
@@ -142,8 +148,9 @@ async function logout() {
   height: 10px;
   background: #7c3aed;
   border-radius: 50%;
-  margin-left: -14px;
-  margin-right: 6px;
+  position: absolute;
+  top: -2px;
+  right: -2px;
   box-shadow: 0 0 0 4px #f7f9fc;
 }
 
@@ -192,11 +199,12 @@ button.ghost:hover {
   background: linear-gradient(135deg, #fe8fb6, #a173ff);
   display: grid;
   place-items: center;
+  box-shadow: 0 8px 20px rgba(161, 115, 255, 0.22);
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background-size: cover;
   background-position: center;
@@ -205,29 +213,31 @@ button.ghost:hover {
   font-weight: 800;
   color: #0f172a;
   background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid #e5e7eb;
 }
 
 .dropdown {
   position: absolute;
   right: 0;
-  top: 120%;
-  min-width: 200px;
-  padding: 10px;
-  border-radius: 14px;
+  top: 110%;
+  min-width: 220px;
+  padding: 12px;
+  border-radius: 16px;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
   display: grid;
-  gap: 6px;
+  gap: 8px;
   background: #fff;
   z-index: 20;
 }
 
 .item {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   color: #1f2a3d;
   border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .item:hover {
