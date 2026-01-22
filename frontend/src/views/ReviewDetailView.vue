@@ -40,6 +40,7 @@ const comments = ref<CommentDetail[]>([])
 const commentsVisible = ref(false)
 const commentsLoading = ref(false)
 const commentsError = ref('')
+const formError = ref('')
 const newComment = ref('')
 const submitting = ref(false)
 
@@ -133,9 +134,10 @@ function validateEmail(value: string) {
 async function submitComment() {
   const content = newComment.value.trim()
   if (!content) {
-    commentsError.value = 'Vui lòng nhập nội dung bình luận'
+    formError.value = 'Vui lòng nhập nội dung bình luận'
     return
   }
+  formError.value = ''
 
   if (replyMode.value === 'auth') {
     if (!auth.user) {
@@ -180,7 +182,7 @@ async function submitComment() {
       review.value.commentsCount = (review.value.commentsCount ?? 0) + 1
     }
   } catch (error: any) {
-    commentsError.value = error.response?.data?.message || 'Gửi bình luận thất bại'
+    formError.value = error.response?.data?.message || 'Gửi bình luận thất bại'
   } finally {
     submitting.value = false
   }
@@ -253,7 +255,7 @@ function formatDate(value?: string) {
           <div class="reply-head">Cho review của bạn về xe</div>
           <form class="comment-form" @submit.prevent>
             <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
-            <div v-if="commentsError" class="form-error">{{ commentsError }}</div>
+            <div v-if="formError" class="form-error">{{ formError }}</div>
             <div class="comment-actions">
               <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
                 {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
