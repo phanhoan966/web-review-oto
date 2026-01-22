@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import client from '../api/client'
+import { useAuthStore } from '../stores/auth'
 
 interface ReviewDetail {
   id: number
@@ -42,6 +43,12 @@ const commentsError = ref('')
 const newComment = ref('')
 const submitting = ref(false)
 
+const auth = useAuthStore()
+const replyMode = ref<'auth' | 'anon'>('auth')
+const modalVisible = ref(false)
+const modalEmail = ref('')
+const modalError = ref('')
+
 onMounted(() => {
   load()
 })
@@ -74,14 +81,60 @@ async function loadComments() {
   }
 }
 
+function openModal(mode: 'auth' | 'anon') {
+  replyMode.value = mode
+  modalError.value = ''
+  if (mode === 'auth') {
+    if (!auth.user) {
+      commentsError.value = 'Bạn cần đăng nhập để trả lời'
+      return
+    }
+    modalEmail.value = auth.user.email
+    modalVisible.value = true
+  } else {
+    modalEmail.value = auth.user?.email || ''
+    if (!auth.user) {
+      modalVisible.value = true
+    } else {
+      submitComment()
+    }
+  }
+}
+
+function validateEmail(value: string) {
+  return /^[\w-.]+@[\w-]+\.[\w-.]+$/.test(value)
+}
+
 async function submitComment() {
   const content = newComment.value.trim()
   if (!content) {
     commentsError.value = 'Vui lòng nhập nội dung bình luận'
     return
   }
+
+  if (replyMode.value === 'auth') {
+    if (!auth.user) {
+      commentsError.value = 'Bạn cần đăng nhập để trả lời'
+      return
+    }
+    if (!validateEmail(modalEmail.value) || modalEmail.value !== auth.user.email) {
+      modalError.value = 'Email không đúng với tài khoản của bạn'
+      modalVisible.value = true
+      return
+    }
+  }
+
+  if (replyMode.value === 'anon' && !auth.user) {
+    if (!validateEmail(modalEmail.value)) {
+      modalError.value = 'Email không hợp lệ'
+      modalVisible.value = true
+      return
+    }
+  }
+
   submitting.value = true
   commentsError.value = ''
+  modalVisible.value = false
   try {
     const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content })
     comments.value = [data, ...comments.value]
@@ -152,15 +205,18 @@ function formatDate(value?: string) {
 
         <section class="card reply">
           <div class="reply-head">Cho review của bạn về xe</div>
-          <form class="comment-form" @submit.prevent="submitComment">
+          <form class="comment-form" @submit.prevent>
             <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
             <div class="comment-actions">
               <button class="ghost" type="button" @click="loadComments" :disabled="commentsLoading">
                 {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
               </button>
-              <button class="primary" type="submit" :disabled="submitting">
-                {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
-              </button>
+              <div class="action-group">
+                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                </button>
+              </div>
             </div>
           </form>
         </section>
@@ -168,6 +224,7 @@ function formatDate(value?: string) {
         <section class="card comments">
           <div class="comments-head">
             <h3>Bình luận</h3>
+            <p class="muted">Bất kỳ ai cũng có thể xem và bình luận</p>
           </div>
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
@@ -218,6 +275,19 @@ function formatDate(value?: string) {
 
     <div v-else class="status" :class="{ error: Boolean(errorMsg) }">
       {{ loading ? 'Đang tải...' : errorMsg || 'Không tìm thấy bài viết' }}
+    </div>
+
+    <div v-if="modalVisible" class="modal">
+      <div class="modal-card">
+        <h4>Xác nhận email</h4>
+        <p class="muted">Nhập email {{ replyMode === 'auth' ? 'tài khoản' : 'của bạn' }} để tiếp tục</p>
+        <input v-model="modalEmail" type="email" placeholder="your@email.com" />
+        <div v-if="modalError" class="modal-error">{{ modalError }}</div>
+        <div class="modal-actions">
+          <button class="ghost" type="button" @click="modalVisible = false">Huỷ</button>
+          <button class="primary" type="button" @click="submitComment">Xác nhận</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -394,6 +464,11 @@ function formatDate(value?: string) {
   gap: 10px;
 }
 
+.action-group {
+  display: flex;
+  gap: 8px;
+}
+
 .primary,
 .ghost,
 .pill {
@@ -507,6 +582,43 @@ function formatDate(value?: string) {
 
 .error {
   color: #b91c1c;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+}
+
+.modal-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  width: min(420px, 90vw);
+  display: grid;
+  gap: 10px;
+}
+
+.modal-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-error {
+  color: #b91c1c;
+  font-weight: 700;
 }
 
 </style>
