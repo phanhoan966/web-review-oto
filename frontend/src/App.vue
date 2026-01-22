@@ -1,15 +1,36 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
 const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
+const menuOpen = ref(false)
+const menuRef = ref<HTMLElement | null>(null)
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+
+function handleClickOutside(event: MouseEvent) {
+  if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
+    menuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 async function logout() {
   await auth.logout()
   router.push({ name: 'feed' })
+  menuOpen.value = false
 }
 </script>
 
@@ -28,16 +49,16 @@ async function logout() {
         <div class="actions">
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
           <RouterLink v-if="!auth.isAuthenticated" class="primary" to="/register">Đăng ký</RouterLink>
-          <div v-else class="user-box">
-            <div class="user-meta">
-              <div class="user-name">{{ auth.user?.username }}</div>
-              <div class="user-sub">{{ auth.user?.email }}</div>
-              <div class="user-actions">
-                <RouterLink class="mini" to="/profile">Hồ sơ</RouterLink>
-                <button class="mini ghost" @click="logout">Đăng xuất</button>
-              </div>
+          <div v-else class="user-menu" ref="menuRef">
+            <button class="avatar-btn" @click.stop="toggleMenu">
+              <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
+            </button>
+            <div v-if="menuOpen" class="dropdown surface">
+              <RouterLink class="item" to="/profile" @click="menuOpen = false">Hồ sơ</RouterLink>
+              <RouterLink class="item" to="/profile" @click="menuOpen = false">Tài khoản</RouterLink>
+              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false">Nhiệm vụ</RouterLink>
+              <button class="logout" @click="logout">Đăng xuất</button>
             </div>
-            <div class="avatar" :style="auth.user?.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">{{ auth.user?.avatarUrl ? '' : initials }}</div>
           </div>
         </div>
       </div>
@@ -124,47 +145,20 @@ button.ghost:hover {
   background: #f3f5f9;
 }
 
-.user-box {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: #f7f9fc;
+.user-menu {
+  position: relative;
 }
 
-.user-meta {
-  display: grid;
-  gap: 4px;
-}
-
-.user-name {
-  font-weight: 800;
-  font-size: 15px;
-}
-
-.user-sub {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.mini {
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-weight: 700;
-  border: 1px solid var(--border);
-  background: #fff;
+.avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background-size: cover;
   background-position: center;
@@ -173,6 +167,44 @@ button.ghost:hover {
   font-weight: 800;
   color: #0d6efd;
   background: linear-gradient(135deg, #e8f2ff, #f8fbff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  min-width: 200px;
+  padding: 10px;
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.08);
+  display: grid;
+  gap: 6px;
+  background: #fff;
+  z-index: 20;
+}
+
+.item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #1f2a3d;
+  border: 1px solid transparent;
+}
+
+.item:hover {
+  background: #f7f9fc;
+  border-color: var(--border);
+}
+
+.logout {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d9e6;
+  background: #f8f0ff;
+  color: #7c3aed;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 @media (max-width: 720px) {
