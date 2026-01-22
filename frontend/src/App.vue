@@ -154,20 +154,24 @@ button.ghost:hover {
   background: transparent;
   padding: 0;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background-size: cover;
   background-position: center;
   display: grid;
   place-items: center;
   font-weight: 800;
-  color: #0d6efd;
-  background: linear-gradient(135deg, #e8f2ff, #f8fbff);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+  background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
 .dropdown {
