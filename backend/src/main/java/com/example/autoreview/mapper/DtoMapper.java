@@ -56,7 +56,8 @@ public class DtoMapper {
         dto.setId(comment.getId());
         dto.setContent(comment.getContent());
         dto.setCreatedAt(comment.getCreatedAt());
-        if (comment.getAuthor() != null) {
+        dto.setAnonymous(comment.isAnonymous());
+        if (!comment.isAnonymous() && comment.getAuthor() != null) {
             dto.setAuthorName(comment.getAuthor().getUsername());
             dto.setAuthorAvatar(comment.getAuthor().getAvatarUrl());
         }

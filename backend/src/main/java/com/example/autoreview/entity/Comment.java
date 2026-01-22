@@ -32,6 +32,9 @@ public class Comment {
     @JoinColumn(name = "review_id")
     private Review review;
 
+    @Column(nullable = false)
+    private boolean anonymous;
+
     public Long getId() {
         return id;
     }
@@ -70,5 +73,13 @@ public class Comment {
 
     public void setReview(Review review) {
         this.review = review;
+    }
+
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 }

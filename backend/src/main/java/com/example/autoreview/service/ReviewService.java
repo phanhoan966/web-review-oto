@@ -156,6 +156,7 @@ public class ReviewService {
             comment.setContent(request.getContent());
             comment.setAuthor(author);
             comment.setReview(review);
+            comment.setAnonymous(request.isAnonymous());
             comment.setCreatedAt(Instant.now());
             Comment saved = commentRepository.save(comment);
             review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);

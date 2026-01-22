@@ -28,8 +28,12 @@ interface CommentDetail {
   content: string
   authorName?: string
   authorAvatar?: string
+  anonymous?: boolean
   createdAt?: string
 }
+
+const defaultAvatar = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'
+const anonAvatar = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'
 
 const route = useRoute()
 const review = ref<ReviewDetail | null>(null)
@@ -165,12 +169,14 @@ async function submitComment() {
     }
   }
 
+  const anonymous = replyMode.value === 'anon'
   submitting.value = true
   commentsError.value = ''
   modalVisible.value = false
   try {
-    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content })
-    if (replyMode.value === 'auth' && auth.user) {
+    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content, anonymous })
+    data.anonymous = anonymous
+    if (!anonymous && replyMode.value === 'auth' && auth.user) {
       data.authorName = auth.user.username
       data.authorAvatar = auth.user.avatarUrl
     }
@@ -286,11 +292,11 @@ function formatDate(value?: string) {
                 :class="{ flash: highlightedIds.has(comment.id) }"
               >
                 <div class="comment-avatar">
-                  <img :src="comment.authorAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=60'" alt="avatar" />
+                  <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
                 </div>
                 <div class="comment-content">
                   <div class="comment-meta">
-                    <strong>{{ comment.authorName || 'Ẩn danh' }}</strong>
+                    <strong>{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
                     <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                   </div>
                   <p>{{ comment.content }}</p>

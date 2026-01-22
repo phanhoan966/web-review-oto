@@ -7,6 +7,7 @@ public class CommentDto {
     private String content;
     private String authorName;
     private String authorAvatar;
+    private boolean anonymous;
     private Instant createdAt;
 
     public Long getId() {
@@ -39,6 +40,14 @@ public class CommentDto {
 
     public void setAuthorAvatar(String authorAvatar) {
         this.authorAvatar = authorAvatar;
+    }
+
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
     public Instant getCreatedAt() {
