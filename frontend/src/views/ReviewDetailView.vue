@@ -43,6 +43,10 @@ const commentsError = ref('')
 const newComment = ref('')
 const submitting = ref(false)
 
+const page = ref(0)
+const pageSize = 10
+const hasMore = ref(true)
+
 const auth = useAuthStore()
 const replyMode = ref<'auth' | 'anon'>('auth')
 const modalVisible = ref(false)
@@ -66,16 +70,33 @@ async function load() {
   }
 }
 
-async function loadComments() {
+async function loadComments(reset = false) {
+  if (reset) {
+    page.value = 0
+    hasMore.value = true
+    comments.value = []
+  }
+  if (!hasMore.value && !reset) {
+    return
+  }
   commentsVisible.value = true
   commentsLoading.value = true
   commentsError.value = ''
   try {
-    const { data } = await client.get<CommentDetail[]>(`/reviews/${route.params.id}/comments`)
-    comments.value = data
+    const { data } = await client.get<CommentDetail[]>(`/reviews/${route.params.id}/comments`, {
+      params: { page: page.value, size: pageSize }
+    })
+    comments.value = reset ? data : [...comments.value, ...data]
+    if (data.length < pageSize) {
+      hasMore.value = false
+    } else {
+      page.value += 1
+    }
   } catch (error: any) {
     commentsError.value = error.response?.data?.message || 'Không tải được bình luận'
-    comments.value = []
+    if (reset) {
+      comments.value = []
+    }
   } finally {
     commentsLoading.value = false
   }
@@ -210,7 +231,7 @@ function formatDate(value?: string) {
           <form class="comment-form" @submit.prevent>
             <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
             <div class="comment-actions">
-              <button class="ghost" type="button" @click="loadComments" :disabled="commentsLoading">
+              <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
                 {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
               </button>
               <div class="action-group">
@@ -244,6 +265,7 @@ function formatDate(value?: string) {
                   <p>{{ comment.content }}</p>
                 </div>
               </div>
+              <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false)">Xem thêm bình luận</button>
             </div>
           </div>
         </section>

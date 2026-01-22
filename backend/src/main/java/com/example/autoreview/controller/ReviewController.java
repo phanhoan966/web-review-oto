@@ -95,7 +95,7 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id) {
-        return ResponseEntity.ok(reviewService.listComments(id));
+    public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(reviewService.listComments(id, page, size));
     }
 }

@@ -167,12 +167,13 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentDto> listComments(Long reviewId) {
+    public List<CommentDto> listComments(Long reviewId, int page, int size) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         if (review.getStatus() != ReviewStatus.APPROVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
-        return commentRepository.findByReviewOrderByCreatedAtAsc(review).stream().map(DtoMapper::toCommentDto).toList();
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return commentRepository.findByReviewOrderByCreatedAtDesc(review, pageable).map(DtoMapper::toCommentDto).getContent();
     }
 
     @Transactional
