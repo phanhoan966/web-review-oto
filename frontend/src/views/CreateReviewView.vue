@@ -24,12 +24,26 @@ const form = ref({
   brandId: ''
 })
 const heroPreview = ref('')
+const uploadError = ref('')
+const uploading = ref(false)
 const errorMsg = ref('')
 
 watch(
   () => form.value.title,
   (val) => {
     form.value.slug = slugify(val)
+  }
+)
+
+watch(
+  () => form.value.heroImageUrl,
+  (val) => {
+    if (val && !val.startsWith('data:')) {
+      heroPreview.value = val
+    }
+    if (!val) {
+      heroPreview.value = ''
+    }
   }
 )
 
@@ -54,19 +68,37 @@ function slugify(value: string) {
     .trim()
 }
 
-function onHeroFile(event: Event) {
+async function onHeroFile(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   if (!file) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    heroPreview.value = reader.result as string
-    form.value.heroImageUrl = heroPreview.value
+  uploadError.value = ''
+  uploading.value = true
+  try {
+    const payload = new FormData()
+    payload.append('file', file)
+    const { data } = await client.post<{ url: string }>('/uploads', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    form.value.heroImageUrl = data.url
+    heroPreview.value = data.url
+  } catch (error: any) {
+    uploadError.value = error.response?.data?.message || 'Upload ảnh thất bại'
+  } finally {
+    uploading.value = false
   }
-  reader.readAsDataURL(file)
 }
 
 async function submit() {
+  const heroUrl = form.value.heroImageUrl?.trim() || ''
+  if (uploading.value) {
+    errorMsg.value = 'Đang upload ảnh, vui lòng đợi'
+    return
+  }
+  if (heroUrl.startsWith('data:')) {
+    errorMsg.value = 'Vui lòng upload ảnh để lấy URL'
+    return
+  }
   loading.value = true
   errorMsg.value = ''
   try {
@@ -74,7 +106,7 @@ async function submit() {
       title: form.value.title,
       excerpt: form.value.excerpt,
       content: form.value.content,
-      heroImageUrl: form.value.heroImageUrl,
+      heroImageUrl: heroUrl || null,
       vehicleModel: form.value.vehicleModel,
       vehicleYear: form.value.vehicleYear ? Number(form.value.vehicleYear) : null,
       fuelType: form.value.fuelType,
@@ -114,9 +146,10 @@ async function submit() {
           <input v-model="form.heroImageUrl" placeholder="https://..." />
           <label class="upload-btn">
             Upload
-            <input type="file" accept="image/*" @change="onHeroFile" />
+            <input type="file" accept="image/*" :disabled="uploading" @change="onHeroFile" />
           </label>
         </div>
+        <p v-if="uploadError" class="error">{{ uploadError }}</p>
         <div v-if="form.heroImageUrl || heroPreview" class="hero-preview">
           <img :src="heroPreview || form.heroImageUrl" alt="preview" />
         </div>
@@ -150,7 +183,7 @@ async function submit() {
           </div>
         </div>
 
-        <button type="submit" :disabled="loading">{{ loading ? 'Đang gửi...' : 'Gửi' }}</button>
+        <button type="submit" :disabled="loading || uploading">{{ loading ? 'Đang gửi...' : uploading ? 'Đang upload ảnh...' : 'Gửi' }}</button>
         <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
       </form>
     </div>

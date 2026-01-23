@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/admin/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password", "/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/uploads").permitAll()
                         .requestMatchers(HttpMethod.GET, "/reviews/pending").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/reviews/mine").authenticated()
                         .requestMatchers(HttpMethod.GET, "/reviews", "/reviews/most-viewed", "/reviews/*/comments", "/reviews/*", "/brands/**", "/reviewers/**").permitAll()

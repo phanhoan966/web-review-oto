@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class ReviewService {
@@ -81,7 +82,7 @@ public class ReviewService {
         review.setTitle(request.getTitle());
         review.setExcerpt(request.getExcerpt());
         review.setContent(request.getContent());
-        review.setHeroImageUrl(request.getHeroImageUrl());
+        review.setHeroImageUrl(sanitizeHeroImageUrl(request.getHeroImageUrl()));
         review.setVehicleModel(request.getVehicleModel());
         review.setVehicleYear(request.getVehicleYear());
         review.setFuelType(request.getFuelType());
@@ -112,7 +113,7 @@ public class ReviewService {
         review.setTitle(request.getTitle());
         review.setExcerpt(request.getExcerpt());
         review.setContent(request.getContent());
-        review.setHeroImageUrl(request.getHeroImageUrl());
+        review.setHeroImageUrl(sanitizeHeroImageUrl(request.getHeroImageUrl()));
         review.setVehicleModel(request.getVehicleModel());
         review.setVehicleYear(request.getVehicleYear());
         review.setFuelType(request.getFuelType());
@@ -191,6 +192,26 @@ public class ReviewService {
             review.setCommentsCount(review.getCommentsCount() - 1);
             reviewRepository.save(review);
         }
+    }
+
+    private String sanitizeHeroImageUrl(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String url = value.trim();
+        if (url.startsWith("data:")) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Chỉ chấp nhận URL ảnh");
+        }
+        if (url.length() > 512) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "URL ảnh quá dài");
+        }
+        if (url.startsWith("/uploads/") || url.startsWith("uploads/")) {
+            return url.startsWith("/") ? url : "/" + url;
+        }
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        throw new ApiException(HttpStatus.BAD_REQUEST, "URL ảnh không hợp lệ");
     }
 
     private boolean hasAdminRole(User user) {
