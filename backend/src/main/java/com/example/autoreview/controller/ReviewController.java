@@ -48,9 +48,10 @@ public class ReviewController {
     @GetMapping("/mine")
     public ResponseEntity<ReviewListResponse> mine(
             @AuthenticationPrincipal Object principal,
+            HttpServletRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        String email = currentUserResolver.resolveEmail(principal, null);
+        String email = currentUserResolver.resolveEmail(principal, request);
         return ResponseEntity.ok(reviewService.listByAuthor(email, page, size));
     }
 
@@ -65,15 +66,15 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<ReviewDto> create(@AuthenticationPrincipal Object principal, @Valid @RequestBody CreateReviewRequest request) {
-        String email = currentUserResolver.resolveEmail(principal, null);
-        return ResponseEntity.ok(reviewService.create(email, request));
+    public ResponseEntity<ReviewDto> create(@AuthenticationPrincipal Object principal, HttpServletRequest request, @Valid @RequestBody CreateReviewRequest requestBody) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.create(email, requestBody));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReviewDto> update(@PathVariable Long id, @AuthenticationPrincipal Object principal, @Valid @RequestBody UpdateReviewRequest request) {
-        String email = currentUserResolver.resolveEmail(principal, null);
-        return ResponseEntity.ok(reviewService.updateOwn(id, email, request));
+    public ResponseEntity<ReviewDto> update(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request, @Valid @RequestBody UpdateReviewRequest requestBody) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.updateOwn(id, email, requestBody));
     }
 
     @GetMapping("/pending")
@@ -83,15 +84,15 @@ public class ReviewController {
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Void> approve(@PathVariable Long id, @AuthenticationPrincipal Object principal) {
-        String email = currentUserResolver.resolveEmail(principal, null);
+    public ResponseEntity<Void> approve(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
         reviewService.approve(id, email, true);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/reject")
-    public ResponseEntity<Void> reject(@PathVariable Long id, @AuthenticationPrincipal Object principal) {
-        String email = currentUserResolver.resolveEmail(principal, null);
+    public ResponseEntity<Void> reject(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
         reviewService.approve(id, email, false);
         return ResponseEntity.noContent().build();
     }

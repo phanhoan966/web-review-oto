@@ -22,8 +22,8 @@ public class CommentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Object principal) {
-        String email = currentUserResolver.resolveEmail(principal, null);
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Object principal, javax.servlet.http.HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
         reviewService.deleteComment(id, email);
         return ResponseEntity.noContent().build();
     }
