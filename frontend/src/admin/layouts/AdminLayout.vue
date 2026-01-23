@@ -64,9 +64,19 @@ async function logoutAndClose() {
           <span>Khu vực quản trị</span>
         </div>
         <div class="profile-area">
+          <div class="quick-actions">
+            <button class="icon-btn" aria-label="Chế độ" title="Chế độ">
+              ☾
+            </button>
+            <button class="icon-btn" aria-label="Thông báo" title="Thông báo">
+              🔔
+              <span class="dot"></span>
+            </button>
+          </div>
           <button class="avatar-btn" aria-label="Tài khoản" @click="toggleProfileMenu">
             <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar" />
             <span v-else>{{ avatarInitial }}</span>
+            <span class="status-dot"></span>
           </button>
           <div v-if="profileOpen" class="dropdown" @click.stop>
             <div class="user-row">
@@ -192,20 +202,52 @@ nav {
   position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 14px;
+}
+
+.quick-actions {
+  display: inline-flex;
   gap: 10px;
 }
 
-.avatar-btn {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 1px solid #d1d5db;
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
   background: white;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 18px;
+  position: relative;
+}
+
+.icon-btn .dot {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.avatar-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  background: white;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: grid;
   place-items: center;
   padding: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .avatar-btn img {
@@ -220,10 +262,21 @@ nav {
   color: #0b1437;
 }
 
+.status-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px white;
+}
+
 .dropdown {
   position: absolute;
   right: 0;
-  top: 56px;
+  top: 60px;
   background: white;
   border-radius: 16px;
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12);
