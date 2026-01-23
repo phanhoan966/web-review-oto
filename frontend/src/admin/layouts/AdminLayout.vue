@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+const collapsed = ref(false)
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊' },
@@ -15,6 +16,10 @@ const nav = [
 
 const activeName = computed(() => route.name)
 
+function toggleSidebar() {
+  collapsed.value = !collapsed.value
+}
+
 async function logout() {
   await auth.logout()
   router.push({ name: 'admin-login' })
@@ -22,7 +27,7 @@ async function logout() {
 </script>
 
 <template>
-  <div class="layout">
+  <div class="layout" :class="{ collapsed }">
     <aside class="sidebar">
       <div class="brand">AutoReview Admin</div>
       <nav>
@@ -45,7 +50,10 @@ async function logout() {
 
     <div class="main">
       <header class="topbar">
-        <div class="breadcrumbs">Khu vực quản trị</div>
+        <div class="breadcrumbs">
+          <button class="icon" aria-label="Toggle sidebar" @click="toggleSidebar">☰</button>
+          <span>Khu vực quản trị</span>
+        </div>
         <div class="actions">
           <button class="ghost" @click="router.push({ name: 'review-create' })">Tạo bài mới</button>
           <button class="primary" @click="router.push({ name: 'feed' })">Xem Public</button>
@@ -166,6 +174,25 @@ nav {
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
+.breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.breadcrumbs .icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
 .actions {
   display: flex;
   gap: 10px;
@@ -194,6 +221,26 @@ main.content {
   background: #eef2ff;
   color: #312e81;
   border: 1px solid #c7d2fe;
+}
+
+.layout.collapsed {
+  grid-template-columns: 72px 1fr;
+}
+
+.layout.collapsed .sidebar {
+  padding: 16px 10px;
+}
+
+.layout.collapsed .brand,
+.layout.collapsed .sidebar-footer,
+.layout.collapsed .nav-item span:last-child {
+  display: none;
+}
+
+.layout.collapsed .nav-item {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 12px;
 }
 
 @media (max-width: 1024px) {
