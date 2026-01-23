@@ -14,7 +14,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,10 +47,11 @@ public class ReviewController {
 
     @GetMapping("/mine")
     public ResponseEntity<ReviewListResponse> mine(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal Object principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reviewService.listByAuthor(userDetails.getUsername(), page, size));
+        String email = currentUserResolver.resolveEmail(principal, null);
+        return ResponseEntity.ok(reviewService.listByAuthor(email, page, size));
     }
 
     @GetMapping("/most-viewed")
@@ -65,13 +65,15 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<ReviewDto> create(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody CreateReviewRequest request) {
-        return ResponseEntity.ok(reviewService.create(userDetails.getUsername(), request));
+    public ResponseEntity<ReviewDto> create(@AuthenticationPrincipal Object principal, @Valid @RequestBody CreateReviewRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, null);
+        return ResponseEntity.ok(reviewService.create(email, request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReviewDto> update(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateReviewRequest request) {
-        return ResponseEntity.ok(reviewService.updateOwn(id, userDetails.getUsername(), request));
+    public ResponseEntity<ReviewDto> update(@PathVariable Long id, @AuthenticationPrincipal Object principal, @Valid @RequestBody UpdateReviewRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, null);
+        return ResponseEntity.ok(reviewService.updateOwn(id, email, request));
     }
 
     @GetMapping("/pending")
@@ -81,14 +83,16 @@ public class ReviewController {
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Void> approve(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        reviewService.approve(id, userDetails.getUsername(), true);
+    public ResponseEntity<Void> approve(@PathVariable Long id, @AuthenticationPrincipal Object principal) {
+        String email = currentUserResolver.resolveEmail(principal, null);
+        reviewService.approve(id, email, true);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/reject")
-    public ResponseEntity<Void> reject(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        reviewService.approve(id, userDetails.getUsername(), false);
+    public ResponseEntity<Void> reject(@PathVariable Long id, @AuthenticationPrincipal Object principal) {
+        String email = currentUserResolver.resolveEmail(principal, null);
+        reviewService.approve(id, email, false);
         return ResponseEntity.noContent().build();
     }
 
