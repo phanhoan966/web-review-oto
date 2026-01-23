@@ -28,3 +28,4 @@ app:
     secure: ${APP_COOKIE_SECURE:false}
     same-site: ${APP_COOKIE_SAME_SITE:Lax}
     domain: ${APP_COOKIE_DOMAIN:}
+  file-base-url: http://localhost:8080

@@ -85,11 +85,12 @@ async function onHeroFile(event: Event) {
   try {
     const payload = new FormData()
     payload.append('file', file)
-    const { data } = await client.post<{ url: string }>('/uploads', payload, {
+    const { data } = await client.post<{ path?: string; url: string }>('/uploads', payload, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-    form.value.heroImageUrl = data.url
-    heroPreview.value = buildAssetUrl(data.url)
+    const storedPath = data.path || data.url
+    form.value.heroImageUrl = storedPath
+    heroPreview.value = buildAssetUrl(storedPath)
   } catch (error: any) {
     uploadError.value = error.response?.data?.message || 'Upload ảnh thất bại'
   } finally {

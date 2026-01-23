@@ -19,7 +19,7 @@ public class UploadController {
     private final UploadService uploadService;
     private final String fileBaseUrl;
 
-    public UploadController(UploadService uploadService, @Value("${app.file-base-url:http://localhost:8080}") String fileBaseUrl) {
+    public UploadController(UploadService uploadService, @Value("${app.file-base-url:}") String fileBaseUrl) {
         this.uploadService = uploadService;
         this.fileBaseUrl = fileBaseUrl;
     }
@@ -28,7 +28,7 @@ public class UploadController {
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
         String path = uploadService.store(file);
         String url = buildUrl(path);
-        return ResponseEntity.ok(Map.of("url", url));
+        return ResponseEntity.ok(Map.of("path", path, "url", url));
     }
 
     private String buildUrl(String path) {
