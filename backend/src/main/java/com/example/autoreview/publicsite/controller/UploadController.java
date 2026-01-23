@@ -1,7 +1,8 @@
 package com.example.autoreview.publicsite.controller;
 
-import com.example.autoreview.publicsite.service.UploadService;
 import java.util.Map;
+
+import com.example.autoreview.publicsite.service.UploadService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
