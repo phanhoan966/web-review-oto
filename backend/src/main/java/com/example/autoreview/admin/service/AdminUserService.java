@@ -1,7 +1,7 @@
-package com.example.autoreview.service;
+package com.example.autoreview.admin.service;
 
-import com.example.autoreview.dto.AdminUserDto;
-import com.example.autoreview.entity.User;
+import com.example.autoreview.admin.dto.response.AdminUserDto;
+import com.example.autoreview.domain.User;
 import com.example.autoreview.exception.ApiException;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.security.Roles;

@@ -1,6 +1,6 @@
 package com.example.autoreview.repository;
 
-import com.example.autoreview.entity.PasswordResetToken;
+import com.example.autoreview.domain.PasswordResetToken;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

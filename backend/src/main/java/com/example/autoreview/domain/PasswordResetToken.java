@@ -1,4 +1,4 @@
-package com.example.autoreview.entity;
+package com.example.autoreview.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

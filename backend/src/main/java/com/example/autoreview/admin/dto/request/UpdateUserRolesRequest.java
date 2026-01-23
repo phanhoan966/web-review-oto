@@ -1,4 +1,4 @@
-package com.example.autoreview.dto;
+package com.example.autoreview.admin.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import java.util.Set;

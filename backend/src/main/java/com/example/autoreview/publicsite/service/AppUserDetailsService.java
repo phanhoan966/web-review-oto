@@ -1,6 +1,6 @@
-package com.example.autoreview.service;
+package com.example.autoreview.publicsite.service;
 
-import com.example.autoreview.entity.User;
+import com.example.autoreview.domain.User;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.security.Roles;
 import java.util.HashSet;

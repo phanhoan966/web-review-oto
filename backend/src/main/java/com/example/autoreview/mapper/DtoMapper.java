@@ -5,10 +5,10 @@ import com.example.autoreview.dto.CommentDto;
 import com.example.autoreview.dto.ReviewDto;
 import com.example.autoreview.dto.ReviewerDto;
 import com.example.autoreview.dto.UserProfileDto;
-import com.example.autoreview.entity.Comment;
-import com.example.autoreview.entity.Review;
-import com.example.autoreview.entity.User;
-import com.example.autoreview.entity.VehicleBrand;
+import com.example.autoreview.domain.Comment;
+import com.example.autoreview.domain.Review;
+import com.example.autoreview.domain.User;
+import com.example.autoreview.domain.VehicleBrand;
 
 public class DtoMapper {
 

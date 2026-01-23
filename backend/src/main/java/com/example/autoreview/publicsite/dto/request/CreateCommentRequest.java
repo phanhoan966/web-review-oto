@@ -1,4 +1,4 @@
-package com.example.autoreview.dto;
+package com.example.autoreview.publicsite.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

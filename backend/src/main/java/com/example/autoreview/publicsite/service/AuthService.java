@@ -1,14 +1,14 @@
-package com.example.autoreview.service;
+package com.example.autoreview.publicsite.service;
 
-import com.example.autoreview.dto.AuthResponse;
-import com.example.autoreview.dto.ForgotPasswordRequest;
-import com.example.autoreview.dto.LoginRequest;
-import com.example.autoreview.dto.RegisterRequest;
-import com.example.autoreview.dto.ResetPasswordRequest;
-import com.example.autoreview.dto.UserProfileDto;
-import com.example.autoreview.entity.PasswordResetToken;
-import com.example.autoreview.entity.RefreshToken;
-import com.example.autoreview.entity.User;
+import com.example.autoreview.publicsite.dto.response.AuthResponse;
+import com.example.autoreview.publicsite.dto.request.ForgotPasswordRequest;
+import com.example.autoreview.publicsite.dto.request.LoginRequest;
+import com.example.autoreview.publicsite.dto.request.RegisterRequest;
+import com.example.autoreview.publicsite.dto.request.ResetPasswordRequest;
+import com.example.autoreview.publicsite.dto.response.UserProfileDto;
+import com.example.autoreview.domain.PasswordResetToken;
+import com.example.autoreview.domain.RefreshToken;
+import com.example.autoreview.domain.User;
 import com.example.autoreview.exception.ApiException;
 import com.example.autoreview.mapper.DtoMapper;
 import com.example.autoreview.repository.PasswordResetTokenRepository;

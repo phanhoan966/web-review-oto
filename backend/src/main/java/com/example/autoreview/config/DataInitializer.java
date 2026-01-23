@@ -1,9 +1,9 @@
 package com.example.autoreview.config;
 
-import com.example.autoreview.entity.Review;
-import com.example.autoreview.entity.ReviewStatus;
-import com.example.autoreview.entity.User;
-import com.example.autoreview.entity.VehicleBrand;
+import com.example.autoreview.domain.Review;
+import com.example.autoreview.domain.ReviewStatus;
+import com.example.autoreview.domain.User;
+import com.example.autoreview.domain.VehicleBrand;
 import com.example.autoreview.repository.ReviewRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.repository.VehicleBrandRepository;
