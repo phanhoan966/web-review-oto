@@ -3,6 +3,7 @@ import { onMounted, ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import client from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
+import { slugify } from '../utils/slugify'
 
 interface ReviewDetail {
   id: number
@@ -75,6 +76,9 @@ async function load() {
   errorMsg.value = ''
   try {
     const { data } = await client.get(`/reviews/${route.params.id}`)
+    if (data?.title) {
+      route.params.slug = slugify(data.title)
+    }
     review.value = data
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tìm thấy bài viết'

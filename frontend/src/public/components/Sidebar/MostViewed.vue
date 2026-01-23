@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { slugify } from '../../utils/slugify'
 
 export interface ViewedItem {
   id: number
@@ -18,7 +19,7 @@ defineProps<{ items: ViewedItem[] }>()
   <section class="widget surface">
     <header class="widget-header">Xem nhiều nhất</header>
     <div class="items">
-      <RouterLink v-for="item in items" :key="item.id" class="row" :to="`/reviews/${item.id}`">
+      <RouterLink v-for="item in items" :key="item.id" class="row" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
         <img class="thumb" :src="item.heroImageUrl" :alt="item.title" />
         <div class="info">
           <div class="title">{{ item.title }}</div>

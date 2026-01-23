@@ -68,6 +68,13 @@ function slugify(value: string) {
     .trim()
 }
 
+const previewBase = 'http://localhost:5173'
+
+const previewPath = computed(() => {
+  const slug = form.value.slug || 'tieu-de'
+  return `${previewBase}/post/${slug}/:id`
+})
+
 async function onHeroFile(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]

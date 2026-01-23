@@ -20,7 +20,8 @@ const router = createRouter({
     { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
     { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminDashboardView, meta: { requiresAuth: true } },
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },
-    { path: '/reviews/:id', name: 'review-detail', component: ReviewDetailView },
+    { path: '/post/:slug/:id', name: 'review-detail', component: ReviewDetailView },
+    { path: '/reviews/:id', name: 'review-detail-legacy', component: ReviewDetailView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } }
   ]
 })
