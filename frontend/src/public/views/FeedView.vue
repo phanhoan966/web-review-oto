@@ -5,7 +5,7 @@ import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
 import TopReviewers, { type ReviewerItem } from '../components/Sidebar/TopReviewers.vue'
 import FeaturedBrands, { type BrandItem } from '../components/Sidebar/FeaturedBrands.vue'
 import MostViewed, { type ViewedItem } from '../components/Sidebar/MostViewed.vue'
-import client from '../api/client'
+import client from '../../api/client'
 
 const reviews = ref<ReviewCardData[]>([])
 const reviewers = ref<ReviewerItem[]>([])

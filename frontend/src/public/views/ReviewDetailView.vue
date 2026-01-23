@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import client from '../api/client'
-import { useAuthStore } from '../stores/auth'
+import client from '../../api/client'
+import { useAuthStore } from '../../stores/auth'
 
 interface ReviewDetail {
   id: number

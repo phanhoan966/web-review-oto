@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import client from '../api/client'
+import client from '../../api/client'
 
 interface BrandOption {
   id: number

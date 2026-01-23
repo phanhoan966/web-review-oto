@@ -1,45 +1,31 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { RouterLink } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 
 const email = ref('')
-const password = ref('')
+const sent = ref(false)
 const auth = useAuthStore()
-const router = useRouter()
 
 async function submit() {
-  try {
-    await auth.login(email.value, password.value)
-    router.push({ name: 'feed' })
-  } catch (error) {
-  }
+  await auth.forgotPassword(email.value)
+  sent.value = true
 }
 </script>
 
 <template>
   <div class="auth-shell">
     <div class="form-card surface">
-      <h1>Đăng nhập</h1>
-      <p class="sub">Chào mừng trở lại, hãy đăng nhập để tiếp tục.</p>
+      <h1>Quên mật khẩu</h1>
+      <p class="sub">Nhập email để nhận liên kết đặt lại mật khẩu.</p>
       <form @submit.prevent="submit">
         <label>Email</label>
         <input v-model="email" type="email" required placeholder="you@example.com" />
-
-        <label>Mật khẩu</label>
-        <input v-model="password" type="password" required placeholder="••••••••" />
-
-        <div class="actions">
-          <RouterLink class="link" :to="{ name: 'forgot-password' }">Quên mật khẩu?</RouterLink>
-        </div>
-
-        <button type="submit" :disabled="auth.loading">{{ auth.loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}</button>
-        <p v-if="auth.error" class="error">{{ auth.error }}</p>
+        <button type="submit">Gửi liên kết</button>
+        <p v-if="sent" class="success">Chúng tôi đã gửi hướng dẫn khôi phục.</p>
       </form>
-
       <p class="foot">
-        Chưa có tài khoản?
-        <RouterLink :to="{ name: 'register' }">Đăng ký</RouterLink>
+        <RouterLink :to="{ name: 'login' }">Quay lại đăng nhập</RouterLink>
       </p>
     </div>
   </div>
@@ -101,28 +87,13 @@ button {
   box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
 }
 
-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.link {
-  color: #2563eb;
-  font-weight: 600;
-}
-
 .foot {
   margin-top: 12px;
   color: var(--muted);
 }
 
-.error {
-  color: #b91c1c;
+.success {
+  color: #16a34a;
   font-weight: 600;
 }
 </style>

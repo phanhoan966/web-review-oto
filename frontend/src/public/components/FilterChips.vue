@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { useUiStore } from '../stores/ui'
+import { useUiStore } from '../../stores/ui'
 
 const ui = useUiStore()
 const { filters } = storeToRefs(ui)

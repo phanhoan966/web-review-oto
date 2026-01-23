@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import client from '../api/client'
+import { useAuthStore } from '../../stores/auth'
+import client from '../../api/client'
 import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
 
 const auth = useAuthStore()
