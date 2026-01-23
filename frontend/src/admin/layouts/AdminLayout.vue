@@ -44,7 +44,7 @@ async function logout() {
             <div class="role">Quản trị</div>
           </div>
         </div>
-        <button class="ghost" @click="logout">Đăng xuất</button>
+        <button class="ghost logout-btn" @click="logout">⏻</button>
       </div>
     </aside>
 
@@ -232,9 +232,26 @@ main.content {
 }
 
 .layout.collapsed .brand,
-.layout.collapsed .sidebar-footer,
 .layout.collapsed .nav-item span:last-child {
   display: none;
+}
+
+.layout.collapsed .sidebar-footer .user {
+  display: none;
+}
+
+.layout.collapsed .sidebar-footer {
+  align-items: center;
+}
+
+.layout.collapsed .logout-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
 }
 
 .layout.collapsed .nav-item {
@@ -251,8 +268,13 @@ main.content {
     padding: 16px 10px;
   }
   .brand,
-  .sidebar-footer,
   .nav-item span:last-child {
+    display: none;
+  }
+  .sidebar-footer {
+    display: grid;
+  }
+  .sidebar-footer .user {
     display: none;
   }
   .nav-item {
