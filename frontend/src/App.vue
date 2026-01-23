@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useUiStore } from './stores/ui'
 
 const auth = useAuthStore()
 const ui = useUiStore()
 const router = useRouter()
+const route = useRoute()
 const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
 const menuOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 if (typeof window !== 'undefined') {
   ui.initTheme()
@@ -46,14 +48,13 @@ async function logout() {
 
 <template>
   <div class="app-shell">
-    <header class="site-header">
+    <header v-if="!isAdminRoute" class="site-header">
       <div class="container header-inner">
         <RouterLink class="brand" to="/">AutoReview</RouterLink>
         <nav class="nav">
           <RouterLink to="/">Trang chủ</RouterLink>
           <RouterLink v-if="auth.isAuthenticated" to="/reviews/new">Tạo bài</RouterLink>
           <RouterLink v-if="auth.isAuthenticated" to="/profile">Hồ sơ</RouterLink>
-          <RouterLink v-if="auth.isAuthenticated" to="/admin/dashboard">Dashboard</RouterLink>
           <RouterLink v-else to="/admin/login">Admin</RouterLink>
         </nav>
         <div class="actions">
