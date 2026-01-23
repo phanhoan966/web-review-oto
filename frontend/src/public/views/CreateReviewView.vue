@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import client from '../../api/client'
+import { buildAssetUrl } from '../utils/assetUrl'
 
 interface BrandOption {
   id: number
@@ -39,7 +40,7 @@ watch(
   () => form.value.heroImageUrl,
   (val) => {
     if (val && !val.startsWith('data:')) {
-      heroPreview.value = val
+      heroPreview.value = buildAssetUrl(val)
     }
     if (!val) {
       heroPreview.value = ''
@@ -68,7 +69,7 @@ function slugify(value: string) {
     .trim()
 }
 
-const previewBase = 'http://localhost:5173'
+const previewBase = window.location.origin
 
 const previewPath = computed(() => {
   const slug = form.value.slug || 'tieu-de'
@@ -88,7 +89,7 @@ async function onHeroFile(event: Event) {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     form.value.heroImageUrl = data.url
-    heroPreview.value = data.url
+    heroPreview.value = buildAssetUrl(data.url)
   } catch (error: any) {
     uploadError.value = error.response?.data?.message || 'Upload ảnh thất bại'
   } finally {

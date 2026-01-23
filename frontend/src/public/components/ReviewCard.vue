@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { slugify } from '../utils/slugify'
+import { buildAssetUrl } from '../utils/assetUrl'
 
 export interface ReviewCardData {
   id: number
@@ -29,6 +30,8 @@ const meta = computed(() => {
 
 const detailPath = computed(() => `/post/${slugify(props.review.title) || 'bai-viet'}/${props.review.id}`)
 
+const heroSrc = computed(() => buildAssetUrl(props.review.heroImageUrl))
+
 const relativeTime = computed(() => formatRelativeTime(props.review.publishedAt))
 
 function formatRelativeTime(value?: string) {
@@ -49,7 +52,7 @@ function formatRelativeTime(value?: string) {
   <RouterLink class="card-link" :to="detailPath">
     <article class="card surface">
       <div class="hero">
-        <img :src="review.heroImageUrl" :alt="review.title" />
+        <img :src="heroSrc" :alt="review.title" />
       </div>
       <div class="content">
         <h2>{{ review.title }}</h2>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, nextTick, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import client from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import { slugify } from '../utils/slugify'
+import { buildAssetUrl } from '../utils/assetUrl'
 
 interface ReviewDetail {
   id: number
@@ -38,6 +39,7 @@ const anonAvatar = 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b
 
 const route = useRoute()
 const review = ref<ReviewDetail | null>(null)
+const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
 const loading = ref(false)
 const errorMsg = ref('')
 
@@ -261,7 +263,7 @@ function formatDate(value?: string) {
           <div class="body" v-html="review.content" />
 
           <div class="hero" v-if="review.heroImageUrl">
-            <img :src="review.heroImageUrl" :alt="review.title" />
+            <img :src="heroSrc" :alt="review.title" />
           </div>
 
           <div class="meta-row">

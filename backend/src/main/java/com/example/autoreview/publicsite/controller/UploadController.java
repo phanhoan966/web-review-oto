@@ -25,7 +25,6 @@ public class UploadController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
         String path = uploadService.store(file);
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath().path(path).toUriString();
-        return ResponseEntity.ok(Map.of("url", url));
+        return ResponseEntity.ok(Map.of("url", path));
     }
 }

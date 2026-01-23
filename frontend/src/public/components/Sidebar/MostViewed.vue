@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { slugify } from '../../utils/slugify'
+import { buildAssetUrl } from '../../utils/assetUrl'
 
 export interface ViewedItem {
   id: number
@@ -12,15 +13,19 @@ export interface ViewedItem {
   rating?: number
 }
 
-defineProps<{ items: ViewedItem[] }>()
+const props = defineProps<{ items: ViewedItem[] }>()
+
+function heroSrc(item: ViewedItem) {
+  return buildAssetUrl(item.heroImageUrl)
+}
 </script>
 
 <template>
   <section class="widget surface">
     <header class="widget-header">Xem nhiều nhất</header>
     <div class="items">
-      <RouterLink v-for="item in items" :key="item.id" class="row" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
-        <img class="thumb" :src="item.heroImageUrl" :alt="item.title" />
+      <RouterLink v-for="item in props.items" :key="item.id" class="row" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
+        <img class="thumb" :src="heroSrc(item)" :alt="item.title" />
         <div class="info">
           <div class="title">{{ item.title }}</div>
           <div class="meta">
