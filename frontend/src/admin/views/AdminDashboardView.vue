@@ -1,37 +1,95 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import client from '../../api/client'
+
+interface ReviewItem {
+  id: number
+  title: string
+  authorName?: string
+  views?: number
+  likes?: number
+  status?: string
+  fuelType?: string
+  priceSegment?: string
+  publishedAt?: string
+}
 
 const auth = useAuthStore()
 const router = useRouter()
 
-const kpis = [
-  { label: 'Bài chờ duyệt', value: 12, trend: '+3 hôm nay' },
-  { label: 'Bài đã đăng', value: 248, trend: '+18 tuần này' },
-  { label: 'Người dùng mới', value: 54, trend: '+9 hôm nay' },
-  { label: 'Báo cáo vi phạm', value: 4, trend: 'Cần xử lý' }
-]
+const pending = ref<ReviewItem[]>([])
+const topReviews = ref<ReviewItem[]>([])
+const publishedTotal = ref(0)
+const pendingTotal = ref(0)
+const userCount = ref(0)
+const loading = ref(false)
+const errorMsg = ref('')
 
-const topReviews = [
-  { title: 'SUV điện 2025', author: 'Minh Pham', views: 18234, likes: 1220, status: 'APPROVED' },
-  { title: 'Sedan hạng D', author: 'Lan Anh', views: 14220, likes: 980, status: 'APPROVED' },
-  { title: 'Crossover đô thị', author: 'Huy Tran', views: 9510, likes: 610, status: 'PENDING' },
-  { title: 'Pickup địa hình', author: 'Khoa Le', views: 8733, likes: 540, status: 'APPROVED' }
-]
-
-const pending = [
-  { title: 'Hybrid tiết kiệm', author: 'Bui Tam', submitted: 'Hôm nay', tags: ['Hybrid', 'C'] },
-  { title: 'MPV gia đình', author: 'Nguyen Vy', submitted: 'Hôm qua', tags: ['Xăng', 'B'] },
-  { title: 'Sport coupe', author: 'Hoang Vu', submitted: '2 ngày trước', tags: ['Xăng', 'Hiệu năng'] }
-]
+const kpis = computed(() => [
+  { label: 'Bài chờ duyệt', value: pendingTotal.value, trend: 'Đang chờ' },
+  { label: 'Bài đã đăng', value: publishedTotal.value, trend: 'Hiện tại' },
+  { label: 'Người dùng', value: userCount.value, trend: '' },
+  { label: 'Top views', value: topReviews.value[0]?.views || 0, trend: '' }
+])
 
 const traffic = [72, 64, 88, 91, 76, 82, 95]
 
 const welcome = computed(() => auth.user?.username || 'Admin')
 
+onMounted(load)
+
+async function load() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    await Promise.all([fetchPending(), fetchTop(), fetchPublishedTotal(), fetchUsers()])
+  } catch (error: any) {
+    errorMsg.value = error.response?.data?.message || 'Không tải được dữ liệu admin'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function fetchPending() {
+  const { data } = await client.get('/reviews/pending', { params: { page: 0, size: 5 } })
+  pending.value = (data.reviews || []).map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    authorName: r.authorName,
+    fuelType: r.fuelType,
+    priceSegment: r.priceSegment,
+    status: r.status,
+    publishedAt: r.publishedAt
+  }))
+  pendingTotal.value = data.total || 0
+}
+
+async function fetchTop() {
+  const { data } = await client.get('/reviews/most-viewed', { params: { limit: 5 } })
+  topReviews.value = (data || []).map((r: any) => ({
+    id: r.id,
+    title: r.title,
+    authorName: r.authorName,
+    views: r.views,
+    likes: r.likes,
+    status: r.status
+  }))
+}
+
+async function fetchPublishedTotal() {
+  const { data } = await client.get('/reviews', { params: { page: 0, size: 1 } })
+  publishedTotal.value = data.total || 0
+}
+
+async function fetchUsers() {
+  const { data } = await client.get('/admin/users')
+  userCount.value = data?.length || 0
+}
+
 function goPending() {
-  router.push({ name: 'feed' })
+  router.push({ name: 'admin-posts' })
 }
 </script>
 
@@ -79,9 +137,9 @@ function goPending() {
               <p class="muted">{{ item.author }}</p>
             </div>
             <div class="stats">
-              <span>👁 {{ item.views }}</span>
-              <span>❤ {{ item.likes }}</span>
-              <span class="pill" :class="item.status.toLowerCase()">{{ item.status }}</span>
+              <span>👁 {{ item.views ?? 0 }}</span>
+              <span>❤ {{ item.likes ?? 0 }}</span>
+              <span class="pill" :class="(item.status || 'PENDING').toLowerCase()">{{ item.status || 'PENDING' }}</span>
             </div>
           </div>
         </div>
@@ -94,18 +152,15 @@ function goPending() {
         <button class="ghost" @click="goPending">Xem tất cả</button>
       </div>
       <div class="list">
-        <div v-for="item in pending" :key="item.title" class="row pending">
+        <div v-for="item in pending" :key="item.id" class="row pending">
           <div>
             <p class="title">{{ item.title }}</p>
-            <p class="muted">{{ item.author }} · {{ item.submitted }}</p>
+            <p class="muted">{{ item.authorName || 'Ẩn danh' }} · {{ item.status || 'PENDING' }}</p>
             <div class="tags">
-              <span v-for="t in item.tags" :key="t" class="tag">{{ t }}</span>
+              <span v-for="t in [item.fuelType, item.priceSegment].filter(Boolean)" :key="t" class="tag">{{ t }}</span>
             </div>
           </div>
-          <div class="actions">
-            <button class="approve">Duyệt</button>
-            <button class="reject">Từ chối</button>
-          </div>
+          <div class="pill pending">Chờ duyệt</div>
         </div>
       </div>
     </section>

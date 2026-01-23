@@ -1,10 +1,37 @@
 <script setup lang="ts">
-const users = [
-  { name: 'Minh Pham', email: 'minh@example.com', role: 'Editor', status: 'Active', posts: 42 },
-  { name: 'Lan Anh', email: 'lan@example.com', role: 'Author', status: 'Active', posts: 18 },
-  { name: 'Huy Tran', email: 'huy@example.com', role: 'Reviewer', status: 'Pending', posts: 6 },
-  { name: 'Khoa Le', email: 'khoa@example.com', role: 'Admin', status: 'Active', posts: 88 }
-]
+import { onMounted, ref } from 'vue'
+import client from '../../api/client'
+
+interface AdminUser {
+  id: number
+  username: string
+  email: string
+  roles: string[]
+  followers?: number
+  rating?: number
+  reviewCount?: number
+  createdAt?: string
+}
+
+const users = ref<AdminUser[]>([])
+const loading = ref(false)
+const errorMsg = ref('')
+
+onMounted(load)
+
+async function load() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const { data } = await client.get('/admin/users')
+    users.value = data || []
+  } catch (error: any) {
+    errorMsg.value = error.response?.data?.message || 'Không tải được danh sách user'
+    users.value = []
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -13,34 +40,34 @@ const users = [
       <div>
         <p class="eyebrow">Người dùng</p>
         <h2>Quản lý user</h2>
-        <p class="muted">Phân quyền, khóa tài khoản, theo dõi hoạt động.</p>
+        <p class="muted">Phân quyền và theo dõi hoạt động.</p>
       </div>
       <div class="actions">
-        <button class="ghost">Mời user</button>
-        <button class="primary">Tạo admin</button>
+        <button class="ghost" @click="load" :disabled="loading">Làm mới</button>
       </div>
     </div>
 
-    <div class="table">
+    <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+    <p v-else-if="loading" class="muted">Đang tải...</p>
+
+    <div v-else class="table">
       <div class="row head">
         <div>Họ tên</div>
         <div>Email</div>
-        <div>Role</div>
-        <div>Trạng thái</div>
+        <div>Roles</div>
+        <div>Theo dõi</div>
         <div>Bài viết</div>
-        <div></div>
+        <div>Tham gia</div>
       </div>
-      <div v-for="u in users" :key="u.email" class="row">
-        <div class="name">{{ u.name }}</div>
+      <div v-for="u in users" :key="u.id" class="row">
+        <div class="name">{{ u.username }}</div>
         <div class="muted">{{ u.email }}</div>
-        <div><span class="pill">{{ u.role }}</span></div>
-        <div><span class="status" :class="u.status.toLowerCase()">{{ u.status }}</span></div>
-        <div>{{ u.posts }}</div>
-        <div class="row-actions">
-          <button class="ghost">Sửa</button>
-          <button class="danger">Khóa</button>
-        </div>
+        <div><span class="pill">{{ (u.roles || []).join(', ') }}</span></div>
+        <div>{{ u.followers ?? 0 }}</div>
+        <div>{{ u.reviewCount ?? 0 }}</div>
+        <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
       </div>
+      <div v-if="!users.length" class="row empty">Không có user</div>
     </div>
   </div>
 </template>
@@ -80,6 +107,11 @@ h2 {
   color: var(--muted);
 }
 
+.error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 .table {
   display: grid;
   gap: 10px;
@@ -87,7 +119,7 @@ h2 {
 
 .row {
   display: grid;
-  grid-template-columns: 2fr 2fr 1fr 1fr 1fr auto;
+  grid-template-columns: 2fr 2fr 1.5fr 1fr 1fr 1.2fr;
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
@@ -98,6 +130,12 @@ h2 {
   font-weight: 700;
   color: #111827;
   background: #eef2ff;
+}
+
+.row.empty {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  color: var(--muted);
 }
 
 .name {
@@ -113,66 +151,30 @@ h2 {
   font-size: 13px;
 }
 
-.status {
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 13px;
-  color: white;
-}
-
-.status.active {
-  background: #22c55e;
-}
-
-.status.pending {
-  background: #f59e0b;
-}
-
-.status.blocked {
-  background: #ef4444;
-}
-
-.actions,
-.row-actions {
+.actions {
   display: flex;
   gap: 8px;
 }
 
-.primary,
-.ghost,
-.danger {
+.ghost {
   border-radius: 12px;
   font-weight: 700;
   border: none;
   cursor: pointer;
   padding: 10px 12px;
-}
-
-.primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-}
-
-.ghost {
   background: #f1f5f9;
   color: #111827;
   border: 1px solid #e5e7eb;
 }
 
-.danger {
-  background: #fee2e2;
-  color: #b91c1c;
+.ghost:disabled {
+  opacity: 0.6;
 }
 
 @media (max-width: 960px) {
   .row,
   .row.head {
-    grid-template-columns: 1.5fr 1.5fr 1fr 1fr 1fr;
-  }
-  .row-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
+    grid-template-columns: 1.6fr 1.8fr 1.4fr 1fr 1fr;
   }
 }
 </style>

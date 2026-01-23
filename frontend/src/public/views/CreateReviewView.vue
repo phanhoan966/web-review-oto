@@ -88,7 +88,7 @@ async function onHeroFile(event: Event) {
     const { data } = await client.post<{ path?: string; url: string }>('/uploads', payload, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
-    const storedPath = data.url || data.path
+    const storedPath = data.path || data.url
     form.value.heroImageUrl = storedPath
     heroPreview.value = buildAssetUrl(storedPath)
   } catch (error: any) {
