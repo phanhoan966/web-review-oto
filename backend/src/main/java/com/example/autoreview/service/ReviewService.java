@@ -1,5 +1,7 @@
 package com.example.autoreview.publicsite.service;
 
+import com.example.autoreview.entity.Review;
+import com.example.autoreview.entity.User;
 import com.example.autoreview.publicsite.dto.response.CommentDto;
 import com.example.autoreview.publicsite.dto.request.CreateCommentRequest;
 import com.example.autoreview.publicsite.dto.request.CreateReviewRequest;
