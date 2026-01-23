@@ -30,6 +30,7 @@ public class Review {
     @Column(length = 2048)
     private String content;
 
+    @Column(columnDefinition = "TEXT")
     private String heroImageUrl;
 
     private String vehicleModel;

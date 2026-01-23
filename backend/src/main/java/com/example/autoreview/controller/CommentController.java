@@ -2,6 +2,7 @@ package com.example.autoreview.controller;
 
 import com.example.autoreview.security.CurrentUserResolver;
 import com.example.autoreview.service.ReviewService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,7 +23,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Object principal, javax.servlet.http.HttpServletRequest request) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
         String email = currentUserResolver.resolveEmail(principal, request);
         reviewService.deleteComment(id, email);
         return ResponseEntity.noContent().build();
