@@ -141,13 +141,18 @@ public class ReviewService {
 
     @Transactional
     public void approve(Long id, String approverEmail, boolean approve) {
+        setStatus(id, approverEmail, approve ? ReviewStatus.APPROVED : ReviewStatus.REJECTED);
+    }
+
+    @Transactional
+    public void setStatus(Long id, String approverEmail, ReviewStatus status) {
         Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         User approver = userRepository.findByEmail(approverEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         if (!hasAdminRole(approver)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
         }
-        review.setStatus(approve ? ReviewStatus.APPROVED : ReviewStatus.REJECTED);
-        review.setPublishedAt(approve ? Instant.now() : null);
+        review.setStatus(status);
+        review.setPublishedAt(status == ReviewStatus.APPROVED ? Instant.now() : null);
         review.setUpdatedAt(Instant.now());
         reviewRepository.save(review);
     }
