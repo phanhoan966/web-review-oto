@@ -2,11 +2,13 @@
 import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { buildAssetUrl } from '../../public/utils/assetUrl'
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
+const profileOpen = ref(false)
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊' },
@@ -15,12 +17,29 @@ const nav = [
 ]
 
 const activeName = computed(() => route.name)
+const avatarSrc = computed(() => (auth.user?.avatarUrl ? buildAssetUrl(auth.user.avatarUrl) : ''))
+const avatarInitial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
+const displayName = computed(() => auth.user?.username || 'Admin')
 
 function toggleSidebar() {
   collapsed.value = !collapsed.value
 }
 
-async function logout() {
+function toggleProfileMenu() {
+  profileOpen.value = !profileOpen.value
+}
+
+function closeProfileMenu() {
+  profileOpen.value = false
+}
+
+function goProfile() {
+  profileOpen.value = false
+  router.push({ name: 'profile' })
+}
+
+async function logoutAndClose() {
+  profileOpen.value = false
   await auth.logout()
   router.push({ name: 'admin-login' })
 }
@@ -54,9 +73,26 @@ async function logout() {
           <button class="icon" aria-label="Toggle sidebar" @click="toggleSidebar">☰</button>
           <span>Khu vực quản trị</span>
         </div>
-        <div class="actions">
-          <button class="ghost" @click="router.push({ name: 'review-create' })">Tạo bài mới</button>
-          <button class="primary" @click="router.push({ name: 'feed' })">Xem Public</button>
+        <div class="profile-area">
+          <button class="avatar-btn" aria-label="Tài khoản" @click="toggleProfileMenu">
+            <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar" />
+            <span v-else>{{ avatarInitial }}</span>
+          </button>
+          <div v-if="profileOpen" class="dropdown" @click.stop>
+            <div class="user-row">
+              <div class="menu-avatar">
+                <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar" />
+                <span v-else>{{ avatarInitial }}</span>
+              </div>
+              <div>
+                <p class="name">{{ displayName }}</p>
+                <p class="muted">{{ auth.user?.email || 'Quản trị' }}</p>
+              </div>
+            </div>
+            <button class="menu-item" @click="goProfile">Hồ sơ</button>
+            <button class="menu-item" @click="logoutAndClose">Đăng xuất</button>
+          </div>
+          <div v-if="profileOpen" class="backdrop" @click="closeProfileMenu"></div>
         </div>
       </header>
       <main class="content">
@@ -191,6 +227,100 @@ nav {
   display: grid;
   place-items: center;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.profile-area {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  background: white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.avatar-btn img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-btn span {
+  font-weight: 800;
+  color: #0b1437;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
+  z-index: 10;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+}
+
+.menu-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #eef2ff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-weight: 800;
+  color: #312e81;
+}
+
+.menu-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.menu-item:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
 }
 
 .actions {
