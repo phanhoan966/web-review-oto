@@ -2,8 +2,8 @@ package com.example.autoreview.repository;
 
 import java.util.Optional;
 
-import com.example.autoreview.entity.Review;
-import com.example.autoreview.entity.ReviewStatus;
+import com.example.autoreview.domain.Review;
+import com.example.autoreview.domain.ReviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,10 +1,10 @@
 package com.example.autoreview.mapper;
 
-import com.example.autoreview.dto.BrandDto;
-import com.example.autoreview.dto.CommentDto;
-import com.example.autoreview.dto.ReviewDto;
-import com.example.autoreview.dto.ReviewerDto;
-import com.example.autoreview.dto.UserProfileDto;
+import com.example.autoreview.publicsite.dto.response.BrandDto;
+import com.example.autoreview.publicsite.dto.response.CommentDto;
+import com.example.autoreview.publicsite.dto.response.ReviewDto;
+import com.example.autoreview.publicsite.dto.response.ReviewerDto;
+import com.example.autoreview.publicsite.dto.response.UserProfileDto;
 import com.example.autoreview.domain.Comment;
 import com.example.autoreview.domain.Review;
 import com.example.autoreview.domain.User;
