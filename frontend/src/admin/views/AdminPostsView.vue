@@ -33,24 +33,24 @@ async function load() {
 }
 
 async function loadPending() {
-  const { data } = await client.get('/reviews/pending', { params: { page: 0, size: 20 } })
+  const { data } = await client.get('/admin/reviews/pending', { params: { page: 0, size: 20 } })
   pending.value = data.reviews || []
 }
 
 async function loadApproved() {
-  const { data } = await client.get('/reviews', { params: { page: 0, size: 20 } })
+  const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 20, status: 'APPROVED' } })
   approved.value = data.reviews || []
 }
 
 async function loadRejected() {
-  const { data } = await client.get('/reviews', { params: { page: 0, size: 20, status: 'REJECTED' } })
+  const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 20, status: 'REJECTED' } })
   rejected.value = data.reviews || []
 }
 
 async function approve(id: number) {
   actionLoading.value = id
   try {
-    await client.post(`/reviews/${id}/approve`)
+    await client.post(`/admin/reviews/${id}/approve`)
     await loadPending()
     await loadApproved()
     await loadRejected()
@@ -62,7 +62,7 @@ async function approve(id: number) {
 async function reject(id: number) {
   actionLoading.value = id
   try {
-    await client.post(`/reviews/${id}/reject`)
+    await client.post(`/admin/reviews/${id}/reject`)
     await loadPending()
     await loadRejected()
   } finally {

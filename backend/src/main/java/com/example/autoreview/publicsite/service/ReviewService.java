@@ -60,6 +60,22 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public ReviewListResponse listAll(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Review> reviews = reviewRepository.findAll(pageable);
+        List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        return new ReviewListResponse(dtos, reviews.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
+    public ReviewListResponse listByStatus(ReviewStatus status, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Review> reviews = reviewRepository.findByStatus(status, pageable);
+        List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        return new ReviewListResponse(dtos, reviews.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
     public List<ReviewDto> mostViewed(int limit) {
         PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "views"));
         return reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();

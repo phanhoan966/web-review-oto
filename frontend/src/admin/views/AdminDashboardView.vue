@@ -53,7 +53,7 @@ async function load() {
 }
 
 async function fetchPending() {
-  const { data } = await client.get('/reviews/pending', { params: { page: 0, size: 5 } })
+  const { data } = await client.get('/admin/reviews/pending', { params: { page: 0, size: 5 } })
   pending.value = (data.reviews || []).map((r: any) => ({
     id: r.id,
     title: r.title,
@@ -67,7 +67,7 @@ async function fetchPending() {
 }
 
 async function fetchTop() {
-  const { data } = await client.get('/reviews/most-viewed', { params: { limit: 5 } })
+  const { data } = await client.get('/admin/reviews/most-viewed', { params: { limit: 5 } })
   topReviews.value = (data || []).map((r: any) => ({
     id: r.id,
     title: r.title,
@@ -79,7 +79,7 @@ async function fetchTop() {
 }
 
 async function fetchPublishedTotal() {
-  const { data } = await client.get('/reviews', { params: { page: 0, size: 1 } })
+  const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 1, status: 'APPROVED' } })
   publishedTotal.value = data.total || 0
 }
 
