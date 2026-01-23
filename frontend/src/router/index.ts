@@ -8,6 +8,9 @@ import ProfileView from '../public/views/ProfileView.vue'
 import ReviewDetailView from '../public/views/ReviewDetailView.vue'
 import AdminLoginView from '../admin/views/AdminLoginView.vue'
 import AdminDashboardView from '../admin/views/AdminDashboardView.vue'
+import AdminLayout from '../admin/layouts/AdminLayout.vue'
+import AdminUsersView from '../admin/views/AdminUsersView.vue'
+import AdminPostsView from '../admin/views/AdminPostsView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -18,7 +21,17 @@ const router = createRouter({
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView },
     { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
-    { path: '/admin/dashboard', name: 'admin-dashboard', component: AdminDashboardView, meta: { requiresAuth: true } },
+    {
+      path: '/admin',
+      component: AdminLayout,
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', redirect: { name: 'admin-dashboard' } },
+        { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboardView },
+        { path: 'users', name: 'admin-users', component: AdminUsersView },
+        { path: 'posts', name: 'admin-posts', component: AdminPostsView }
+      ]
+    },
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },
     { path: '/post/:slug/:id', name: 'review-detail', component: ReviewDetailView },
     { path: '/reviews/:id', name: 'review-detail-legacy', component: ReviewDetailView },
@@ -31,6 +44,8 @@ router.beforeEach(async (to, _from, next) => {
   if (!auth.hydrated) {
     await auth.hydrate()
   }
+  const isAdminRoute = to.path.startsWith('/admin')
+
   if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password') && auth.isAuthenticated) {
     next({ name: 'feed' })
     return
@@ -40,7 +55,7 @@ router.beforeEach(async (to, _from, next) => {
     return
   }
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    next({ name: 'login' })
+    next({ name: isAdminRoute ? 'admin-login' : 'login' })
     return
   }
   next()
