@@ -1,4 +1,4 @@
-package com.example.autoreview.publicsite.dto.response;
+package com.example.autoreview.dto;
 
 import java.time.Instant;
 

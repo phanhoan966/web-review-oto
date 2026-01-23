@@ -1,4 +1,4 @@
-package com.example.autoreview.domain;
+package com.example.autoreview.entity;
 
 public enum ReviewStatus {
     PENDING,
