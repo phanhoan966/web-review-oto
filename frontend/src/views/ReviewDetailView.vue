@@ -53,6 +53,7 @@ const pageSize = 10
 const hasMore = ref(true)
 
 const commentsSection = ref<HTMLElement | null>(null)
+const commentList = ref<HTMLElement | null>(null)
 const highlightedIds = ref<Set<number>>(new Set())
 const slideIds = ref<Set<number>>(new Set())
 let highlightTimer: number | undefined
@@ -106,7 +107,12 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
     }
     if (autoScroll) {
       await nextTick()
-      commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const target = commentList.value?.lastElementChild as HTMLElement | null
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      } else {
+        commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
     if (highlightNew) {
       markHighlighted(data)
@@ -298,7 +304,7 @@ function formatDate(value?: string) {
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
           <div v-else-if="commentsVisible">
             <div v-if="!comments.length" class="status">Chưa có bình luận</div>
-            <div v-else class="comment-list">
+            <div v-else class="comment-list" ref="commentList">
               <div
                 v-for="comment in comments"
                 :key="comment.id"
