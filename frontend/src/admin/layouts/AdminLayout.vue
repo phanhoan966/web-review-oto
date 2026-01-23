@@ -55,16 +55,6 @@ async function logoutAndClose() {
           <span>{{ item.label }}</span>
         </RouterLink>
       </nav>
-      <div class="sidebar-footer">
-        <div class="user">
-          <div class="avatar">{{ (auth.user?.username || 'A').charAt(0).toUpperCase() }}</div>
-          <div class="meta">
-            <div class="name">{{ auth.user?.username || 'Admin' }}</div>
-            <div class="role">Quản trị</div>
-          </div>
-        </div>
-        <button class="ghost logout-btn" @click="logout">⏻</button>
-      </div>
     </aside>
 
     <div class="main">
@@ -162,37 +152,6 @@ nav {
   justify-content: center;
 }
 
-.sidebar-footer {
-  display: grid;
-  gap: 12px;
-}
-
-.user {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  color: white;
-}
-
-.meta .name {
-  font-weight: 700;
-}
-
-.meta .role {
-  color: #9ca3af;
-  font-size: 13px;
-}
 
 .main {
   display: grid;
@@ -364,24 +323,6 @@ main.content {
 .layout.collapsed .brand,
 .layout.collapsed .nav-item span:last-child {
   display: none;
-}
-
-.layout.collapsed .sidebar-footer .user {
-  display: none;
-}
-
-.layout.collapsed .sidebar-footer {
-  align-items: center;
-}
-
-.layout.collapsed .logout-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
 }
 
 .layout.collapsed .nav-item {
