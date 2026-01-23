@@ -12,6 +12,7 @@ interface ReviewRow {
 }
 
 const pending = ref<ReviewRow[]>([])
+const approved = ref<ReviewRow[]>([])
 const rejected = ref<ReviewRow[]>([])
 const loading = ref(false)
 const actionLoading = ref<number | null>(null)
@@ -23,7 +24,7 @@ async function load() {
   loading.value = true
   errorMsg.value = ''
   try {
-    await Promise.all([loadPending(), loadRejected()])
+    await Promise.all([loadPending(), loadApproved(), loadRejected()])
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tải được bài viết'
   } finally {
@@ -36,6 +37,11 @@ async function loadPending() {
   pending.value = data.reviews || []
 }
 
+async function loadApproved() {
+  const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 20, status: 'APPROVED' } })
+  approved.value = data.reviews || []
+}
+
 async function loadRejected() {
   const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 20, status: 'REJECTED' } })
   rejected.value = data.reviews || []
@@ -46,6 +52,7 @@ async function approve(id: number) {
   try {
     await client.post(`/admin/reviews/${id}/approve`)
     await loadPending()
+    await loadApproved()
     await loadRejected()
   } finally {
     actionLoading.value = null
@@ -57,6 +64,18 @@ async function reject(id: number) {
   try {
     await client.post(`/admin/reviews/${id}/reject`)
     await loadPending()
+    await loadApproved()
+    await loadRejected()
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+async function hidePost(id: number) {
+  actionLoading.value = id
+  try {
+    await client.post(`/admin/reviews/${id}/reject`)
+    await loadApproved()
     await loadRejected()
   } finally {
     actionLoading.value = null
@@ -102,6 +121,28 @@ async function reject(id: number) {
           </div>
         </div>
         <div v-if="!pending.length" class="row empty">Không có bài chờ duyệt</div>
+      </div>
+
+      <div class="table">
+        <div class="row head">
+          <div>Tiêu đề</div>
+          <div>Tác giả</div>
+          <div>Trạng thái</div>
+          <div>Lượt xem</div>
+          <div>Xuất bản</div>
+          <div></div>
+        </div>
+        <div v-for="p in approved" :key="p.id" class="row">
+          <div class="title">{{ p.title }}</div>
+          <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
+          <div><span class="status approved">{{ p.status || 'APPROVED' }}</span></div>
+          <div>{{ p.views ?? 0 }}</div>
+          <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
+          <div class="row-actions">
+            <button class="ghost" :disabled="actionLoading === p.id" @click="hidePost(p.id)">Ẩn</button>
+          </div>
+        </div>
+        <div v-if="!approved.length" class="row empty">Không có bài đã duyệt</div>
       </div>
 
       <div class="table">
