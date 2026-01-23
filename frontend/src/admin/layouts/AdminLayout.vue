@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { buildAssetUrl } from '../../public/utils/assetUrl'
@@ -9,6 +9,8 @@ const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
 const profileOpen = ref(false)
+const sidebarOpen = ref(false)
+const isMobileView = ref(false)
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊' },
@@ -21,8 +23,32 @@ const avatarSrc = computed(() => (auth.user?.avatarUrl ? buildAssetUrl(auth.user
 const avatarInitial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
 const displayName = computed(() => auth.user?.username || 'Admin')
 
+function updateIsMobile() {
+  isMobileView.value = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches
+  if (!isMobileView.value) {
+    sidebarOpen.value = false
+  }
+}
+
+onMounted(() => {
+  updateIsMobile()
+  window.addEventListener('resize', updateIsMobile)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateIsMobile)
+})
+
 function toggleSidebar() {
+  if (isMobileView.value) {
+    sidebarOpen.value = !sidebarOpen.value
+    return
+  }
   collapsed.value = !collapsed.value
+}
+
+function closeSidebar() {
+  sidebarOpen.value = false
 }
 
 function toggleProfileMenu() {
@@ -46,7 +72,7 @@ async function logoutAndClose() {
 </script>
 
 <template>
-  <div class="layout" :class="{ collapsed }">
+  <div class="layout" :class="{ collapsed, 'sidebar-open': sidebarOpen }">
     <aside class="sidebar">
       <div class="brand">AutoReview Admin</div>
       <nav>
@@ -56,6 +82,7 @@ async function logoutAndClose() {
         </RouterLink>
       </nav>
     </aside>
+    <div v-if="isMobileView && sidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
 
     <div class="main">
       <header class="topbar">
@@ -115,7 +142,7 @@ async function logoutAndClose() {
   color: #e5e7eb;
   padding: 20px 16px;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   gap: 18px;
   box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
 }
@@ -346,14 +373,38 @@ main.content {
 
 @media (max-width: 720px) {
   .layout {
-    grid-template-columns: 64px 1fr;
+    grid-template-columns: 1fr;
   }
   .sidebar {
-    padding: 14px 8px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 240px;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+    padding: 14px 12px;
+  }
+  .layout.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.28);
+    z-index: 15;
+  }
+  .main {
+    grid-column: 1 / -1;
   }
   .topbar {
     padding: 12px 14px;
     gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    background: rgba(255, 255, 255, 0.92);
   }
   .breadcrumbs span {
     display: none;
