@@ -344,6 +344,40 @@ main.content {
   padding: 22px 22px 32px;
 }
 
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 64px 1fr;
+  }
+  .sidebar {
+    padding: 14px 8px;
+  }
+  .topbar {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .breadcrumbs span {
+    display: none;
+  }
+  .profile-area {
+    gap: 10px;
+  }
+  .quick-actions {
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .avatar-btn {
+    width: 42px;
+    height: 42px;
+  }
+  main.content {
+    padding: 16px;
+  }
+}
+
 .primary,
 .ghost {
   border-radius: 12px;

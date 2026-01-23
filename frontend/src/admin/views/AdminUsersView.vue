@@ -177,4 +177,15 @@ h2 {
     grid-template-columns: 1.6fr 1.8fr 1.4fr 1fr 1fr;
   }
 }
+
+@media (max-width: 720px) {
+  .row.head {
+    display: none;
+  }
+  .row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
 </style>

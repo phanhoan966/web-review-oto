@@ -302,4 +302,19 @@ h2 {
     justify-content: flex-start;
   }
 }
+
+@media (max-width: 720px) {
+  .row.head {
+    display: none;
+  }
+  .row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
 </style>
