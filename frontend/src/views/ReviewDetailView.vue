@@ -54,7 +54,9 @@ const hasMore = ref(true)
 
 const commentsSection = ref<HTMLElement | null>(null)
 const highlightedIds = ref<Set<number>>(new Set())
+const slideIds = ref<Set<number>>(new Set())
 let highlightTimer: number | undefined
+let slideTimer: number | undefined
 
 const auth = useAuthStore()
 const replyMode = ref<'auth' | 'anon'>('auth')
@@ -109,6 +111,7 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
     if (highlightNew) {
       markHighlighted(data)
     }
+    markSlide(data)
   } catch (error: any) {
     commentsError.value = error.response?.data?.message || 'Không tải được bình luận'
     if (reset) {
@@ -184,6 +187,7 @@ async function submitComment() {
     newComment.value = ''
     commentsVisible.value = true
     markHighlighted([data])
+    markSlide([data])
     if (review.value) {
       review.value.commentsCount = (review.value.commentsCount ?? 0) + 1
     }
@@ -202,6 +206,16 @@ function markHighlighted(items: CommentDetail[]) {
   highlightTimer = window.setTimeout(() => {
     highlightedIds.value = new Set()
   }, 3000)
+}
+
+function markSlide(items: CommentDetail[]) {
+  slideIds.value = new Set(items.map((c) => c.id))
+  if (slideTimer) {
+    clearTimeout(slideTimer)
+  }
+  slideTimer = window.setTimeout(() => {
+    slideIds.value = new Set()
+  }, 600)
 }
 
 function formatDate(value?: string) {
@@ -289,7 +303,7 @@ function formatDate(value?: string) {
                 v-for="comment in comments"
                 :key="comment.id"
                 class="comment-item"
-                :class="{ flash: highlightedIds.has(comment.id) }"
+                :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
               >
                 <div class="comment-avatar">
                   <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
@@ -584,6 +598,10 @@ function formatDate(value?: string) {
   animation: flash 3s ease;
 }
 
+.comment-item.slide-in {
+  animation: slideUp 0.5s ease;
+}
+
 @keyframes flash {
   0% {
     background: var(--highlight);
@@ -593,6 +611,17 @@ function formatDate(value?: string) {
   }
   100% {
     background: var(--chip-bg);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
