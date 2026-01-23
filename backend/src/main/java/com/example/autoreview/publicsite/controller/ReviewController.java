@@ -1,5 +1,4 @@
 package com.example.autoreview.publicsite.controller;
-package com.example.autoreview.publicsite.controller;
 
 import com.example.autoreview.publicsite.dto.response.CommentDto;
 import com.example.autoreview.publicsite.dto.request.CreateCommentRequest;
