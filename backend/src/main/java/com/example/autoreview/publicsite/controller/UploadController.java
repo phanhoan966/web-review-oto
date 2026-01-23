@@ -19,7 +19,7 @@ public class UploadController {
     private final UploadService uploadService;
     private final String fileBaseUrl;
 
-    public UploadController(UploadService uploadService, @Value("${app.file-base-url:}") String fileBaseUrl) {
+    public UploadController(UploadService uploadService, @Value("${app.file-base-url:http://localhost:8080}") String fileBaseUrl) {
         this.uploadService = uploadService;
         this.fileBaseUrl = fileBaseUrl;
     }
