@@ -80,7 +80,7 @@ async function logoutAndClose() {
 </script>
 
 <template>
-  <div class="layout admin-light" :class="{ collapsed, 'sidebar-open': sidebarOpen }">
+  <div class="layout" :class="[ui.theme === 'dark' ? 'admin-dark' : 'admin-light', { collapsed, 'sidebar-open': sidebarOpen }]">
     <aside class="sidebar">
       <div class="sidebar-head">
         <div class="avatar-wrap">
@@ -174,20 +174,38 @@ async function logoutAndClose() {
   --pill-border: #e5e7eb;
 }
 
+:global(.admin-dark) {
+  --bg: #0b1220;
+  --surface: #0f172a;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: #1f2937;
+  --chip-bg: #111827;
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  --primary: #60a5fa;
+  --accent: #38bdf8;
+  --pill-border: #1f2937;
+}
+
 .sidebar {
-  background: linear-gradient(180deg, #eaf1ff 0%, #f6f8ff 100%);
+  background: linear-gradient(180deg, rgba(226, 234, 255, 0.9) 0%, rgba(246, 248, 255, 0.95) 100%);
   color: var(--text);
   padding: 18px 16px 24px;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 16px;
-  border-right: 1px solid #dfe8f5;
+  border-right: 1px solid var(--border);
   position: sticky;
   top: 0;
   min-height: 100vh;
   max-height: 100vh;
   overflow-y: auto;
   z-index: 2;
+}
+
+.admin-dark .sidebar {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 28, 0.98));
+  border-right: 1px solid var(--border);
 }
 
 .sidebar-head {
