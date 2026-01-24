@@ -50,8 +50,8 @@ function filterReviews(list: ReviewRow[], target: { title: string; author: strin
   return list.filter((p) => {
     const matchesTitle = !title || (p.title || '').toLowerCase().includes(title)
     const matchesAuthor = !author || (p.authorName || '').toLowerCase().includes(author)
-    const dateText = p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''
-    const matchesDate = !date || dateText.includes(date)
+    const dateText = p.publishedAt ? new Date(p.publishedAt).toISOString().slice(0, 10) : ''
+    const matchesDate = !date || dateText === date
     const matchesVehicle = !vehicle || (p.vehicleModel || '').toLowerCase().includes(vehicle)
     return matchesTitle && matchesAuthor && matchesDate && matchesVehicle
   })
@@ -301,7 +301,7 @@ function changeRejectedSize(size: number) {
         </label>
         <label>
           <span>Ngày viết</span>
-          <input v-model="pendingFilters.date" type="text" placeholder="dd/mm/yyyy" />
+          <input v-model="pendingFilters.date" type="date" />
         </label>
         <label>
           <span>Loại xe</span>
@@ -352,7 +352,7 @@ function changeRejectedSize(size: number) {
         </label>
         <label>
           <span>Ngày viết</span>
-          <input v-model="approvedFilters.date" type="text" placeholder="dd/mm/yyyy" />
+          <input v-model="approvedFilters.date" type="date" />
         </label>
         <label>
           <span>Loại xe</span>
@@ -402,7 +402,7 @@ function changeRejectedSize(size: number) {
         </label>
         <label>
           <span>Ngày viết</span>
-          <input v-model="rejectedFilters.date" type="text" placeholder="dd/mm/yyyy" />
+          <input v-model="rejectedFilters.date" type="date" />
         </label>
         <label>
           <span>Loại xe</span>
