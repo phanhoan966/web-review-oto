@@ -364,9 +364,7 @@ function formatDate(value?: string) {
                       </div>
                       <div class="comment-content">
                         <div class="comment-meta">
-                          <RouterLink class="comment-name" :to="`/user/${encodeURIComponent(comment.authorName)}`">
-                            {{ comment.authorName }}
-                          </RouterLink>
+                          <strong class="comment-name">{{ comment.authorName }}</strong>
                           <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                         </div>
                         <p>{{ comment.content }}</p>
@@ -375,7 +373,6 @@ function formatDate(value?: string) {
                   </template>
                   <ReviewerPopoverCard
                     :name="comment.authorName"
-                    :username="comment.authorName"
                     :avatar-url="comment.authorAvatar"
                   />
                 </HoverPopover>

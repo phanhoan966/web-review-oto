@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = defineProps<{
   name: string
   username?: string
@@ -8,6 +10,10 @@ const props = defineProps<{
   reviewCount?: number
   rating?: number
 }>()
+
+const showStats = computed(
+  () => props.followers !== undefined || props.reviewCount !== undefined || props.rating !== undefined
+)
 </script>
 
 <template>
@@ -16,14 +22,14 @@ const props = defineProps<{
       <img class="avatar" :src="props.avatarUrl || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
       <div>
         <div class="pop-name">{{ props.name }}</div>
-        <div class="pop-handle">@{{ props.username || props.name }}</div>
+        <div v-if="props.username" class="pop-handle">@{{ props.username }}</div>
       </div>
     </div>
     <p class="pop-bio">{{ props.bio || 'Chưa có giới thiệu.' }}</p>
-    <div class="pop-stats">
-      <div><span class="value">{{ props.followers ?? 0 }}</span><span class="label">Followers</span></div>
-      <div><span class="value">{{ props.reviewCount ?? 0 }}</span><span class="label">Bài viết</span></div>
-      <div><span class="value">{{ props.rating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
+    <div v-if="showStats" class="pop-stats">
+      <div v-if="props.followers !== undefined"><span class="value">{{ props.followers }}</span><span class="label">Followers</span></div>
+      <div v-if="props.reviewCount !== undefined"><span class="value">{{ props.reviewCount }}</span><span class="label">Bài viết</span></div>
+      <div v-if="props.rating !== undefined"><span class="value">{{ props.rating.toFixed(1) }}</span><span class="label">Rating</span></div>
     </div>
   </div>
 </template>
