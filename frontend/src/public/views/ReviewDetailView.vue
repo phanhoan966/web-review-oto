@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, RouterLink } from 'vue-router'
 import client from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import { slugify } from '../utils/slugify'
 import { buildAssetUrl } from '../utils/assetUrl'
+import HoverPopover from '../components/common/HoverPopover.vue'
+import ReviewerPopoverCard from '../components/common/ReviewerPopoverCard.vue'
 
 interface ReviewDetail {
   id: number
@@ -23,6 +25,11 @@ interface ReviewDetail {
   publishedAt?: string
   authorName?: string
   authorAvatar?: string
+  authorUsername?: string
+  authorFollowers?: number
+  authorReviewCount?: number
+  authorRating?: number
+  authorBio?: string
 }
 
 interface CommentDetail {
@@ -40,6 +47,9 @@ const anonAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_N
 const route = useRoute()
 const review = ref<ReviewDetail | null>(null)
 const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
+const profilePath = computed(() =>
+  review.value?.authorUsername ? `/user/${encodeURIComponent(review.value.authorUsername)}` : ''
+)
 const loading = ref(false)
 const errorMsg = ref('')
 
@@ -243,13 +253,42 @@ function formatDate(value?: string) {
         <article class="card">
           <header class="post-head">
             <div class="author-block">
-              <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-              <div>
-                <div class="name-row">
-                  <strong>{{ review.authorName || 'Reviewer' }}</strong>
-                  <span class="muted">· {{ formatDate(review.publishedAt) || 'Vừa đăng' }}</span>
+              <HoverPopover v-if="profilePath">
+                <template #trigger>
+                  <div class="author-trigger">
+                    <RouterLink class="avatar-link" :to="profilePath">
+                      <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+                    </RouterLink>
+                    <div>
+                      <div class="name-row">
+                        <RouterLink class="name-link" :to="profilePath">{{ review.authorName || 'Reviewer' }}</RouterLink>
+                        <span class="muted">· {{ formatDate(review.publishedAt) || 'Vừa đăng' }}</span>
+                      </div>
+                      <div class="eyebrow">{{ review.brand || 'Xe' }}</div>
+                    </div>
+                  </div>
+                </template>
+                <ReviewerPopoverCard
+                  :name="review.authorName || 'Reviewer'"
+                  :username="review.authorUsername"
+                  :avatar-url="review.authorAvatar"
+                  :bio="review.authorBio"
+                  :followers="review.authorFollowers"
+                  :review-count="review.authorReviewCount"
+                  :rating="review.authorRating"
+                />
+              </HoverPopover>
+              <div v-else class="author-trigger">
+                <div class="avatar-link">
+                  <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
                 </div>
-                <div class="eyebrow">{{ review.brand || 'Xe' }}</div>
+                <div>
+                  <div class="name-row">
+                    <strong>{{ review.authorName || 'Reviewer' }}</strong>
+                    <span class="muted">· {{ formatDate(review.publishedAt) || 'Vừa đăng' }}</span>
+                  </div>
+                  <div class="eyebrow">{{ review.brand || 'Xe' }}</div>
+                </div>
               </div>
             </div>
             <div class="head-actions">
@@ -422,11 +461,31 @@ function formatDate(value?: string) {
   align-items: center;
 }
 
+.author-trigger {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar-link {
+  display: block;
+}
+
 .avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.name-link {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 700;
+}
+
+.name-link:hover {
+  text-decoration: underline;
 }
 
 .name-row {
