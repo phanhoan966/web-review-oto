@@ -290,6 +290,32 @@ form {
   border-color: var(--accent, var(--primary));
 }
 
+.editor-shell :deep(.ck) {
+  --ck-color-base-foreground: var(--text);
+  --ck-color-base-background: var(--surface);
+  --ck-color-text: var(--text);
+  --ck-color-shadow-drop: rgba(0, 0, 0, 0.12);
+  --ck-color-shadow-inner: rgba(0, 0, 0, 0.08);
+  --ck-color-toolbar-background: var(--surface);
+  --ck-color-toolbar-border: var(--border);
+  --ck-color-button-default-background: var(--surface);
+  --ck-color-button-default-hover-background: var(--chip-bg);
+  --ck-color-button-default-active-background: var(--chip-bg);
+  --ck-color-button-default-disabled-background: var(--surface);
+  --ck-color-dropdown-panel-background: var(--surface);
+  --ck-color-dropdown-panel-border: var(--border);
+  --ck-color-list-background: var(--surface);
+  --ck-color-list-button-hover-background: var(--chip-bg);
+  --ck-color-input-background: var(--surface);
+  --ck-color-input-border: var(--border);
+  --ck-color-input-text: var(--text);
+  --ck-color-input-disabled-background: var(--chip-bg);
+  --ck-color-input-disabled-border: var(--border);
+  --ck-color-input-disabled-text: var(--muted);
+  background: var(--surface);
+  color: var(--text);
+}
+
 .editor-shell :deep(.ck-editor) {
   background: var(--surface);
   color: var(--text);
@@ -333,6 +359,22 @@ form {
 .editor-shell :deep(.ck-content) {
   min-height: 720px;
   color: var(--text);
+}
+
+.editor-shell :deep(.ck-dropdown__panel),
+.editor-shell :deep(.ck-balloon-panel) {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.editor-shell :deep(.ck-list__item .ck-button) {
+  color: var(--text);
+}
+
+.editor-shell :deep(.ck-list__item .ck-button.ck-on) {
+  background: var(--chip-bg);
 }
 
 @media (max-width: 720px) {
