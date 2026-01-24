@@ -157,8 +157,18 @@ async function logoutAndClose() {
   grid-template-columns: 350px 1fr;
   min-height: 100vh;
   background: #f5f7fb;
-  color: var(--text);
+  color: #0f172a;
   align-items: start;
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #4b5563;
+  --border: #e5e7eb;
+  --chip-bg: #f7f9fc;
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --primary: #2171ff;
+  --accent: #3ba9ff;
+  --pill-border: #e5e7eb;
 }
 
 .sidebar {
@@ -427,7 +437,7 @@ async function logoutAndClose() {
   display: grid;
   grid-template-rows: auto 1fr;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--bg);
   color: #0f172a;
   padding: 18px 16px 24px;
 }
