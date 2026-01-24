@@ -42,6 +42,7 @@ public class DtoMapper {
         dto.setViews(review.getViews());
         dto.setFuelType(review.getFuelType());
         dto.setPriceSegment(review.getPriceSegment());
+        dto.setCreatedAt(review.getCreatedAt());
         dto.setPublishedAt(review.getPublishedAt());
         dto.setStatus(review.getStatus() != null ? review.getStatus().name() : null);
         if (review.getAuthor() != null) {

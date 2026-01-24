@@ -19,6 +19,7 @@ public class ReviewDto {
     private Integer views;
     private String fuelType;
     private String priceSegment;
+    private Instant createdAt;
     private Instant publishedAt;
     private String status;
 
@@ -140,6 +141,14 @@ public class ReviewDto {
 
     public void setPriceSegment(String priceSegment) {
         this.priceSegment = priceSegment;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Instant getPublishedAt() {

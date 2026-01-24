@@ -13,6 +13,7 @@ interface ReviewRow {
   likes?: number
   commentsCount?: number
   vehicleModel?: string
+  createdAt?: string
   publishedAt?: string
 }
 
@@ -320,6 +321,7 @@ function changeRejectedSize(size: number) {
           <div>Thả tim</div>
           <div>Bình luận</div>
           <div>Loại xe</div>
+          <div>Ngày viết</div>
           <div>Ngày xuất bản</div>
           <div></div>
         </div>
@@ -331,6 +333,7 @@ function changeRejectedSize(size: number) {
           <div>{{ p.likes ?? 0 }}</div>
           <div>{{ p.commentsCount ?? 0 }}</div>
           <div class="muted">{{ p.vehicleModel || '-' }}</div>
+          <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
             <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt</button>
@@ -371,6 +374,7 @@ function changeRejectedSize(size: number) {
           <div>Thả tim</div>
           <div>Bình luận</div>
           <div>Loại xe</div>
+          <div>Ngày viết</div>
           <div>Ngày xuất bản</div>
           <div></div>
         </div>
@@ -382,6 +386,7 @@ function changeRejectedSize(size: number) {
           <div>{{ p.likes ?? 0 }}</div>
           <div>{{ p.commentsCount ?? 0 }}</div>
           <div class="muted">{{ p.vehicleModel || '-' }}</div>
+          <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
             <button class="ghost" :disabled="actionLoading === p.id" @click="hidePost(p.id)">Ẩn</button>
@@ -421,6 +426,7 @@ function changeRejectedSize(size: number) {
           <div>Thả tim</div>
           <div>Bình luận</div>
           <div>Loại xe</div>
+          <div>Ngày viết</div>
           <div>Ngày xuất bản</div>
           <div></div>
         </div>
@@ -432,6 +438,7 @@ function changeRejectedSize(size: number) {
           <div>{{ p.likes ?? 0 }}</div>
           <div>{{ p.commentsCount ?? 0 }}</div>
           <div class="muted">{{ p.vehicleModel || '-' }}</div>
+          <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
             <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt lại</button>
@@ -529,8 +536,8 @@ h2 {
 
 .row,
 .row.head {
-  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr minmax(140px, 1fr);
-  min-width: 1180px;
+  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr 1fr minmax(140px, 1fr);
+  min-width: 1300px;
 }
 
 .row {
@@ -546,7 +553,8 @@ h2 {
 .row > div:nth-child(5),
 .row > div:nth-child(6),
 .row > div:nth-child(7),
-.row > div:nth-child(8) {
+.row > div:nth-child(8),
+.row > div:nth-child(9) {
   text-align: center;
 }
 
@@ -628,7 +636,7 @@ h2 {
 @media (max-width: 960px) {
   .row,
   .row.head {
-    grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr minmax(140px, 1fr);
+    grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr 1fr minmax(140px, 1fr);
   }
   .row-actions {
     grid-column: auto;
