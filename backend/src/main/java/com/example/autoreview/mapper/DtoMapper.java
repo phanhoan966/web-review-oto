@@ -71,6 +71,7 @@ public class DtoMapper {
             dto.setAuthorFollowers(comment.getAuthor().getFollowers());
             dto.setAuthorReviewCount(comment.getAuthor().getReviewCount());
             dto.setAuthorRating(comment.getAuthor().getRating());
+//            TODO BIO
             dto.setAuthorBio(null);
         }
         return dto;
