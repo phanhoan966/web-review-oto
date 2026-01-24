@@ -154,7 +154,7 @@ async function logoutAndClose() {
 <style scoped lang="scss">
 .layout {
   display: grid;
-  grid-template-columns: 248px 1fr;
+  grid-template-columns: 272px 1fr;
   min-height: 100vh;
   background: #f5f7fb;
   color: var(--text);
@@ -163,7 +163,7 @@ async function logoutAndClose() {
 .sidebar {
   background: linear-gradient(180deg, #eaf1ff 0%, #f6f8ff 100%);
   color: var(--text);
-  padding: 16px 14px;
+  padding: 18px 16px;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 14px;
