@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FilterChips from '../components/FilterChips.vue'
 import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
@@ -21,7 +21,8 @@ const page = ref(0)
 const initialSize = 3
 const nextSize = 5
 const hasMore = ref(true)
-const selectedBrand = ref<string | null>(route.query.brand ? String(route.query.brand) : null)
+const brandParam = computed(() => (route.params.brand ? String(route.params.brand) : null))
+const selectedBrand = ref<string | null>(brandParam.value)
 
 onMounted(() => {
   loadData(true)
@@ -32,13 +33,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })
 
-watch(
-  () => route.query.brand,
-  (val) => {
-    selectedBrand.value = val ? String(val) : null
-    loadData(true)
-  }
-)
+watch(brandParam, (val) => {
+  selectedBrand.value = val
+  loadData(true)
+})
 
 async function loadData(reset = false) {
   if (loading.value) return
@@ -96,8 +94,7 @@ function handleScroll() {
 
 function onBrandSelect(brand: BrandItem) {
   selectedBrand.value = brand.name
-  router.push({ query: { ...route.query, brand: brand.name } })
-  loadData(true)
+  router.push({ name: 'feed-brand', params: { brand: brand.name } })
 }
 </script>
 
