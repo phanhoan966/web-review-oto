@@ -227,8 +227,8 @@ button {
 .ghost {
   border: 1px solid var(--border);
   padding: 12px 16px;
-  background: #f7f9fc;
-  color: #1f2937;
+  background: var(--chip-bg);
+  color: var(--text);
 }
 
 .grid.kpi {
@@ -258,7 +258,7 @@ button {
 
 .label {
   margin: 0;
-  color: #1f2937;
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -298,7 +298,7 @@ button {
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #f9fbff;
+  background: var(--chip-bg);
 }
 
 .title {
@@ -337,8 +337,8 @@ button {
 }
 
 .tag {
-  background: #eef2ff;
-  color: #1f2a3d;
+  background: var(--chip-bg);
+  color: var(--text);
   padding: 6px 10px;
   border-radius: 10px;
   font-weight: 600;
