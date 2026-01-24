@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { slugify } from '../utils/slugify'
 import { buildAssetUrl } from '../utils/assetUrl'
+import HoverPopover from './common/HoverPopover.vue'
 
 export interface ReviewCardData {
   id: number
@@ -77,30 +78,41 @@ function formatRelativeTime(value?: string) {
     <div class="content">
       <RouterLink class="title-link" :to="detailPath"><h2>{{ review.title }}</h2></RouterLink>
       <div class="author" :class="{ hoverable: !!profilePath }">
-        <RouterLink v-if="profilePath" class="avatar-link" :to="profilePath" :title="authorTooltip">
-          <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-        </RouterLink>
-        <div v-else class="avatar-link" :title="authorTooltip">
-          <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-        </div>
-        <div class="author-meta">
-          <RouterLink v-if="profilePath" class="name-link" :to="profilePath" :title="authorTooltip">{{ review.authorName }}</RouterLink>
-          <div v-else class="name">{{ review.authorName }}</div>
-          <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
-        </div>
-        <div v-if="profilePath" class="author-popover">
-          <div class="pop-header">
-            <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-            <div>
-              <div class="pop-name">{{ review.authorName }}</div>
-              <div class="pop-handle">@{{ review.authorUsername }}</div>
+        <HoverPopover v-if="profilePath">
+          <template #trigger>
+            <div class="author-trigger">
+              <RouterLink class="avatar-link" :to="profilePath" :title="authorTooltip">
+                <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+              </RouterLink>
+              <div class="author-meta">
+                <RouterLink class="name-link" :to="profilePath" :title="authorTooltip">{{ review.authorName }}</RouterLink>
+                <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
+              </div>
+            </div>
+          </template>
+          <div class="popover-card">
+            <div class="pop-header">
+              <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+              <div>
+                <div class="pop-name">{{ review.authorName }}</div>
+                <div class="pop-handle">@{{ review.authorUsername }}</div>
+              </div>
+            </div>
+            <p class="pop-bio">{{ review.authorBio || 'Chưa có giới thiệu.' }}</p>
+            <div class="pop-stats">
+              <div><span class="value">{{ review.authorFollowers ?? 0 }}</span><span class="label">Followers</span></div>
+              <div><span class="value">{{ review.authorReviewCount ?? 0 }}</span><span class="label">Bài viết</span></div>
+              <div><span class="value">{{ review.authorRating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
             </div>
           </div>
-          <p class="pop-bio">{{ review.authorBio || 'Chưa có giới thiệu.' }}</p>
-          <div class="pop-stats">
-            <div><span class="value">{{ review.authorFollowers ?? 0 }}</span><span class="label">Followers</span></div>
-            <div><span class="value">{{ review.authorReviewCount ?? 0 }}</span><span class="label">Bài viết</span></div>
-            <div><span class="value">{{ review.authorRating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
+        </HoverPopover>
+        <div v-else class="author-trigger" :title="authorTooltip">
+          <div class="avatar-link">
+            <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+          </div>
+          <div class="author-meta">
+            <div class="name">{{ review.authorName }}</div>
+            <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
           </div>
         </div>
       </div>
@@ -153,17 +165,14 @@ function formatRelativeTime(value?: string) {
 }
 
 .author {
+  position: relative;
+}
+
+.author-trigger {
   display: grid;
   grid-template-columns: 46px 1fr;
   gap: 10px;
   align-items: center;
-  position: relative;
-}
-
-.author.hoverable:hover .author-popover {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(4px);
 }
 
 .avatar-link {
@@ -179,21 +188,9 @@ function formatRelativeTime(value?: string) {
   border: 2px solid #eef2f7;
 }
 
-.author-popover {
-  position: absolute;
-  left: 0;
-  top: 100%;
-  margin-top: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  min-width: 260px;
-  z-index: 5;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+.popover-card {
+  display: grid;
+  gap: 8px;
 }
 
 .pop-header {

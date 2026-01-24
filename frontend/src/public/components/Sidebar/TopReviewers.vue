@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import HoverPopover from '../common/HoverPopover.vue'
 
 export interface ReviewerItem {
   id: number
@@ -19,21 +20,23 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   <section class="widget surface">
     <header class="widget-header">{{ title || 'Top Reviewers' }}</header>
     <div class="list">
-      <RouterLink
-        v-for="reviewer in reviewers"
-        :key="reviewer.id"
-        class="row"
-        :to="`/user/${encodeURIComponent(reviewer.username || reviewer.displayName)}`"
-      >
-        <div class="avatar-wrap">
-          <img :src="reviewer.avatarUrl || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-        </div>
-        <div class="info">
-          <div class="name">{{ reviewer.displayName }}</div>
-          <div class="meta">{{ reviewer.followers || 0 }} followers • ⭐ {{ reviewer.rating?.toFixed(1) || '4.5' }}</div>
-        </div>
-        <span class="count">{{ reviewer.reviewCount || 0 }}</span>
-        <div class="reviewer-popover">
+      <HoverPopover v-for="reviewer in reviewers" :key="reviewer.id" class="row-wrap">
+        <template #trigger>
+          <RouterLink
+            class="row"
+            :to="`/user/${encodeURIComponent(reviewer.username || reviewer.displayName)}`"
+          >
+            <div class="avatar-wrap">
+              <img :src="reviewer.avatarUrl || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+            </div>
+            <div class="info">
+              <div class="name">{{ reviewer.displayName }}</div>
+              <div class="meta">{{ reviewer.followers || 0 }} followers • ⭐ {{ reviewer.rating?.toFixed(1) || '4.5' }}</div>
+            </div>
+            <span class="count">{{ reviewer.reviewCount || 0 }}</span>
+          </RouterLink>
+        </template>
+        <div class="popover-card">
           <div class="pop-header">
             <img class="avatar" :src="reviewer.avatarUrl || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
             <div>
@@ -48,7 +51,7 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
             <div><span class="value">{{ reviewer.rating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
           </div>
         </div>
-      </RouterLink>
+      </HoverPopover>
     </div>
   </section>
 </template>
@@ -72,6 +75,10 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   gap: 12px;
 }
 
+.row-wrap {
+  width: 100%;
+}
+
 .row {
   display: grid;
   grid-template-columns: 52px 1fr auto;
@@ -82,7 +89,6 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   padding: 6px 4px;
   border-radius: 12px;
   transition: background 0.2s ease;
-  position: relative;
 }
 
 .row:hover {
@@ -91,12 +97,6 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
 
 .row:hover .name {
   text-decoration: underline;
-}
-
-.row:hover .reviewer-popover {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(4px);
 }
 
 .avatar-wrap {
@@ -126,21 +126,9 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   font-weight: 700;
 }
 
-.reviewer-popover {
-  position: absolute;
-  left: 0;
-  top: 100%;
-  margin-top: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  min-width: 260px;
-  z-index: 5;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+.popover-card {
+  display: grid;
+  gap: 8px;
 }
 
 .pop-header {
