@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
 import { resolvePageMeta } from '../utils/pageMeta'
@@ -16,9 +16,16 @@ interface ReviewRow {
   publishedAt?: string
 }
 
+const filters = ref({ title: '', author: '', date: '', vehicle: '' })
+const pendingAll = ref<ReviewRow[]>([])
+const approvedAll = ref<ReviewRow[]>([])
+const rejectedAll = ref<ReviewRow[]>([])
 const pending = ref<ReviewRow[]>([])
 const approved = ref<ReviewRow[]>([])
 const rejected = ref<ReviewRow[]>([])
+const pendingBase = ref({ page: 0, size: 10, total: 0 })
+const approvedBase = ref({ page: 0, size: 10, total: 0 })
+const rejectedBase = ref({ page: 0, size: 10, total: 0 })
 const pendingPage = ref({ page: 0, size: 10, total: 0 })
 const approvedPage = ref({ page: 0, size: 10, total: 0 })
 const rejectedPage = ref({ page: 0, size: 10, total: 0 })
@@ -28,9 +35,85 @@ function clampPage(meta: { page: number; size: number; total: number }) {
   const page = Math.min(Math.max(meta.page, 0), totalPages - 1)
   return { ...meta, page }
 }
+
+function hasFilters() {
+  return Object.values(filters.value).some((v) => v.trim())
+}
+
+function filterReviews(list: ReviewRow[]) {
+  const title = filters.value.title.trim().toLowerCase()
+  const author = filters.value.author.trim().toLowerCase()
+  const date = filters.value.date.trim()
+  const vehicle = filters.value.vehicle.trim().toLowerCase()
+  return list.filter((p) => {
+    const matchesTitle = !title || (p.title || '').toLowerCase().includes(title)
+    const matchesAuthor = !author || (p.authorName || '').toLowerCase().includes(author)
+    const dateText = p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : ''
+    const matchesDate = !date || dateText.includes(date)
+    const matchesVehicle = !vehicle || (p.vehicleModel || '').toLowerCase().includes(vehicle)
+    return matchesTitle && matchesAuthor && matchesDate && matchesVehicle
+  })
+}
+
+function resetFilters() {
+  filters.value = { title: '', author: '', date: '', vehicle: '' }
+}
+
+function applyPending() {
+  const filtered = filterReviews(pendingAll.value)
+  if (hasFilters()) {
+    const meta = clampPage({ ...pendingPage.value, total: filtered.length })
+    const start = meta.page * meta.size
+    pendingPage.value = meta
+    pending.value = filtered.slice(start, start + meta.size)
+    return
+  }
+  pendingPage.value = pendingBase.value
+  pending.value = pendingAll.value
+}
+
+function applyApproved() {
+  const filtered = filterReviews(approvedAll.value)
+  if (hasFilters()) {
+    const meta = clampPage({ ...approvedPage.value, total: filtered.length })
+    const start = meta.page * meta.size
+    approvedPage.value = meta
+    approved.value = filtered.slice(start, start + meta.size)
+    return
+  }
+  approvedPage.value = approvedBase.value
+  approved.value = approvedAll.value
+}
+
+function applyRejected() {
+  const filtered = filterReviews(rejectedAll.value)
+  if (hasFilters()) {
+    const meta = clampPage({ ...rejectedPage.value, total: filtered.length })
+    const start = meta.page * meta.size
+    rejectedPage.value = meta
+    rejected.value = filtered.slice(start, start + meta.size)
+    return
+  }
+  rejectedPage.value = rejectedBase.value
+  rejected.value = rejectedAll.value
+}
+
 const loading = ref(false)
 const actionLoading = ref<number | null>(null)
 const errorMsg = ref('')
+
+watch(
+  filters,
+  () => {
+    pendingPage.value = { ...pendingPage.value, page: 0 }
+    approvedPage.value = { ...approvedPage.value, page: 0 }
+    rejectedPage.value = { ...rejectedPage.value, page: 0 }
+    applyPending()
+    applyApproved()
+    applyRejected()
+  },
+  { deep: true }
+)
 
 onMounted(load)
 
@@ -49,25 +132,31 @@ async function load() {
 async function loadPending() {
   const params = { page: pendingPage.value.page, size: pendingPage.value.size }
   const { data } = await client.get('/admin/reviews/pending', { params })
-  pending.value = data.reviews || data.content || []
-  const meta = resolvePageMeta(data, pending.value.length, { ...pendingPage.value })
-  pendingPage.value = clampPage(meta)
+  pendingAll.value = data.reviews || data.content || []
+  const meta = resolvePageMeta(data, pendingAll.value.length, { ...pendingPage.value })
+  pendingBase.value = clampPage(meta)
+  pendingPage.value = pendingBase.value
+  applyPending()
 }
 
 async function loadApproved() {
   const params = { page: approvedPage.value.page, size: approvedPage.value.size, status: 'APPROVED' }
   const { data } = await client.get('/admin/reviews', { params })
-  approved.value = data.reviews || data.content || []
-  const meta = resolvePageMeta(data, approved.value.length, { ...approvedPage.value })
-  approvedPage.value = clampPage(meta)
+  approvedAll.value = data.reviews || data.content || []
+  const meta = resolvePageMeta(data, approvedAll.value.length, { ...approvedPage.value })
+  approvedBase.value = clampPage(meta)
+  approvedPage.value = approvedBase.value
+  applyApproved()
 }
 
 async function loadRejected() {
   const params = { page: rejectedPage.value.page, size: rejectedPage.value.size, status: 'REJECTED' }
   const { data } = await client.get('/admin/reviews', { params })
-  rejected.value = data.reviews || data.content || []
-  const meta = resolvePageMeta(data, rejected.value.length, { ...rejectedPage.value })
-  rejectedPage.value = clampPage(meta)
+  rejectedAll.value = data.reviews || data.content || []
+  const meta = resolvePageMeta(data, rejectedAll.value.length, { ...rejectedPage.value })
+  rejectedBase.value = clampPage(meta)
+  rejectedPage.value = rejectedBase.value
+  applyRejected()
 }
 
 async function approve(id: number) {
@@ -107,31 +196,55 @@ async function hidePost(id: number) {
 
 function changePendingPage(page: number) {
   pendingPage.value = { ...pendingPage.value, page }
+  if (hasFilters()) {
+    applyPending()
+    return
+  }
   loadPending()
 }
 
 function changePendingSize(size: number) {
   pendingPage.value = { ...pendingPage.value, size, page: 0 }
+  if (hasFilters()) {
+    applyPending()
+    return
+  }
   loadPending()
 }
 
 function changeApprovedPage(page: number) {
   approvedPage.value = { ...approvedPage.value, page }
+  if (hasFilters()) {
+    applyApproved()
+    return
+  }
   loadApproved()
 }
 
 function changeApprovedSize(size: number) {
   approvedPage.value = { ...approvedPage.value, size, page: 0 }
+  if (hasFilters()) {
+    applyApproved()
+    return
+  }
   loadApproved()
 }
 
 function changeRejectedPage(page: number) {
   rejectedPage.value = { ...rejectedPage.value, page }
+  if (hasFilters()) {
+    applyRejected()
+    return
+  }
   loadRejected()
 }
 
 function changeRejectedSize(size: number) {
   rejectedPage.value = { ...rejectedPage.value, size, page: 0 }
+  if (hasFilters()) {
+    applyRejected()
+    return
+  }
   loadRejected()
 }
 </script>
@@ -146,6 +259,28 @@ function changeRejectedSize(size: number) {
       </div>
       <div class="actions">
         <button class="ghost" @click="load" :disabled="loading">Làm mới</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <label>
+        <span>Tiêu đề</span>
+        <input v-model="filters.title" type="text" placeholder="Nhập tiêu đề" />
+      </label>
+      <label>
+        <span>Tác giả</span>
+        <input v-model="filters.author" type="text" placeholder="Nhập tên tác giả" />
+      </label>
+      <label>
+        <span>Ngày viết</span>
+        <input v-model="filters.date" type="text" placeholder="dd/mm/yyyy" />
+      </label>
+      <label>
+        <span>Loại xe</span>
+        <input v-model="filters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+      </label>
+      <div class="filter-actions">
+        <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
       </div>
     </div>
 
@@ -260,6 +395,18 @@ function changeRejectedSize(size: number) {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .eyebrow {
