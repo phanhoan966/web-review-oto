@@ -356,15 +356,40 @@ function formatDate(value?: string) {
                 class="comment-item"
                 :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
               >
-                <div class="comment-avatar">
-                  <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
-                </div>
-                <div class="comment-content">
-                  <div class="comment-meta">
-                    <strong>{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
-                    <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
+                <HoverPopover v-if="!comment.anonymous && comment.authorName">
+                  <template #trigger>
+                    <div class="comment-trigger">
+                      <div class="comment-avatar">
+                        <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
+                      </div>
+                      <div class="comment-content">
+                        <div class="comment-meta">
+                          <RouterLink class="comment-name" :to="`/user/${encodeURIComponent(comment.authorName)}`">
+                            {{ comment.authorName }}
+                          </RouterLink>
+                          <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
+                        </div>
+                        <p>{{ comment.content }}</p>
+                      </div>
+                    </div>
+                  </template>
+                  <ReviewerPopoverCard
+                    :name="comment.authorName"
+                    :username="comment.authorName"
+                    :avatar-url="comment.authorAvatar"
+                  />
+                </HoverPopover>
+                <div v-else class="comment-trigger">
+                  <div class="comment-avatar">
+                    <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
                   </div>
-                  <p>{{ comment.content }}</p>
+                  <div class="comment-content">
+                    <div class="comment-meta">
+                      <strong>{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
+                      <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                  </div>
                 </div>
               </div>
               <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false, true)">Xem thêm bình luận</button>
@@ -657,12 +682,30 @@ function formatDate(value?: string) {
 }
 
 .comment-item {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--chip-bg);
   border: 1px solid var(--border);
+}
+
+.comment-trigger {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.comment-name {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.comment-name:hover {
+  text-decoration: underline;
 }
 
 .comment-item.flash {
