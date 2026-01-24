@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { slugify } from '../utils/slugify'
 import { buildAssetUrl } from '../utils/assetUrl'
 import HoverPopover from './common/HoverPopover.vue'
+import ReviewerPopoverCard from './common/ReviewerPopoverCard.vue'
 
 export interface ReviewCardData {
   id: number
@@ -90,21 +91,15 @@ function formatRelativeTime(value?: string) {
               </div>
             </div>
           </template>
-          <div class="popover-card">
-            <div class="pop-header">
-              <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-              <div>
-                <div class="pop-name">{{ review.authorName }}</div>
-                <div class="pop-handle">@{{ review.authorUsername }}</div>
-              </div>
-            </div>
-            <p class="pop-bio">{{ review.authorBio || 'Chưa có giới thiệu.' }}</p>
-            <div class="pop-stats">
-              <div><span class="value">{{ review.authorFollowers ?? 0 }}</span><span class="label">Followers</span></div>
-              <div><span class="value">{{ review.authorReviewCount ?? 0 }}</span><span class="label">Bài viết</span></div>
-              <div><span class="value">{{ review.authorRating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
-            </div>
-          </div>
+          <ReviewerPopoverCard
+            :name="review.authorName"
+            :username="review.authorUsername"
+            :avatar-url="review.authorAvatar"
+            :bio="review.authorBio"
+            :followers="review.authorFollowers"
+            :review-count="review.authorReviewCount"
+            :rating="review.authorRating"
+          />
         </HoverPopover>
         <div v-else class="author-trigger" :title="authorTooltip">
           <div class="avatar-link">
@@ -186,50 +181,6 @@ function formatRelativeTime(value?: string) {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #eef2f7;
-}
-
-.popover-card {
-  display: grid;
-  gap: 8px;
-}
-
-.pop-header {
-  display: grid;
-  grid-template-columns: 46px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.pop-name {
-  font-weight: 700;
-}
-
-.pop-handle {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.pop-bio {
-  margin: 8px 0 10px 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.pop-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.pop-stats .value {
-  display: block;
-  font-weight: 800;
-}
-
-.pop-stats .label {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
 }
 
 .name {

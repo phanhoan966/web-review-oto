@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import HoverPopover from '../common/HoverPopover.vue'
+import ReviewerPopoverCard from '../common/ReviewerPopoverCard.vue'
 
 export interface ReviewerItem {
   id: number
@@ -36,21 +37,15 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
             <span class="count">{{ reviewer.reviewCount || 0 }}</span>
           </RouterLink>
         </template>
-        <div class="popover-card">
-          <div class="pop-header">
-            <img class="avatar" :src="reviewer.avatarUrl || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
-            <div>
-              <div class="pop-name">{{ reviewer.displayName }}</div>
-              <div class="pop-handle">@{{ reviewer.username || reviewer.displayName }}</div>
-            </div>
-          </div>
-          <p class="pop-bio">{{ reviewer.bio || 'Chưa có giới thiệu.' }}</p>
-          <div class="pop-stats">
-            <div><span class="value">{{ reviewer.followers || 0 }}</span><span class="label">Followers</span></div>
-            <div><span class="value">{{ reviewer.reviewCount || 0 }}</span><span class="label">Bài viết</span></div>
-            <div><span class="value">{{ reviewer.rating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
-          </div>
-        </div>
+        <ReviewerPopoverCard
+          :name="reviewer.displayName"
+          :username="reviewer.username"
+          :avatar-url="reviewer.avatarUrl"
+          :bio="reviewer.bio"
+          :followers="reviewer.followers"
+          :review-count="reviewer.reviewCount"
+          :rating="reviewer.rating"
+        />
       </HoverPopover>
     </div>
   </section>
