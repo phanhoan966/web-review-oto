@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import FilterChips from '../components/FilterChips.vue'
 import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
 import TopReviewers, { type ReviewerItem } from '../components/Sidebar/TopReviewers.vue'
@@ -13,36 +13,69 @@ const brands = ref<BrandItem[]>([])
 const mostViewed = ref<ViewedItem[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
+const page = ref(0)
+const pageSize = 10
+const hasMore = ref(true)
 
 onMounted(() => {
-  loadData()
+  loadData(true)
+  window.addEventListener('scroll', handleScroll)
 })
 
-async function loadData() {
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+async function loadData(reset = false) {
+  if (loading.value) return
+  if (reset) {
+    page.value = 0
+    hasMore.value = true
+    reviews.value = []
+  }
+  if (!hasMore.value) return
+
   loading.value = true
   errorMsg.value = ''
   try {
     const [reviewsRes, reviewersRes, brandsRes, viewedRes] = await Promise.all([
-      client.get('/reviews', { params: { page: 0, size: 5 } }),
+      client.get('/reviews', { params: { page: page.value, size: pageSize } }),
       client.get('/reviewers/top', { params: { limit: 3 } }),
       client.get('/brands/featured'),
       client.get('/reviews/most-viewed', { params: { limit: 3 } })
     ])
-    reviews.value = reviewsRes.data.reviews || []
+    const items = reviewsRes.data.reviews || reviewsRes.data.content || []
+    reviews.value = reset ? items : [...reviews.value, ...items]
     reviewers.value = reviewersRes.data || []
     brands.value = brandsRes.data || []
     mostViewed.value = viewedRes.data || []
+    if (items.length < pageSize) {
+      hasMore.value = false
+    } else {
+      page.value += 1
+    }
     if (!reviews.value.length) {
       errorMsg.value = 'Chưa có bài viết nào.'
     }
   } catch (error) {
     errorMsg.value = 'Tải dữ liệu thất bại, vui lòng thử lại.'
-    reviews.value = []
-    reviewers.value = []
-    brands.value = []
-    mostViewed.value = []
+    if (reset) {
+      reviews.value = []
+    }
   } finally {
     loading.value = false
+  }
+}
+
+function onFilterChange() {
+  loadData(true)
+}
+
+function handleScroll() {
+  if (loading.value || !hasMore.value) return
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 200
+  if (nearBottom) {
+    loadData(false)
   }
 }
 </script>
@@ -55,7 +88,7 @@ async function loadData() {
         <h1>Đánh Giá Xe Nổi Bật</h1>
       </div>
       <div class="filters">
-        <FilterChips @change="loadData" />
+        <FilterChips @change="onFilterChange" />
       </div>
     </section>
 
@@ -65,6 +98,7 @@ async function loadData() {
           <ReviewCard v-for="review in reviews" :key="review.id" :review="review" />
           <div v-if="!loading && !reviews.length" class="empty">{{ errorMsg || 'Không có dữ liệu' }}</div>
           <div v-if="loading" class="loading">Đang tải...</div>
+          <div v-if="!hasMore && reviews.length" class="end">Đã hết bài viết</div>
         </div>
       </div>
       <aside class="sidebar">
@@ -115,6 +149,12 @@ h1 {
 }
 
 .loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 12px 0;
+}
+
+.end {
   text-align: center;
   color: var(--muted);
   padding: 12px 0;
