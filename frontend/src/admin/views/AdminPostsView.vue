@@ -320,7 +320,7 @@ function changeRejectedSize(size: number) {
           <div>Thả tim</div>
           <div>Bình luận</div>
           <div>Loại xe</div>
-          <div>Gửi</div>
+          <div>Ngày xuất bản</div>
           <div></div>
         </div>
         <div v-for="p in pending" :key="p.id" class="row">
@@ -371,7 +371,7 @@ function changeRejectedSize(size: number) {
           <div>Thả tim</div>
           <div>Bình luận</div>
           <div>Loại xe</div>
-          <div>Xuất bản</div>
+          <div>Ngày xuất bản</div>
           <div></div>
         </div>
         <div v-for="p in approved" :key="p.id" class="row">
@@ -421,7 +421,7 @@ function changeRejectedSize(size: number) {
           <div>Thả tim</div>
           <div>Bình luận</div>
           <div>Loại xe</div>
-          <div>Gửi</div>
+          <div>Ngày xuất bản</div>
           <div></div>
         </div>
         <div v-for="p in rejected" :key="p.id" class="row">
