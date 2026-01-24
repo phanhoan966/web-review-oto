@@ -17,6 +17,7 @@ interface AdminUser {
 }
 
 const auth = useAuthStore()
+const allUsers = ref<AdminUser[]>([])
 const users = ref<AdminUser[]>([])
 const usersPage = ref({ page: 0, size: 10, total: 0 })
 
@@ -24,6 +25,14 @@ function clampPage(meta: { page: number; size: number; total: number }) {
   const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
   const page = Math.min(Math.max(meta.page, 0), totalPages - 1)
   return { ...meta, page }
+}
+
+function applyPaging() {
+  const meta = clampPage({ ...usersPage.value, total: allUsers.value.length })
+  const start = meta.page * meta.size
+  const end = start + meta.size
+  usersPage.value = meta
+  users.value = allUsers.value.slice(start, end)
 }
 
 const loading = ref(false)
@@ -163,12 +172,12 @@ async function deleteUser(id: number, target: AdminUser) {
 
 function changeUsersPage(page: number) {
   usersPage.value = { ...usersPage.value, page }
-  load()
+  applyPaging()
 }
 
 function changeUsersSize(size: number) {
   usersPage.value = { ...usersPage.value, size, page: 0 }
-  load()
+  applyPaging()
 }
 
 async function load() {
@@ -178,11 +187,13 @@ async function load() {
     const params = { page: usersPage.value.page, size: usersPage.value.size }
     const { data } = await client.get('/admin/users', { params })
     const list = Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : data?.users || []
-    users.value = list
-    const meta = resolvePageMeta(data, users.value.length, { ...usersPage.value })
+    allUsers.value = list
+    const meta = resolvePageMeta(data, allUsers.value.length, { ...usersPage.value, total: allUsers.value.length })
     usersPage.value = clampPage(meta)
+    applyPaging()
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tải được danh sách user'
+    allUsers.value = []
     users.value = []
   } finally {
     loading.value = false
