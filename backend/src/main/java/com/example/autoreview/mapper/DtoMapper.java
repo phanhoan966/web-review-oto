@@ -67,6 +67,11 @@ public class DtoMapper {
         if (!comment.isAnonymous() && comment.getAuthor() != null) {
             dto.setAuthorName(comment.getAuthor().getUsername());
             dto.setAuthorAvatar(comment.getAuthor().getAvatarUrl());
+            dto.setAuthorUsername(comment.getAuthor().getUsername());
+            dto.setAuthorFollowers(comment.getAuthor().getFollowers());
+            dto.setAuthorReviewCount(comment.getAuthor().getReviewCount());
+            dto.setAuthorRating(comment.getAuthor().getRating());
+            dto.setAuthorBio(comment.getAuthor().getBio());
         }
         return dto;
     }

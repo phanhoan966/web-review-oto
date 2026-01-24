@@ -7,6 +7,11 @@ public class CommentDto {
     private String content;
     private String authorName;
     private String authorAvatar;
+    private String authorUsername;
+    private Integer authorFollowers;
+    private Integer authorReviewCount;
+    private Double authorRating;
+    private String authorBio;
     private boolean anonymous;
     private Instant createdAt;
 
@@ -40,6 +45,46 @@ public class CommentDto {
 
     public void setAuthorAvatar(String authorAvatar) {
         this.authorAvatar = authorAvatar;
+    }
+
+    public String getAuthorUsername() {
+        return authorUsername;
+    }
+
+    public void setAuthorUsername(String authorUsername) {
+        this.authorUsername = authorUsername;
+    }
+
+    public Integer getAuthorFollowers() {
+        return authorFollowers;
+    }
+
+    public void setAuthorFollowers(Integer authorFollowers) {
+        this.authorFollowers = authorFollowers;
+    }
+
+    public Integer getAuthorReviewCount() {
+        return authorReviewCount;
+    }
+
+    public void setAuthorReviewCount(Integer authorReviewCount) {
+        this.authorReviewCount = authorReviewCount;
+    }
+
+    public Double getAuthorRating() {
+        return authorRating;
+    }
+
+    public void setAuthorRating(Double authorRating) {
+        this.authorRating = authorRating;
+    }
+
+    public String getAuthorBio() {
+        return authorBio;
+    }
+
+    public void setAuthorBio(String authorBio) {
+        this.authorBio = authorBio;
     }
 
     public boolean isAnonymous() {

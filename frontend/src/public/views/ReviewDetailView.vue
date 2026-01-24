@@ -37,6 +37,11 @@ interface CommentDetail {
   content: string
   authorName?: string
   authorAvatar?: string
+  authorUsername?: string
+  authorFollowers?: number
+  authorReviewCount?: number
+  authorRating?: number
+  authorBio?: string
   anonymous?: boolean
   createdAt?: string
 }
@@ -356,7 +361,7 @@ function formatDate(value?: string) {
                 class="comment-item"
                 :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
               >
-                <HoverPopover v-if="!comment.anonymous && comment.authorName">
+                <HoverPopover v-if="!comment.anonymous && (comment.authorUsername || comment.authorName)">
                   <template #trigger>
                     <div class="comment-trigger">
                       <div class="comment-avatar">
@@ -364,7 +369,10 @@ function formatDate(value?: string) {
                       </div>
                       <div class="comment-content">
                         <div class="comment-meta">
-                          <strong class="comment-name">{{ comment.authorName }}</strong>
+                          <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                            {{ comment.authorName || comment.authorUsername }}
+                          </RouterLink>
+                          <strong v-else class="comment-name">{{ comment.authorName }}</strong>
                           <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                         </div>
                         <p>{{ comment.content }}</p>
@@ -372,8 +380,13 @@ function formatDate(value?: string) {
                     </div>
                   </template>
                   <ReviewerPopoverCard
-                    :name="comment.authorName"
+                    :name="comment.authorName || comment.authorUsername || 'Reviewer'"
+                    :username="comment.authorUsername"
                     :avatar-url="comment.authorAvatar"
+                    :bio="comment.authorBio"
+                    :followers="comment.authorFollowers"
+                    :review-count="comment.authorReviewCount"
+                    :rating="comment.authorRating"
                   />
                 </HoverPopover>
                 <div v-else class="comment-trigger">
