@@ -164,14 +164,16 @@ async function logoutAndClose() {
 .sidebar {
   background: linear-gradient(180deg, #eaf1ff 0%, #f6f8ff 100%);
   color: var(--text);
-  padding: 18px 16px;
+  padding: 18px 16px 24px;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 14px;
+  gap: 16px;
   border-right: 1px solid #dfe8f5;
   position: sticky;
   top: 0;
   min-height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
   z-index: 2;
 }
 
@@ -277,54 +279,63 @@ async function logoutAndClose() {
 
 .nav {
   display: grid;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 14px;
+  margin-top: 12px;
 }
 
 .nav-item {
-  display: grid;
-  grid-template-columns: 46px 1fr;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+  min-height: 176px;
+  padding: 18px 16px;
+  border-radius: 18px;
   color: #0f172a;
   text-decoration: none;
   background: #f7f9fc;
   border: 1px solid #e2e9f6;
-  box-shadow: 0 8px 20px rgba(28, 100, 242, 0.08);
-  transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  box-shadow: 0 10px 22px rgba(28, 100, 242, 0.08);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .nav-item:hover {
-  transform: translateX(2px);
+  transform: translateX(3px);
   border-color: #d0ddf6;
-  box-shadow: 0 10px 24px rgba(28, 100, 242, 0.12);
+  box-shadow: 0 12px 26px rgba(28, 100, 242, 0.12);
 }
 
 .nav-item.active {
   background: linear-gradient(135deg, #1d8aff, #327bff);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 14px 30px rgba(29, 122, 255, 0.28);
+  box-shadow: 0 18px 32px rgba(29, 122, 255, 0.3);
 }
 
 .nav-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #e1ebff, #d3e5ff);
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: 20px;
   color: #1f3a8a;
   border: 1px solid #dbe6fd;
+  box-shadow: 0 8px 18px rgba(31, 58, 138, 0.08);
 }
 
 .nav-item.active .nav-icon {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: #ffffff;
+  color: #1d8aff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+}
+
+.nav-text {
+  display: grid;
+  gap: 4px;
 }
 
 .nav-text p {
@@ -333,7 +344,7 @@ async function logoutAndClose() {
 }
 
 .nav-text .muted {
-  margin-top: 2px;
+  margin: 0;
   color: var(--muted);
 }
 
