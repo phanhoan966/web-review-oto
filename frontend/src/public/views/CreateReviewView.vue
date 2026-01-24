@@ -114,7 +114,8 @@ async function initEditor() {
   }
   try {
     editorInstance = await ClassicEditor.create(editorHost.value as HTMLElement, {
-      placeholder: 'Viết nội dung bài review...'
+      placeholder: 'Viết nội dung bài review...',
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'bulletedList', 'numberedList', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo']
     })
     if (form.value.content) {
       editorInstance.setData(form.value.content)
@@ -289,7 +290,7 @@ form {
 }
 
 .editor-shell .ck.ck-editor__editable {
-  min-height: 260px;
+  min-height: 460px;
 }
 
 .hero-row {
