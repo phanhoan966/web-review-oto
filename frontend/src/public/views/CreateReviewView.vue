@@ -290,11 +290,11 @@ form {
 }
 
 .editor-shell .ck.ck-editor__editable {
-  min-height: 460px;
+  min-height: 720px;
 }
 
 .ck-content {
-    min-height: 460px;
+  min-height: 720px;
 }
 
 .hero-row {
