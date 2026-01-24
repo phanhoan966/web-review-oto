@@ -1,6 +1,5 @@
-const rawBase = (import.meta.env.VITE_FILE_BASE_URL || import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
-const originBase = typeof window !== 'undefined' ? window.location.origin : ''
-const assetBase = (rawBase || originBase).replace(/\/api$/, '')
+const rawBase = (import.meta.env.VITE_FILE_BASE_URL || import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+const assetBase = rawBase.startsWith('http') ? rawBase.replace(/\/api$/, '') : rawBase
 
 export function buildAssetUrl(path?: string) {
   if (!path) return ''
