@@ -36,6 +36,13 @@ const profilePath = computed(() =>
   props.review.authorUsername ? `/user/${encodeURIComponent(props.review.authorUsername)}` : ''
 )
 
+const authorTooltip = computed(() => {
+  const username = props.review.authorUsername
+  const name = props.review.authorName
+  const handle = username ? `@${username}` : ''
+  return [name, handle, 'Nhấn để xem hồ sơ'].filter(Boolean).join(' • ')
+})
+
 const heroSrc = computed(() => buildAssetUrl(props.review.heroImageUrl))
 
 const relativeTime = computed(() => formatRelativeTime(props.review.publishedAt))
@@ -62,14 +69,14 @@ function formatRelativeTime(value?: string) {
     <div class="content">
       <RouterLink class="title-link" :to="detailPath"><h2>{{ review.title }}</h2></RouterLink>
       <div class="author">
-        <RouterLink v-if="profilePath" class="avatar-link" :to="profilePath">
-          <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
+        <RouterLink v-if="profilePath" class="avatar-link" :to="profilePath" :title="authorTooltip">
+          <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
         </RouterLink>
-        <div v-else class="avatar-link">
-          <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
+        <div v-else class="avatar-link" :title="authorTooltip">
+          <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
         </div>
         <div>
-          <RouterLink v-if="profilePath" class="name" :to="profilePath">{{ review.authorName }}</RouterLink>
+          <RouterLink v-if="profilePath" class="name-link" :to="profilePath" :title="authorTooltip">{{ review.authorName }}</RouterLink>
           <div v-else class="name">{{ review.authorName }}</div>
           <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
         </div>
@@ -146,6 +153,16 @@ function formatRelativeTime(value?: string) {
   font-weight: 600;
   color: inherit;
   text-decoration: none;
+}
+
+.name-link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.name-link:hover {
+  text-decoration: underline;
 }
 
 .sub {

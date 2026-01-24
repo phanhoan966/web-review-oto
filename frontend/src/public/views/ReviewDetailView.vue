@@ -34,8 +34,8 @@ interface CommentDetail {
   createdAt?: string
 }
 
-const defaultAvatar = 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'
-const anonAvatar = 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'
+const defaultAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
+const anonAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
 
 const route = useRoute()
 const review = ref<ReviewDetail | null>(null)
@@ -243,7 +243,7 @@ function formatDate(value?: string) {
         <article class="card">
           <header class="post-head">
             <div class="author-block">
-              <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
+              <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
               <div>
                 <div class="name-row">
                   <strong>{{ review.authorName || 'Reviewer' }}</strong>

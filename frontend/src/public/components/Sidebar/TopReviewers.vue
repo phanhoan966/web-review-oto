@@ -23,9 +23,10 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
         :key="reviewer.id"
         class="row"
         :to="`/user/${encodeURIComponent(reviewer.username || reviewer.displayName)}`"
+        :title="`@${reviewer.username || reviewer.displayName} • ${reviewer.reviewCount || 0} bài • ${reviewer.followers || 0} followers • ⭐ ${reviewer.rating?.toFixed(1) || '4.5'}`"
       >
         <div class="avatar-wrap">
-          <img :src="reviewer.avatarUrl || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
+          <img :src="reviewer.avatarUrl || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
         </div>
         <div class="info">
           <div class="name">{{ reviewer.displayName }}</div>
@@ -70,6 +71,10 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
 
 .row:hover {
   background: var(--chip-bg);
+}
+
+.row:hover .name {
+  text-decoration: underline;
 }
 
 .avatar-wrap {
