@@ -146,7 +146,7 @@ h1 {
 }
 
 .sidebar {
-  display: grid;
+  display: flow;
   gap: 12px;
 }
 

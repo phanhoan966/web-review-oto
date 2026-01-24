@@ -42,6 +42,7 @@ function heroSrc(item: ViewedItem) {
   padding: 16px;
   border-radius: 18px;
   box-shadow: var(--shadow);
+  margin-bottom: 15px;
 }
 
 .widget-header {

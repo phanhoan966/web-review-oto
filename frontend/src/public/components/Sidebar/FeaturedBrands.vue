@@ -29,6 +29,7 @@ defineProps<{ brands: BrandItem[] }>()
   box-shadow: var(--shadow);
   background: var(--surface);
   border: 1px solid var(--border);
+  margin-bottom: 15px;
 }
 
 .widget-header {
