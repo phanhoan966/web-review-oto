@@ -115,8 +115,9 @@ async function initEditor() {
   try {
     editorInstance = await ClassicEditor.create(editorHost.value as HTMLElement, {
       placeholder: 'Viết nội dung bài review...',
-      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'bulletedList', 'numberedList', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo']
+      toolbar: ['heading', '|', 'bold', 'italic', 'link', '|', 'bulletedList', 'numberedList', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', 'imageUpload', '|', 'undo', 'redo']
     })
+    editorInstance.plugins.get('FileRepository').createUploadAdapter = (loader: any) => createUploadAdapter(loader)
     if (form.value.content) {
       editorInstance.setData(form.value.content)
     }
@@ -126,6 +127,23 @@ async function initEditor() {
     editorReady.value = true
   } catch (error: any) {
     editorError.value = 'Không tải được trình soạn thảo'
+  }
+}
+
+function createUploadAdapter(loader: any) {
+  return {
+    async upload() {
+      const file = await loader.file
+      const payload = new FormData()
+      payload.append('file', file)
+      const { data } = await client.post<{ path?: string; url: string }>('/uploads', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      const storedPath = data.path || data.url
+      const url = buildAssetUrl(storedPath)
+      return { default: url }
+    },
+    abort() {}
   }
 }
 
