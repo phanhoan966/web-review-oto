@@ -29,4 +29,10 @@ public class ReviewerService {
                 .map(DtoMapper::toReviewerDto)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
     }
+
+    public ReviewerDto getByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(DtoMapper::toReviewerDto)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+    }
 }

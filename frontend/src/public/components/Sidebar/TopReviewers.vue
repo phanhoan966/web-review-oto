@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 export interface ReviewerItem {
   id: number
   displayName: string
+  username?: string
   avatarUrl?: string
   followers?: number
   rating?: number
@@ -17,7 +18,12 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   <section class="widget surface">
     <header class="widget-header">{{ title || 'Top Reviewers' }}</header>
     <div class="list">
-      <RouterLink v-for="reviewer in reviewers" :key="reviewer.id" class="row" :to="`/u/${reviewer.id}`">
+      <RouterLink
+        v-for="reviewer in reviewers"
+        :key="reviewer.id"
+        class="row"
+        :to="`/user/${encodeURIComponent(reviewer.username || reviewer.displayName)}`"
+      >
         <div class="avatar-wrap">
           <img :src="reviewer.avatarUrl || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
         </div>

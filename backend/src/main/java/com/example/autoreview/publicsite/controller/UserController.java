@@ -32,4 +32,14 @@ public class UserController {
     public ResponseEntity<ReviewListResponse> reviews(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(reviewService.listPublicByAuthor(id, page, size));
     }
+
+    @GetMapping("/username/{username}")
+    public ResponseEntity<ReviewerDto> profileByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(reviewerService.getByUsername(username));
+    }
+
+    @GetMapping("/username/{username}/reviews")
+    public ResponseEntity<ReviewListResponse> reviewsByUsername(@PathVariable String username, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(reviewService.listPublicByAuthorUsername(username, page, size));
+    }
 }

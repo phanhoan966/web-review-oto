@@ -26,4 +26,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findByAuthorEmailOrderByCreatedAtDesc(String email, Pageable pageable);
 
     Page<Review> findByAuthorIdAndStatusOrderByCreatedAtDesc(Long authorId, ReviewStatus status, Pageable pageable);
+
+    Page<Review> findByAuthorUsernameAndStatusOrderByCreatedAtDesc(String username, ReviewStatus status, Pageable pageable);
 }

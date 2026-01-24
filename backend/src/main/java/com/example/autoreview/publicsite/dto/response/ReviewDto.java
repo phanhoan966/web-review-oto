@@ -11,6 +11,7 @@ public class ReviewDto {
     private String heroImageUrl;
     private String authorName;
     private String authorAvatar;
+    private String authorUsername;
     private String brand;
     private String vehicleModel;
     private Integer vehicleYear;
@@ -77,6 +78,14 @@ public class ReviewDto {
 
     public void setAuthorAvatar(String authorAvatar) {
         this.authorAvatar = authorAvatar;
+    }
+
+    public String getAuthorUsername() {
+        return authorUsername;
+    }
+
+    public void setAuthorUsername(String authorUsername) {
+        this.authorUsername = authorUsername;
     }
 
     public String getBrand() {

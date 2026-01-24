@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
+    Optional<User> findByUsername(String username);
+
     @Query("select u from User u order by u.followers desc, u.rating desc")
     List<User> findTopReviewers(org.springframework.data.domain.Pageable pageable);
 }

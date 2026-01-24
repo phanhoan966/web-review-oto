@@ -16,7 +16,7 @@ const page = ref(0)
 const size = 6
 const hasMore = ref(true)
 
-const userId = computed(() => Number(route.params.id))
+const username = computed(() => String(route.params.username || ''))
 
 onMounted(() => {
   loadProfile()
@@ -29,7 +29,7 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => route.params.id,
+  () => route.params.username,
   () => {
     resetState()
     loadProfile()
@@ -50,7 +50,7 @@ async function loadProfile() {
   profileLoading.value = true
   profileError.value = ''
   try {
-    const { data } = await client.get<ReviewerItem>(`/users/${userId.value}`)
+    const { data } = await client.get<ReviewerItem>(`/users/username/${username.value}`)
     profile.value = data
   } catch (error: any) {
     profileError.value = error.response?.data?.message || 'Không tải được hồ sơ'
@@ -70,7 +70,7 @@ async function loadReviews(reset = false) {
   listLoading.value = true
   listError.value = ''
   try {
-    const { data } = await client.get(`/users/${userId.value}/reviews`, { params: { page: page.value, size } })
+    const { data } = await client.get(`/users/username/${username.value}/reviews`, { params: { page: page.value, size } })
     const items = data.reviews || data.content || []
     reviews.value = reset ? items : [...reviews.value, ...items]
     if (items.length < size) {
@@ -154,6 +154,8 @@ function handleScroll() {
   padding: 32px 16px 48px;
   display: grid;
   gap: 18px;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
 .profile-card {

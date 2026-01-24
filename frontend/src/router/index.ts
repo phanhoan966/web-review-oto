@@ -38,7 +38,7 @@ const router = createRouter({
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },
     { path: '/post/:slug/:id', name: 'review-detail', component: ReviewDetailView },
     { path: '/reviews/:id', name: 'review-detail-legacy', component: ReviewDetailView },
-    { path: '/u/:id', name: 'user-profile', component: UserProfilePublicView },
+    { path: '/user/:username', name: 'user-profile', component: UserProfilePublicView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } }
   ]
 })

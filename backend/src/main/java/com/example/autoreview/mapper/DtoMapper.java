@@ -49,6 +49,7 @@ public class DtoMapper {
             dto.setAuthorId(review.getAuthor().getId());
             dto.setAuthorName(review.getAuthor().getUsername());
             dto.setAuthorAvatar(review.getAuthor().getAvatarUrl());
+            dto.setAuthorUsername(review.getAuthor().getUsername());
         }
         return dto;
     }
@@ -70,6 +71,7 @@ public class DtoMapper {
         ReviewerDto dto = new ReviewerDto();
         dto.setId(user.getId());
         dto.setDisplayName(user.getUsername());
+        dto.setUsername(user.getUsername());
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setFollowers(user.getFollowers());
         dto.setRating(user.getRating());

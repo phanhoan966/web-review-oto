@@ -69,6 +69,15 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public ReviewListResponse listPublicByAuthorUsername(String username, int page, int size) {
+        userRepository.findByUsername(username).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Review> reviews = reviewRepository.findByAuthorUsernameAndStatusOrderByCreatedAtDesc(username, ReviewStatus.APPROVED, pageable);
+        List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        return new ReviewListResponse(dtos, reviews.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
     public ReviewListResponse listAll(int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findAll(pageable);

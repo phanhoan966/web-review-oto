@@ -12,6 +12,7 @@ export interface ReviewCardData {
   authorId?: number
   authorName: string
   authorAvatar?: string
+  authorUsername?: string
   brand?: string
   vehicleModel?: string
   vehicleYear?: number
@@ -31,7 +32,9 @@ const meta = computed(() => {
 
 const detailPath = computed(() => `/post/${slugify(props.review.title) || 'bai-viet'}/${props.review.id}`)
 
-const profilePath = computed(() => (props.review.authorId ? `/u/${props.review.authorId}` : ''))
+const profilePath = computed(() =>
+  props.review.authorUsername ? `/user/${encodeURIComponent(props.review.authorUsername)}` : ''
+)
 
 const heroSrc = computed(() => buildAssetUrl(props.review.heroImageUrl))
 
