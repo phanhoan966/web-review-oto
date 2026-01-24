@@ -158,6 +158,7 @@ async function logoutAndClose() {
   min-height: 100vh;
   background: #f5f7fb;
   color: var(--text);
+  align-items: start;
 }
 
 .sidebar {
@@ -168,6 +169,10 @@ async function logoutAndClose() {
   grid-template-rows: auto 1fr;
   gap: 14px;
   border-right: 1px solid #dfe8f5;
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  z-index: 2;
 }
 
 .sidebar-head {
