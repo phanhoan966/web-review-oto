@@ -10,6 +10,9 @@ interface ReviewRow {
   authorName?: string
   status?: string
   views?: number
+  likes?: number
+  commentsCount?: number
+  vehicleModel?: string
   publishedAt?: string
 }
 
@@ -156,6 +159,9 @@ function changeRejectedSize(size: number) {
           <div>Tác giả</div>
           <div>Trạng thái</div>
           <div>Lượt xem</div>
+          <div>Thả tim</div>
+          <div>Bình luận</div>
+          <div>Loại xe</div>
           <div>Gửi</div>
           <div></div>
         </div>
@@ -164,6 +170,9 @@ function changeRejectedSize(size: number) {
           <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
           <div><span class="status pending">{{ p.status || 'PENDING' }}</span></div>
           <div>{{ p.views ?? 0 }}</div>
+          <div>{{ p.likes ?? 0 }}</div>
+          <div>{{ p.commentsCount ?? 0 }}</div>
+          <div class="muted">{{ p.vehicleModel || '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
             <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt</button>
@@ -180,6 +189,9 @@ function changeRejectedSize(size: number) {
           <div>Tác giả</div>
           <div>Trạng thái</div>
           <div>Lượt xem</div>
+          <div>Thả tim</div>
+          <div>Bình luận</div>
+          <div>Loại xe</div>
           <div>Xuất bản</div>
           <div></div>
         </div>
@@ -188,6 +200,9 @@ function changeRejectedSize(size: number) {
           <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
           <div><span class="status approved">{{ p.status || 'APPROVED' }}</span></div>
           <div>{{ p.views ?? 0 }}</div>
+          <div>{{ p.likes ?? 0 }}</div>
+          <div>{{ p.commentsCount ?? 0 }}</div>
+          <div class="muted">{{ p.vehicleModel || '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
             <button class="ghost" :disabled="actionLoading === p.id" @click="hidePost(p.id)">Ẩn</button>
@@ -203,6 +218,9 @@ function changeRejectedSize(size: number) {
           <div>Tác giả</div>
           <div>Trạng thái</div>
           <div>Lượt xem</div>
+          <div>Thả tim</div>
+          <div>Bình luận</div>
+          <div>Loại xe</div>
           <div>Gửi</div>
           <div></div>
         </div>
@@ -211,6 +229,9 @@ function changeRejectedSize(size: number) {
           <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
           <div><span class="status rejected">{{ p.status || 'REJECTED' }}</span></div>
           <div>{{ p.views ?? 0 }}</div>
+          <div>{{ p.likes ?? 0 }}</div>
+          <div>{{ p.commentsCount ?? 0 }}</div>
+          <div class="muted">{{ p.vehicleModel || '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
             <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt lại</button>
@@ -276,7 +297,7 @@ h2 {
 
 .row {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr auto;
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
