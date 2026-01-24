@@ -134,7 +134,7 @@ function goPending() {
           <div v-for="item in topReviews" :key="item.title" class="row">
             <div>
               <p class="title">{{ item.title }}</p>
-              <p class="muted">{{ item.author }}</p>
+              <p class="muted">{{ item.authorName }}</p>
             </div>
             <div class="stats">
               <span>👁 {{ item.views ?? 0 }}</span>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import client from '../../api/client'
 import { buildAssetUrl } from '../utils/assetUrl'
@@ -68,13 +68,6 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, '')
     .trim()
 }
-
-const previewBase = window.location.origin
-
-const previewPath = computed(() => {
-  const slug = form.value.slug || 'tieu-de'
-  return `${previewBase}/post/${slug}/:id`
-})
 
 async function onHeroFile(event: Event) {
   const target = event.target as HTMLInputElement

@@ -9,6 +9,7 @@ export interface UserProfile {
   followers?: number
   rating?: number
   reviewCount?: number
+  roles?: string[]
 }
 
 interface AuthState {

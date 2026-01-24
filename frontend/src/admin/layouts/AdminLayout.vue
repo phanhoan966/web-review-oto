@@ -2,9 +2,11 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useUiStore } from '../../stores/ui'
 import { buildAssetUrl } from '../../public/utils/assetUrl'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const route = useRoute()
 const router = useRouter()
 const collapsed = ref(false)
@@ -22,6 +24,8 @@ const activeName = computed(() => route.name)
 const avatarSrc = computed(() => (auth.user?.avatarUrl ? buildAssetUrl(auth.user.avatarUrl) : ''))
 const avatarInitial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
 const displayName = computed(() => auth.user?.username || 'Admin')
+const themeIcon = computed(() => (ui.theme === 'dark' ? '☀' : '☾'))
+const themeLabel = computed(() => (ui.theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'))
 
 function updateIsMobile() {
   isMobileView.value = typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches
@@ -45,6 +49,10 @@ function toggleSidebar() {
     return
   }
   collapsed.value = !collapsed.value
+}
+
+function toggleThemeMode() {
+  ui.toggleTheme()
 }
 
 function closeSidebar() {
@@ -92,8 +100,8 @@ async function logoutAndClose() {
         </div>
         <div class="profile-area">
           <div class="quick-actions">
-            <button class="icon-btn" aria-label="Chế độ" title="Chế độ">
-              ☾
+            <button class="icon-btn" :aria-label="themeLabel" :title="themeLabel" @click="toggleThemeMode">
+              {{ themeIcon }}
             </button>
             <button class="icon-btn" aria-label="Thông báo" title="Thông báo">
               🔔
@@ -134,17 +142,19 @@ async function logoutAndClose() {
   display: grid;
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f6f8fb 0%, #eef2ff 100%);
+  background: var(--bg);
+  color: var(--text);
 }
 
 .sidebar {
-  background: #0b1437;
-  color: #e5e7eb;
+  background: var(--surface);
+  color: var(--text);
   padding: 20px 16px;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 18px;
-  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.08);
+  border-right: 1px solid var(--border);
+  box-shadow: 8px 0 30px rgba(15, 23, 42, 0.06);
 }
 
 .brand {
@@ -167,19 +177,22 @@ nav {
   border-radius: 12px;
   color: inherit;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.03);
-  transition: background 0.2s ease, transform 0.1s ease;
+  background: var(--chip-bg);
+  border: 1px solid transparent;
+  transition: background 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  border-color: var(--border);
   transform: translateX(2px);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: #fff;
-  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
+  box-shadow: var(--shadow);
+  border-color: transparent;
 }
 
 .icon {
@@ -189,11 +202,11 @@ nav {
   justify-content: center;
 }
 
-
 .main {
   display: grid;
   grid-template-rows: auto 1fr;
   min-height: 100vh;
+  background: var(--bg);
 }
 
 .topbar {
@@ -202,8 +215,9 @@ nav {
   justify-content: space-between;
   align-items: center;
   backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
 }
 
 .breadcrumbs {
@@ -217,12 +231,13 @@ nav {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: white;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
+  color: var(--text);
 }
 
 .profile-area {
@@ -241,14 +256,15 @@ nav {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
   display: grid;
   place-items: center;
   cursor: pointer;
   font-size: 18px;
   position: relative;
+  color: var(--text);
 }
 
 .icon-btn .dot {
@@ -258,23 +274,24 @@ nav {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(43, 138, 239, 0.12);
 }
 
 .avatar-btn {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid #e5e7eb;
-  background: white;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
   cursor: pointer;
   display: grid;
   place-items: center;
   padding: 0;
   position: relative;
   overflow: hidden;
+  color: var(--text);
 }
 
 .avatar-btn img {
@@ -286,7 +303,7 @@ nav {
 
 .avatar-btn span {
   font-weight: 800;
-  color: #0b1437;
+  color: var(--text);
 }
 
 .status-dot {
@@ -297,21 +314,22 @@ nav {
   height: 10px;
   border-radius: 50%;
   background: #22c55e;
-  box-shadow: 0 0 0 3px white;
+  box-shadow: 0 0 0 3px var(--surface);
 }
 
 .dropdown {
   position: absolute;
   right: 0;
   top: 60px;
-  background: white;
+  background: var(--surface);
   border-radius: 16px;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow);
   padding: 12px;
   display: grid;
   gap: 10px;
   min-width: 220px;
   z-index: 10;
+  border: 1px solid var(--border);
 }
 
 .user-row {
@@ -325,13 +343,13 @@ nav {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid #e5e7eb;
-  background: #eef2ff;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
   display: grid;
   place-items: center;
   overflow: hidden;
   font-weight: 800;
-  color: #312e81;
+  color: var(--text);
 }
 
 .menu-avatar img {
@@ -345,15 +363,16 @@ nav {
   text-align: left;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
   cursor: pointer;
   font-weight: 700;
+  color: var(--text);
 }
 
 .menu-item:hover {
-  background: #eef2ff;
-  border-color: #c7d2fe;
+  background: var(--surface);
+  border-color: var(--border);
 }
 
 .backdrop {
@@ -404,7 +423,7 @@ main.content {
     position: sticky;
     top: 0;
     z-index: 12;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--surface);
   }
   .breadcrumbs span {
     display: none;
@@ -439,15 +458,15 @@ main.content {
 }
 
 .primary {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, var(--accent), var(--primary));
   color: white;
-  box-shadow: 0 10px 26px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 10px 26px rgba(34, 197, 94, 0.18);
 }
 
 .ghost {
-  background: #eef2ff;
-  color: #312e81;
-  border: 1px solid #c7d2fe;
+  background: var(--chip-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .layout.collapsed {
