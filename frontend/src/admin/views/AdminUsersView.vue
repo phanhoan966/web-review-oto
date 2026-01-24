@@ -441,13 +441,14 @@ input {
 }
 
 .table {
+  --cols: 1.5fr 1.5fr 1.3fr 0.9fr 0.9fr 1.1fr 140px;
   display: grid;
   gap: 10px;
 }
 
 .row {
   display: grid;
-  grid-template-columns: 1.5fr 1.5fr 1.3fr 0.9fr 0.9fr 1.1fr auto;
+  grid-template-columns: var(--cols);
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
@@ -525,9 +526,8 @@ input {
 }
 
 @media (max-width: 960px) {
-  .row,
-  .row.head {
-    grid-template-columns: 1.3fr 1.3fr 1.1fr 0.9fr 0.9fr 1fr auto;
+  .table {
+    --cols: 1.3fr 1.3fr 1.1fr 0.9fr 0.9fr 1fr 120px;
   }
 }
 
