@@ -71,7 +71,7 @@ public class DtoMapper {
             dto.setAuthorFollowers(comment.getAuthor().getFollowers());
             dto.setAuthorReviewCount(comment.getAuthor().getReviewCount());
             dto.setAuthorRating(comment.getAuthor().getRating());
-            dto.setAuthorBio(comment.getAuthor().getBio());
+            dto.setAuthorBio(null);
         }
         return dto;
     }
