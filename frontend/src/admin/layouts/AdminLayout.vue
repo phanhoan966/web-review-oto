@@ -172,6 +172,8 @@ async function logoutAndClose() {
   --primary: #2171ff;
   --accent: #3ba9ff;
   --pill-border: #e5e7eb;
+  --sidebar-start: rgba(226, 234, 255, 0.9);
+  --sidebar-end: rgba(246, 248, 255, 0.95);
 }
 
 .layout.admin-dark {
@@ -185,10 +187,12 @@ async function logoutAndClose() {
   --primary: #60a5fa;
   --accent: #38bdf8;
   --pill-border: #1f2937;
+  --sidebar-start: rgba(15, 23, 42, 0.95);
+  --sidebar-end: rgba(9, 12, 23, 0.95);
 }
 
 .sidebar {
-  background: linear-gradient(180deg, rgba(226, 234, 255, 0.9) 0%, rgba(246, 248, 255, 0.95) 100%);
+  background: linear-gradient(180deg, var(--sidebar-start) 0%, var(--sidebar-end) 100%);
   color: var(--text);
   padding: 18px 16px 24px;
   display: grid;
@@ -204,7 +208,7 @@ async function logoutAndClose() {
 }
 
 .admin-dark .sidebar {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(9, 12, 23, 0.95));
+  background: linear-gradient(180deg, var(--sidebar-start), var(--sidebar-end));
   border-right: 1px solid var(--border);
 }
 
