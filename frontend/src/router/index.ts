@@ -5,6 +5,7 @@ import RegisterView from '../public/views/RegisterView.vue'
 import ForgotPasswordView from '../public/views/ForgotPasswordView.vue'
 import CreateReviewView from '../public/views/CreateReviewView.vue'
 import ProfileView from '../public/views/ProfileView.vue'
+import UserProfilePublicView from '../public/views/UserProfilePublicView.vue'
 import ReviewDetailView from '../public/views/ReviewDetailView.vue'
 import AdminLoginView from '../admin/views/AdminLoginView.vue'
 import AdminDashboardView from '../admin/views/AdminDashboardView.vue'
@@ -37,6 +38,7 @@ const router = createRouter({
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },
     { path: '/post/:slug/:id', name: 'review-detail', component: ReviewDetailView },
     { path: '/reviews/:id', name: 'review-detail-legacy', component: ReviewDetailView },
+    { path: '/u/:id', name: 'user-profile', component: UserProfilePublicView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } }
   ]
 })

@@ -9,6 +9,7 @@ export interface ReviewCardData {
   title: string
   excerpt: string
   heroImageUrl: string
+  authorId?: number
   authorName: string
   authorAvatar?: string
   brand?: string
@@ -30,6 +31,8 @@ const meta = computed(() => {
 
 const detailPath = computed(() => `/post/${slugify(props.review.title) || 'bai-viet'}/${props.review.id}`)
 
+const profilePath = computed(() => (props.review.authorId ? `/u/${props.review.authorId}` : ''))
+
 const heroSrc = computed(() => buildAssetUrl(props.review.heroImageUrl))
 
 const relativeTime = computed(() => formatRelativeTime(props.review.publishedAt))
@@ -49,38 +52,36 @@ function formatRelativeTime(value?: string) {
 </script>
 
 <template>
-  <RouterLink class="card-link" :to="detailPath">
-    <article class="card surface">
-      <div class="hero">
-        <img :src="heroSrc" :alt="review.title" />
-      </div>
-      <div class="content">
-        <h2>{{ review.title }}</h2>
-        <div class="author">
+  <article class="card surface">
+    <RouterLink class="hero" :to="detailPath">
+      <img :src="heroSrc" :alt="review.title" />
+    </RouterLink>
+    <div class="content">
+      <RouterLink class="title-link" :to="detailPath"><h2>{{ review.title }}</h2></RouterLink>
+      <div class="author">
+        <RouterLink v-if="profilePath" class="avatar-link" :to="profilePath">
           <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
-          <div>
-            <div class="name">{{ review.authorName }}</div>
-            <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
-          </div>
+        </RouterLink>
+        <div v-else class="avatar-link">
+          <img class="avatar" :src="review.authorAvatar || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
         </div>
-        <p class="excerpt">{{ review.excerpt }}</p>
-        <div class="metrics">
-          <div class="pill">❤ {{ review.likes ?? 0 }}</div>
-          <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
-          <div class="pill">👁 {{ review.views ?? 0 }} views</div>
+        <div>
+          <RouterLink v-if="profilePath" class="name" :to="profilePath">{{ review.authorName }}</RouterLink>
+          <div v-else class="name">{{ review.authorName }}</div>
+          <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
         </div>
       </div>
-    </article>
-  </RouterLink>
+      <p class="excerpt">{{ review.excerpt }}</p>
+      <div class="metrics">
+        <div class="pill">❤ {{ review.likes ?? 0 }}</div>
+        <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
+        <div class="pill">👁 {{ review.views ?? 0 }} views</div>
+      </div>
+    </div>
+  </article>
 </template>
 
 <style scoped lang="scss">
-.card-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
-
 .card {
   padding: 18px;
   border-radius: 24px;
@@ -93,16 +94,23 @@ function formatRelativeTime(value?: string) {
   overflow: hidden;
   border-radius: 18px;
   height: 240px;
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-  }
+  display: block;
+}
+
+.hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
 }
 
 .card:hover .hero img {
   transform: scale(1.02);
+}
+
+.title-link {
+  text-decoration: none;
+  color: inherit;
 }
 
 .content h2 {
@@ -118,6 +126,11 @@ function formatRelativeTime(value?: string) {
   align-items: center;
 }
 
+.avatar-link {
+  display: block;
+  text-decoration: none;
+}
+
 .avatar {
   width: 46px;
   height: 46px;
@@ -128,6 +141,8 @@ function formatRelativeTime(value?: string) {
 
 .name {
   font-weight: 600;
+  color: inherit;
+  text-decoration: none;
 }
 
 .sub {

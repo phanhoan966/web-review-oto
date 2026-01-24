@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 export interface ReviewerItem {
   id: number
   displayName: string
@@ -15,7 +17,7 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   <section class="widget surface">
     <header class="widget-header">{{ title || 'Top Reviewers' }}</header>
     <div class="list">
-      <div v-for="reviewer in reviewers" :key="reviewer.id" class="row">
+      <RouterLink v-for="reviewer in reviewers" :key="reviewer.id" class="row" :to="`/u/${reviewer.id}`">
         <div class="avatar-wrap">
           <img :src="reviewer.avatarUrl || 'https://i.pinimg.com/736x/37/c2/cd/37c2cdd8a1f547f662251917b53e0041.jpg'" alt="avatar" />
         </div>
@@ -24,7 +26,7 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
           <div class="meta">{{ reviewer.followers || 0 }} followers • ⭐ {{ reviewer.rating?.toFixed(1) || '4.5' }}</div>
         </div>
         <span class="count">{{ reviewer.reviewCount || 0 }}</span>
-      </div>
+      </RouterLink>
     </div>
   </section>
 </template>
@@ -53,6 +55,15 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
   grid-template-columns: 52px 1fr auto;
   gap: 10px;
   align-items: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 6px 4px;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.row:hover {
+  background: var(--chip-bg);
 }
 
 .avatar-wrap {

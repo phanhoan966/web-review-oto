@@ -46,6 +46,7 @@ public class DtoMapper {
         dto.setPublishedAt(review.getPublishedAt());
         dto.setStatus(review.getStatus() != null ? review.getStatus().name() : null);
         if (review.getAuthor() != null) {
+            dto.setAuthorId(review.getAuthor().getId());
             dto.setAuthorName(review.getAuthor().getUsername());
             dto.setAuthorAvatar(review.getAuthor().getAvatarUrl());
         }

@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/uploads").permitAll()
                         .requestMatchers(HttpMethod.GET, "/reviews/pending").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
                         .requestMatchers(HttpMethod.GET, "/reviews/mine").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/reviews", "/reviews/most-viewed", "/reviews/*/comments", "/reviews/*", "/brands/**", "/reviewers/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/reviews", "/reviews/most-viewed", "/reviews/*/comments", "/reviews/*", "/brands/**", "/reviewers/**", "/users/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/reviews").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/reviews/**").hasAuthority(Roles.USER)
                         .requestMatchers(HttpMethod.POST, "/reviews/*/comments").permitAll()
