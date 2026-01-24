@@ -154,7 +154,7 @@ async function logoutAndClose() {
 <style scoped lang="scss">
 .layout {
   display: grid;
-  grid-template-columns: 272px 1fr;
+  grid-template-columns: 300px 1fr;
   min-height: 100vh;
   background: #f5f7fb;
   color: var(--text);
@@ -428,6 +428,7 @@ async function logoutAndClose() {
   grid-template-rows: auto 1fr;
   min-height: 100vh;
   background: var(--bg);
+  padding: 18px 16px 24px;
 }
 
 .topbar {
