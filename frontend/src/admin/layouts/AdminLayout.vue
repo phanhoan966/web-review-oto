@@ -156,12 +156,12 @@ async function logoutAndClose() {
   display: grid;
   grid-template-columns: 350px 1fr;
   min-height: 100vh;
-  background: #f5f7fb;
-  color: #0f172a;
+  background: var(--bg);
+  color: var(--text);
   align-items: start;
 }
 
-:global(.admin-light) {
+.layout.admin-light {
   --bg: #f5f7fb;
   --surface: #ffffff;
   --text: #0f172a;
@@ -174,7 +174,7 @@ async function logoutAndClose() {
   --pill-border: #e5e7eb;
 }
 
-:global(.admin-dark) {
+.layout.admin-dark {
   --bg: #0b1220;
   --surface: #0f172a;
   --text: #e5e7eb;
@@ -204,7 +204,7 @@ async function logoutAndClose() {
 }
 
 .admin-dark .sidebar {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 28, 0.98));
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(9, 12, 23, 0.95));
   border-right: 1px solid var(--border);
 }
 
@@ -459,7 +459,7 @@ async function logoutAndClose() {
   grid-template-rows: auto 1fr;
   min-height: 100vh;
   background: var(--bg);
-  color: #0f172a;
+  color: var(--text);
   padding: 18px 16px 24px;
 }
 
@@ -469,10 +469,10 @@ async function logoutAndClose() {
   justify-content: space-between;
   align-items: center;
   backdrop-filter: blur(8px);
-  background: #ffffff;
-  color: #0f172a;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  background: var(--surface);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .breadcrumbs {
@@ -480,24 +480,24 @@ async function logoutAndClose() {
   align-items: center;
   gap: 10px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .breadcrumbs span {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .breadcrumbs .icon {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
-  color: #0f172a;
+  box-shadow: var(--shadow);
+  color: var(--text);
 }
 
 .profile-area {
@@ -516,15 +516,15 @@ async function logoutAndClose() {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
   display: grid;
   place-items: center;
   cursor: pointer;
   font-size: 18px;
   position: relative;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .icon-btn .dot {
@@ -542,16 +542,16 @@ async function logoutAndClose() {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid #e5e7eb;
-  background: #ffffff;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
   cursor: pointer;
   display: grid;
   place-items: center;
   padding: 0;
   position: relative;
   overflow: hidden;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .avatar-btn img {
