@@ -172,12 +172,13 @@ async function hidePost(id: number) {
 
 <style scoped lang="scss">
 .panel {
-  background: white;
+  background: var(--surface);
   border-radius: 20px;
   padding: 20px;
   box-shadow: var(--shadow);
   display: grid;
   gap: 16px;
+  border: 1px solid var(--border);
 }
 
 .panel-head {
@@ -226,13 +227,14 @@ h2 {
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
 }
 
 .row.head {
   font-weight: 700;
-  color: #111827;
-  background: #eef2ff;
+  color: var(--text);
+  background: var(--surface);
 }
 
 .row.empty {
@@ -282,14 +284,14 @@ h2 {
 }
 
 .primary {
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff;
 }
 
 .ghost {
-  background: #f1f5f9;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background: var(--chip-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .danger {

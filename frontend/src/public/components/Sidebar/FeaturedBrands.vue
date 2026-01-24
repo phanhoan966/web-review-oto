@@ -27,6 +27,8 @@ defineProps<{ brands: BrandItem[] }>()
   padding: 16px;
   border-radius: 18px;
   box-shadow: var(--shadow);
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .widget-header {
@@ -47,7 +49,8 @@ defineProps<{ brands: BrandItem[] }>()
   align-items: center;
   padding: 8px;
   border-radius: 12px;
-  background: #f7f9fc;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
 }
 
 .logo {
@@ -56,7 +59,7 @@ defineProps<{ brands: BrandItem[] }>()
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   img {
     max-height: 30px;

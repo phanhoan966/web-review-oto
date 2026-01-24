@@ -242,8 +242,8 @@ form {
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
-  background: #f9fbff;
-  color: #1f2a3d;
+  background: var(--chip-bg);
+  color: var(--text);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -262,7 +262,7 @@ form {
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 10px;
-  background: #f7f9fc;
+  background: var(--chip-bg);
 }
 
 .hero-preview img {
@@ -280,7 +280,7 @@ form {
 
 label {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text);
 }
 
 input,
@@ -289,8 +289,9 @@ select {
   padding: 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: #f7f9fc;
+  background: var(--surface);
   font-size: 15px;
+  color: var(--text);
 }
 
 textarea {

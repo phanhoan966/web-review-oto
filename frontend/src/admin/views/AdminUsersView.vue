@@ -244,12 +244,13 @@ async function load() {
 
 <style scoped lang="scss">
 .panel {
-  background: white;
+  background: var(--surface);
   border-radius: 20px;
   padding: 20px;
   box-shadow: var(--shadow);
   display: grid;
   gap: 16px;
+  border: 1px solid var(--border);
 }
 
 .panel-head {
@@ -283,12 +284,12 @@ h2 {
 }
 
 .form {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px;
   display: grid;
   gap: 12px;
-  background: #f9fafc;
+  background: var(--chip-bg);
 }
 
 .form-grid {
@@ -307,8 +308,9 @@ input {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #dfe3ea;
-  background: white;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .roles {
@@ -328,8 +330,8 @@ input {
   gap: 6px;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: white;
+  border: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .form-actions {
@@ -354,13 +356,14 @@ input {
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
 }
 
 .row.head {
   font-weight: 700;
-  color: #111827;
-  background: #eef2ff;
+  color: var(--text);
+  background: var(--surface);
 }
 
 .row.empty {
@@ -375,14 +378,14 @@ input {
 
 .role-list {
   font-weight: 600;
-  color: #312e81;
+  color: var(--text);
 }
 
 .pill {
   padding: 6px 10px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #312e81;
+  background: var(--chip-bg);
+  color: var(--text);
   font-weight: 700;
   font-size: 13px;
 }
@@ -404,14 +407,14 @@ input {
 }
 
 .primary {
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff;
 }
 
 .ghost {
-  background: #f1f5f9;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background: var(--chip-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .danger {
