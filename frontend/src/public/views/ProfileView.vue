@@ -41,7 +41,7 @@ async function loadReviews() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="container">
     <div class="card surface" v-if="auth.user">
       <div class="header">
         <div class="avatar" :style="auth.user.avatarUrl ? `background-image:url(${auth.user.avatarUrl})` : ''">
@@ -99,16 +99,8 @@ async function loadReviews() {
 </template>
 
 <style scoped lang="scss">
-.page {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 40px 16px;
-  background: var(--bg);
-}
 
 .card {
-  width: min(900px, 100%);
   padding: 28px;
   border-radius: 20px;
   box-shadow: var(--shadow);

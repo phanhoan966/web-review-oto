@@ -98,7 +98,7 @@ function handleScroll() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="container page">
     <section class="profile-card surface">
       <div class="heading">
         <div class="avatar" :style="profile?.avatarUrl ? `background-image:url(${profile.avatarUrl})` : ''">
@@ -154,7 +154,6 @@ function handleScroll() {
   padding: 32px 16px 48px;
   display: grid;
   gap: 18px;
-  max-width: 1080px;
   margin: 0 auto;
 }
 

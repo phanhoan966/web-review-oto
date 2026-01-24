@@ -108,8 +108,8 @@ async function logout() {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-top: 16px;
-  padding-bottom: 12px;
+  padding-top: 5px;
+  padding-bottom: 2px;
 }
 
 .brand {
@@ -117,7 +117,7 @@ async function logout() {
 }
 
 .brand-logo {
-  height: 32px;
+  height: 60px;
   width: auto;
   display: block;
 }

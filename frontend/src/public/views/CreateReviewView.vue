@@ -189,7 +189,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="container page">
     <div class="form-card surface">
       <h1>Tạo bài review</h1>
       <p class="sub">Bài viết sẽ ở trạng thái chờ duyệt.</p>
@@ -198,7 +198,6 @@ async function submit() {
         <input v-model="form.title" required maxlength="200" />
 
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
-        <input v-model="form.slug" readonly />
         <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}</p>
 
         <label>Tóm tắt</label>
@@ -264,13 +263,12 @@ async function submit() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 25px 16px;
+  padding-top: 25px;
   background: var(--bg);
 }
 
 .form-card {
   width: 100%;
-  max-width: 1100px;
   padding: 28px;
   border-radius: 20px;
   box-shadow: var(--shadow);
