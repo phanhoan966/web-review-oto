@@ -15,9 +15,15 @@ const sidebarOpen = ref(false)
 const isMobileView = ref(false)
 
 const nav = [
-  { label: 'Dashboard', name: 'admin-dashboard', icon: '📊' },
-  { label: 'Quản lý user', name: 'admin-users', icon: '👥' },
-  { label: 'Quản lý bài viết', name: 'admin-posts', icon: '📰' }
+  { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
+  { label: 'Quản lý user', name: 'admin-users', icon: '👥', desc: 'Người dùng & reviewer' },
+  { label: 'Quản lý bài viết', name: 'admin-posts', icon: '📰', desc: 'Duyệt và xuất bài' }
+]
+
+const stats = [
+  { label: 'Lượt xem', value: '24.3k' },
+  { label: 'Thả tim', value: '42.6k' },
+  { label: 'Bài viết', value: '246' }
 ]
 
 const activeName = computed(() => route.name)
@@ -82,13 +88,53 @@ async function logoutAndClose() {
 <template>
   <div class="layout" :class="{ collapsed, 'sidebar-open': sidebarOpen }">
     <aside class="sidebar">
-      <div class="brand">AutoReview Admin</div>
-      <nav>
+      <div class="sidebar-head">
+        <div class="avatar-wrap">
+          <img v-if="avatarSrc" :src="avatarSrc" alt="Avatar" />
+          <span v-else>{{ avatarInitial }}</span>
+          <span class="status-dot"></span>
+        </div>
+        <div class="sidebar-meta">
+          <p class="eyebrow">AutoReview</p>
+          <h3>{{ displayName }}</h3>
+          <p class="muted">{{ auth.user?.email || 'auto@review.com' }}</p>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="pill-icon" aria-label="Mở rộng">↗</button>
+        <button class="pill-icon" aria-label="Thông báo">🔔</button>
+        <button class="pill-icon" aria-label="Hộp thư">✉️</button>
+      </div>
+      <div class="stats-grid">
+        <div v-for="stat in stats" :key="stat.label" class="stat-card">
+          <p class="stat-value">{{ stat.value }}</p>
+          <p class="muted small">{{ stat.label }}</p>
+        </div>
+      </div>
+      <nav class="nav">
         <RouterLink v-for="item in nav" :key="item.name" :to="{ name: item.name }" class="nav-item" :class="{ active: activeName === item.name }">
-          <span class="icon">{{ item.icon }}</span>
-          <span>{{ item.label }}</span>
+          <div class="nav-icon">{{ item.icon }}</div>
+          <div class="nav-text">
+            <p>{{ item.label }}</p>
+            <p class="muted small">{{ item.desc }}</p>
+          </div>
         </RouterLink>
       </nav>
+      <div class="sidebar-footer">
+        <button class="theme-toggle" :aria-label="themeLabel" @click="toggleThemeMode">
+          <span class="theme-icon">{{ themeIcon }}</span>
+          <span>{{ ui.theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối' }}</span>
+        </button>
+        <div class="support-card">
+          <div class="support-icon">?</div>
+          <div>
+            <p>Trung tâm hỗ trợ</p>
+            <p class="muted small">Tài liệu và hướng dẫn</p>
+          </div>
+          <button class="pill-icon ghost" aria-label="Mở hỗ trợ">→</button>
+        </div>
+        <button class="logout-btn" @click="logoutAndClose">Đăng xuất</button>
+      </div>
     </aside>
     <div v-if="isMobileView && sidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
 
@@ -140,59 +186,114 @@ async function logoutAndClose() {
 <style scoped lang="scss">
 .layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 300px 1fr;
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
 }
 
 .sidebar {
-  background: var(--surface);
+  background: radial-gradient(circle at 20% 20%, rgba(43, 138, 239, 0.1), rgba(13, 110, 253, 0.08)), var(--surface);
   color: var(--text);
-  padding: 20px 16px;
+  padding: 22px 18px;
   display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 18px;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 14px;
   border-right: 1px solid var(--border);
   box-shadow: 8px 0 30px rgba(15, 23, 42, 0.06);
 }
 
-.brand {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.02em;
-}
-
-nav {
+.sidebar-head {
   display: grid;
-  gap: 8px;
-}
-
-.nav-item {
-  display: grid;
-  grid-template-columns: 32px 1fr;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  color: inherit;
-  text-decoration: none;
-  background: var(--chip-bg);
-  border: 1px solid transparent;
-  transition: background 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
-}
-
-.nav-item:hover {
-  background: var(--surface);
-  border-color: var(--border);
-  transform: translateX(2px);
-}
-
-.nav-item.active {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #fff;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(43, 138, 239, 0.06));
   box-shadow: var(--shadow);
-  border-color: transparent;
+}
+
+.avatar-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-meta h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.sidebar-meta .eyebrow {
+  margin: 0 0 4px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.sidebar-meta .muted {
+  margin: 2px 0 0;
+}
+
+.sidebar-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pill-icon {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stat-card {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 4px;
+}
+
+.stat-value {
+  margin: 0;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.small {
+  font-size: 13px;
 }
 
 .icon {
@@ -200,6 +301,141 @@ nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.nav {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.nav-item {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
+  border-color: var(--accent);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 16px 36px rgba(13, 110, 253, 0.26);
+}
+
+.nav-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.nav-item.active .nav-icon {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.nav-text p {
+  margin: 0;
+  font-weight: 700;
+}
+
+.nav-text .muted {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.nav-item.active .muted {
+  color: #e0e7ff;
+}
+
+.sidebar-footer {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.theme-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  background: var(--chip-bg);
+}
+
+.support-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(13, 110, 253, 0.06), rgba(43, 138, 239, 0.05));
+  box-shadow: var(--shadow);
+}
+
+.support-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 800;
+  cursor: pointer;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.pill-icon.ghost {
+  background: var(--surface);
 }
 
 .main {
@@ -390,6 +626,49 @@ main.content {
   padding: 22px 22px 32px;
 }
 
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 84px 1fr;
+  }
+  .sidebar {
+    padding: 16px 10px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto;
+  }
+  .sidebar-head {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .sidebar-meta .muted,
+  .sidebar-meta h3 {
+    text-align: center;
+  }
+  .sidebar-actions,
+  .nav-text,
+  .stats-grid .muted,
+  .support-card div,
+  .support-card .pill-icon,
+  .theme-toggle span:last-child,
+  .logout-btn {
+    display: none;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .nav-item {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 12px;
+  }
+  .nav-text {
+    display: none;
+  }
+  .theme-icon {
+    margin: 0 auto;
+  }
+}
+
 @media (max-width: 720px) {
   .layout {
     grid-template-columns: 1fr;
@@ -399,11 +678,11 @@ main.content {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 240px;
+    width: 260px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 20;
-    padding: 14px 12px;
+    padding: 16px 12px;
   }
   .layout.sidebar-open .sidebar {
     transform: translateX(0);
@@ -470,45 +749,36 @@ main.content {
 }
 
 .layout.collapsed {
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 84px 1fr;
 }
 
 .layout.collapsed .sidebar {
   padding: 16px 10px;
 }
 
-.layout.collapsed .brand,
-.layout.collapsed .nav-item span:last-child {
+.layout.collapsed .sidebar-head {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+}
+
+.layout.collapsed .sidebar-meta,
+.layout.collapsed .sidebar-actions,
+.layout.collapsed .nav-text,
+.layout.collapsed .support-card div,
+.layout.collapsed .support-card .pill-icon,
+.layout.collapsed .theme-toggle span:last-child,
+.layout.collapsed .logout-btn {
   display: none;
+}
+
+.layout.collapsed .stats-grid {
+  grid-template-columns: 1fr;
 }
 
 .layout.collapsed .nav-item {
   grid-template-columns: 1fr;
   justify-items: center;
   padding: 12px;
-}
-
-@media (max-width: 1024px) {
-  .layout {
-    grid-template-columns: 72px 1fr;
-  }
-  .sidebar {
-    padding: 16px 10px;
-  }
-  .brand,
-  .nav-item span:last-child {
-    display: none;
-  }
-  .sidebar-footer {
-    display: grid;
-  }
-  .sidebar-footer .user {
-    display: none;
-  }
-  .nav-item {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    padding: 12px;
-  }
 }
 </style>
