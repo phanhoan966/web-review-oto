@@ -58,6 +58,14 @@ const profilePath = computed(() =>
 const loading = ref(false)
 const errorMsg = ref('')
 
+watch(
+  () => review.value?.title,
+  (title) => {
+    document.title = title ? `${title} | Đánh Giá Xe` : 'Đánh Giá Xe'
+  },
+  { immediate: true }
+)
+
 const comments = ref<CommentDetail[]>([])
 const commentsVisible = ref(false)
 const commentsLoading = ref(false)

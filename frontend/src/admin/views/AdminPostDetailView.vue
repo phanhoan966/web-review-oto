@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import client from '../../api/client'
 import { buildAssetUrl } from '../../public/utils/assetUrl'
@@ -32,6 +32,14 @@ const review = ref<ReviewDetail | null>(null)
 const loading = ref(false)
 const errorMsg = ref('')
 const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
+
+watch(
+  () => review.value?.title,
+  (title) => {
+    document.title = title ? `${title} | Quản trị` : 'Quản trị'
+  },
+  { immediate: true }
+)
 
 onMounted(load)
 
