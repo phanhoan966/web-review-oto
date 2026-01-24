@@ -20,12 +20,6 @@ const nav = [
   { label: 'Quản lý bài viết', name: 'admin-posts', icon: '📰', desc: 'Duyệt và xuất bài' }
 ]
 
-const stats = [
-  { label: 'Lượt xem', value: '24.3k' },
-  { label: 'Thả tim', value: '42.6k' },
-  { label: 'Bài viết', value: '246' }
-]
-
 const activeName = computed(() => route.name)
 const avatarSrc = computed(() => (auth.user?.avatarUrl ? buildAssetUrl(auth.user.avatarUrl) : ''))
 const avatarInitial = computed(() => (auth.user?.username || 'A').charAt(0).toUpperCase())
@@ -100,17 +94,6 @@ async function logoutAndClose() {
           <p class="muted">{{ auth.user?.email || 'auto@review.com' }}</p>
         </div>
       </div>
-      <div class="sidebar-actions">
-        <button class="pill-icon" aria-label="Mở rộng">↗</button>
-        <button class="pill-icon" aria-label="Thông báo">🔔</button>
-        <button class="pill-icon" aria-label="Hộp thư">✉️</button>
-      </div>
-      <div class="stats-grid">
-        <div v-for="stat in stats" :key="stat.label" class="stat-card">
-          <p class="stat-value">{{ stat.value }}</p>
-          <p class="muted small">{{ stat.label }}</p>
-        </div>
-      </div>
       <nav class="nav">
         <RouterLink v-for="item in nav" :key="item.name" :to="{ name: item.name }" class="nav-item" :class="{ active: activeName === item.name }">
           <div class="nav-icon">{{ item.icon }}</div>
@@ -120,21 +103,6 @@ async function logoutAndClose() {
           </div>
         </RouterLink>
       </nav>
-      <div class="sidebar-footer">
-        <button class="theme-toggle" :aria-label="themeLabel" @click="toggleThemeMode">
-          <span class="theme-icon">{{ themeIcon }}</span>
-          <span>{{ ui.theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối' }}</span>
-        </button>
-        <div class="support-card">
-          <div class="support-icon">?</div>
-          <div>
-            <p>Trung tâm hỗ trợ</p>
-            <p class="muted small">Tài liệu và hướng dẫn</p>
-          </div>
-          <button class="pill-icon ghost" aria-label="Mở hỗ trợ">→</button>
-        </div>
-        <button class="logout-btn" @click="logoutAndClose">Đăng xuất</button>
-      </div>
     </aside>
     <div v-if="isMobileView && sidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
 
@@ -186,20 +154,20 @@ async function logoutAndClose() {
 <style scoped lang="scss">
 .layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 248px 1fr;
   min-height: 100vh;
-  background: #f4f7fb;
+  background: #f5f7fb;
   color: var(--text);
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #f2f6ff, #e9f1ff);
+  background: linear-gradient(180deg, #eaf1ff 0%, #f6f8ff 100%);
   color: var(--text);
-  padding: 18px 16px;
+  padding: 16px 14px;
   display: grid;
-  grid-template-rows: auto auto auto 1fr auto;
+  grid-template-rows: auto 1fr;
   gap: 14px;
-  border-right: 1px solid #e3eaf7;
+  border-right: 1px solid #dfe8f5;
 }
 
 .sidebar-head {
@@ -211,7 +179,7 @@ async function logoutAndClose() {
   border-radius: 16px;
   border: 1px solid #e3eaf7;
   background: #ffffff;
-  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.08);
+  box-shadow: 0 10px 26px rgba(33, 113, 255, 0.12);
 }
 
 .avatar-wrap {
@@ -304,52 +272,52 @@ async function logoutAndClose() {
 
 .nav {
   display: grid;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .nav-item {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 46px 1fr;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  color: inherit;
+  padding: 12px;
+  border-radius: 16px;
+  color: #0f172a;
   text-decoration: none;
-  background: #ffffff;
-  border: 1px solid #e3eaf7;
-  box-shadow: 0 10px 22px rgba(29, 78, 216, 0.08);
+  background: #f7f9fc;
+  border: 1px solid #e2e9f6;
+  box-shadow: 0 8px 20px rgba(28, 100, 242, 0.08);
   transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .nav-item:hover {
   transform: translateX(2px);
-  border-color: #1d8aff;
-  box-shadow: 0 12px 30px rgba(29, 78, 216, 0.12);
+  border-color: #d0ddf6;
+  box-shadow: 0 10px 24px rgba(28, 100, 242, 0.12);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #2171ff, #3ba9ff);
+  background: linear-gradient(135deg, #1d8aff, #327bff);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 16px 36px rgba(33, 113, 255, 0.25);
+  box-shadow: 0 14px 30px rgba(29, 122, 255, 0.28);
 }
 
 .nav-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
-  background: #f5f7fb;
+  background: linear-gradient(135deg, #e1ebff, #d3e5ff);
   display: grid;
   place-items: center;
-  font-size: 20px;
-  color: var(--text);
-  border: 1px solid #e3eaf7;
+  font-size: 18px;
+  color: #1f3a8a;
+  border: 1px solid #dbe6fd;
 }
 
 .nav-item.active .nav-icon {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
@@ -778,6 +746,5 @@ main.content {
   grid-template-columns: 1fr;
   justify-items: center;
   padding: 12px;
-}
 }
 </style>
