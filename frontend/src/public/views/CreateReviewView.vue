@@ -289,11 +289,11 @@ form {
   border-color: var(--accent, var(--primary));
 }
 
-.editor-shell .ck.ck-editor__editable {
+.editor-shell :deep(.ck-editor__editable_inline) {
   min-height: 720px;
 }
 
-.ck-content {
+.editor-shell :deep(.ck-content) {
   min-height: 720px;
 }
 
