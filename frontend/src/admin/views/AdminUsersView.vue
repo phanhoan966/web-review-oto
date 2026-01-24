@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
@@ -13,6 +13,7 @@ interface AdminUser {
   followers?: number
   rating?: number
   reviewCount?: number
+  birthYear?: number
   createdAt?: string
 }
 
@@ -20,6 +21,7 @@ const auth = useAuthStore()
 const allUsers = ref<AdminUser[]>([])
 const users = ref<AdminUser[]>([])
 const usersPage = ref({ page: 0, size: 10, total: 0 })
+const filters = ref({ name: '', email: '', year: '' })
 
 function clampPage(meta: { page: number; size: number; total: number }) {
   const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
@@ -27,12 +29,30 @@ function clampPage(meta: { page: number; size: number; total: number }) {
   return { ...meta, page }
 }
 
+function resetFilters() {
+  filters.value = { name: '', email: '', year: '' }
+}
+
+function filterUsers() {
+  const name = filters.value.name.trim().toLowerCase()
+  const email = filters.value.email.trim().toLowerCase()
+  const year = filters.value.year.trim()
+  return allUsers.value.filter((u) => {
+    const matchesName = !name || (u.username || '').toLowerCase().includes(name)
+    const matchesEmail = !email || (u.email || '').toLowerCase().includes(email)
+    const birthYear = u.birthYear || (u.createdAt ? new Date(u.createdAt).getFullYear() : undefined)
+    const matchesYear = !year || (birthYear && birthYear.toString().includes(year))
+    return matchesName && matchesEmail && matchesYear
+  })
+}
+
 function applyPaging() {
-  const meta = clampPage({ ...usersPage.value, total: allUsers.value.length })
+  const filtered = filterUsers()
+  const meta = clampPage({ ...usersPage.value, total: filtered.length })
   const start = meta.page * meta.size
   const end = start + meta.size
   usersPage.value = meta
-  users.value = allUsers.value.slice(start, end)
+  users.value = filtered.slice(start, end)
 }
 
 const loading = ref(false)
@@ -52,6 +72,15 @@ const roleLabels: Record<string, string> = {
 
 const editingUser = computed(() => users.value.find((u) => u.id === editingId.value) || null)
 const canCreate = computed(() => canModify())
+
+watch(
+  filters,
+  () => {
+    usersPage.value = { ...usersPage.value, page: 0 }
+    applyPaging()
+  },
+  { deep: true }
+)
 
 onMounted(load)
 
@@ -214,6 +243,24 @@ async function load() {
       </div>
     </div>
 
+    <div class="filters">
+      <label>
+        <span>Tên</span>
+        <input v-model="filters.name" type="text" placeholder="Nhập tên" />
+      </label>
+      <label>
+        <span>Email</span>
+        <input v-model="filters.email" type="text" placeholder="Nhập email" />
+      </label>
+      <label>
+        <span>Năm sinh</span>
+        <input v-model="filters.year" type="number" inputmode="numeric" placeholder="Ví dụ 1995" />
+      </label>
+      <div class="filter-actions">
+        <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
+      </div>
+    </div>
+
     <div v-if="canCreate" class="form">
       <div class="form-grid">
         <label>
@@ -294,6 +341,18 @@ async function load() {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .eyebrow {
