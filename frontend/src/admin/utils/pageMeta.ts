@@ -5,8 +5,10 @@ export interface PageMeta {
 }
 
 export function resolvePageMeta(data: any, fallbackLength: number, current: PageMeta): PageMeta {
-  const total = numberOrDefault(data?.total ?? data?.totalElements ?? data?.count, fallbackLength)
   const size = numberOrDefault(data?.size ?? data?.pageSize, current.size)
+  const totalItems = numberOrDefault(data?.total ?? data?.totalElements ?? data?.count ?? data?.totalItems ?? data?.totalRecords, fallbackLength)
+  const totalPages = numberOrDefault(data?.totalPages ?? data?.pages ?? data?.pageCount, 0)
+  const total = totalPages > 0 && size > 0 ? totalPages * size : totalItems
   const page = numberOrDefault(data?.page ?? data?.pageNumber ?? data?.number, current.page)
   return {
     page,
