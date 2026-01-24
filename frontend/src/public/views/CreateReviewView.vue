@@ -290,12 +290,49 @@ form {
   border-color: var(--accent, var(--primary));
 }
 
+.editor-shell :deep(.ck-editor) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.editor-shell :deep(.ck-toolbar) {
+  background: var(--surface);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 10px 10px 0 0;
+}
+
+.editor-shell :deep(.ck-toolbar__separator) {
+  background: var(--border);
+}
+
+.editor-shell :deep(.ck-button) {
+  color: var(--text);
+}
+
+.editor-shell :deep(.ck-button.ck-on) {
+  background: var(--chip-bg);
+}
+
+.editor-shell :deep(.ck-content a) {
+  color: var(--primary);
+}
+
+.editor-shell :deep(.ck-placeholder) {
+  color: var(--muted) !important;
+}
+
 .editor-shell :deep(.ck-editor__editable_inline) {
   min-height: 720px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0 0 10px 10px;
 }
 
 .editor-shell :deep(.ck-content) {
   min-height: 720px;
+  color: var(--text);
 }
 
 @media (max-width: 720px) {
