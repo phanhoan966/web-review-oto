@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import client from '../../api/client'
 import { buildAssetUrl } from '../utils/assetUrl'
 
@@ -28,6 +29,10 @@ const heroPreview = ref('')
 const uploadError = ref('')
 const uploading = ref(false)
 const errorMsg = ref('')
+const editorHost = ref<HTMLElement | null>(null)
+const editorReady = ref(false)
+const editorError = ref('')
+let editorInstance: any = null
 
 watch(
   () => form.value.title,
@@ -48,7 +53,16 @@ watch(
   }
 )
 
-onMounted(loadBrands)
+onMounted(async () => {
+  await loadBrands()
+  await initEditor()
+})
+
+onBeforeUnmount(async () => {
+  if (editorInstance?.destroy) {
+    await editorInstance.destroy()
+  }
+})
 
 async function loadBrands() {
   try {
@@ -91,6 +105,29 @@ async function onHeroFile(event: Event) {
   }
 }
 
+async function initEditor() {
+  editorReady.value = false
+  editorError.value = ''
+  if (!editorHost.value) {
+    editorError.value = 'Không tìm thấy vùng nhập nội dung'
+    return
+  }
+  try {
+    editorInstance = await ClassicEditor.create(editorHost.value as HTMLElement, {
+      placeholder: 'Viết nội dung bài review...'
+    })
+    if (form.value.content) {
+      editorInstance.setData(form.value.content)
+    }
+    editorInstance.model.document.on('change:data', () => {
+      form.value.content = editorInstance.getData()
+    })
+    editorReady.value = true
+  } catch (error: any) {
+    editorError.value = 'Không tải được trình soạn thảo'
+  }
+}
+
 async function submit() {
   const heroUrl = form.value.heroImageUrl?.trim() || ''
   if (uploading.value) {
@@ -99,6 +136,14 @@ async function submit() {
   }
   if (heroUrl.startsWith('data:')) {
     errorMsg.value = 'Vui lòng upload ảnh để lấy URL'
+    return
+  }
+  if (!editorReady.value) {
+    errorMsg.value = 'Trình soạn thảo chưa sẵn sàng'
+    return
+  }
+  if (!form.value.content || !form.value.content.trim()) {
+    errorMsg.value = 'Nội dung không được để trống'
     return
   }
   loading.value = true
@@ -141,7 +186,10 @@ async function submit() {
         <textarea v-model="form.excerpt" required maxlength="256" rows="2" />
 
         <label>Nội dung</label>
-        <textarea v-model="form.content" required maxlength="2048" rows="6" />
+        <div class="editor-shell" :class="{ ready: editorReady }">
+          <div ref="editorHost"></div>
+          <p v-if="editorError" class="error">{{ editorError }}</p>
+        </div>
 
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
         <div class="hero-row">
@@ -227,6 +275,21 @@ form {
 
 .small {
   font-size: 13px;
+}
+
+.editor-shell {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 8px;
+}
+
+.editor-shell.ready {
+  border-color: var(--accent, var(--primary));
+}
+
+.editor-shell .ck.ck-editor__editable {
+  min-height: 260px;
 }
 
 .hero-row {
