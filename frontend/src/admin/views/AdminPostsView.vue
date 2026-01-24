@@ -326,7 +326,7 @@ function changeRejectedSize(size: number) {
           <div></div>
         </div>
         <div v-for="p in pending" :key="p.id" class="row">
-          <div class="title">{{ p.title }}</div>
+          <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
           <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
           <div><span class="status pending">{{ p.status || 'PENDING' }}</span></div>
           <div>{{ p.views ?? 0 }}</div>
@@ -379,7 +379,7 @@ function changeRejectedSize(size: number) {
           <div></div>
         </div>
         <div v-for="p in approved" :key="p.id" class="row">
-          <div class="title">{{ p.title }}</div>
+          <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
           <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
           <div><span class="status approved">{{ p.status || 'APPROVED' }}</span></div>
           <div>{{ p.views ?? 0 }}</div>
@@ -431,7 +431,7 @@ function changeRejectedSize(size: number) {
           <div></div>
         </div>
         <div v-for="p in rejected" :key="p.id" class="row">
-          <div class="title">{{ p.title }}</div>
+          <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
           <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
           <div><span class="status rejected">{{ p.status || 'REJECTED' }}</span></div>
           <div>{{ p.views ?? 0 }}</div>
@@ -572,6 +572,18 @@ h2 {
 
 .title {
   font-weight: 700;
+}
+
+.link {
+  color: var(--primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.link:hover {
+  text-decoration: underline;
 }
 
 .status {

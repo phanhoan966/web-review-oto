@@ -11,6 +11,7 @@ import AdminDashboardView from '../admin/views/AdminDashboardView.vue'
 import AdminLayout from '../admin/layouts/AdminLayout.vue'
 import AdminUsersView from '../admin/views/AdminUsersView.vue'
 import AdminPostsView from '../admin/views/AdminPostsView.vue'
+import AdminPostDetailView from '../admin/views/AdminPostDetailView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -29,7 +30,8 @@ const router = createRouter({
         { path: '', redirect: { name: 'admin-dashboard' } },
         { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboardView },
         { path: 'users', name: 'admin-users', component: AdminUsersView },
-        { path: 'posts', name: 'admin-posts', component: AdminPostsView }
+        { path: 'posts', name: 'admin-posts', component: AdminPostsView },
+        { path: 'posts/:id', name: 'admin-post-detail', component: AdminPostDetailView }
       ]
     },
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },

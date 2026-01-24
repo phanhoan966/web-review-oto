@@ -69,3 +69,8 @@ Implement the task according to the technical specification and general engineer
 <!-- chat-id: d9b97690-1cc2-45dd-9c09-bf816c3d6956 -->
 
 thực hiện light mode cho trang admin
+
+### [x] Step: Khu vực admin
+<!-- chat-id: d14245ba-9cf1-4198-89e8-af291af2504b -->
+
+Ở màn hình admin ở mục quản lý bài viết, khi click vào tiêu đề mỗi bài viết thì sẽ bật lên màn hình detail của bài viết nhưng ở khu vực có url ../admin/...
