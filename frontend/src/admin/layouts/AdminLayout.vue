@@ -154,7 +154,7 @@ async function logoutAndClose() {
 <style scoped lang="scss">
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 350px 1fr;
   min-height: 100vh;
   background: #f5f7fb;
   color: var(--text);
@@ -190,8 +190,8 @@ async function logoutAndClose() {
 }
 
 .avatar-wrap {
-  width: 54px;
-  height: 54px;
+  width: 65px;
+  height: 71px;
   border-radius: 16px;
   background: linear-gradient(135deg, #1d8aff, #3bb0ff);
   display: grid;
@@ -278,18 +278,18 @@ async function logoutAndClose() {
 }
 
 .nav {
-  display: grid;
+  display: flow;
   gap: 14px;
-  margin-top: 12px;
+  margin-top: 4px;
 }
 
 .nav-item {
-  display: flex;
+  margin-bottom: 10px;
+  display: block;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   gap: 14px;
-  min-height: 176px;
   padding: 18px 16px;
   border-radius: 18px;
   color: #0f172a;
@@ -432,14 +432,15 @@ async function logoutAndClose() {
 }
 
 .topbar {
-  padding: 16px 20px;
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   backdrop-filter: blur(8px);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  background: #ffffff;
+  color: #0f172a;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
 }
 
 .breadcrumbs {
@@ -447,19 +448,20 @@ async function logoutAndClose() {
   align-items: center;
   gap: 10px;
   font-weight: 700;
+  color: #0f172a;
 }
 
 .breadcrumbs .icon {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
   cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: var(--shadow);
-  color: var(--text);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  color: #0f172a;
 }
 
 .profile-area {
@@ -478,15 +480,15 @@ async function logoutAndClose() {
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
   display: grid;
   place-items: center;
   cursor: pointer;
   font-size: 18px;
   position: relative;
-  color: var(--text);
+  color: #0f172a;
 }
 
 .icon-btn .dot {
@@ -504,16 +506,16 @@ async function logoutAndClose() {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 2px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  border: 2px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   display: grid;
   place-items: center;
   padding: 0;
   position: relative;
   overflow: hidden;
-  color: var(--text);
+  color: #0f172a;
 }
 
 .avatar-btn img {
@@ -609,7 +611,7 @@ async function logoutAndClose() {
 }
 
 main.content {
-  padding: 22px 22px 32px;
+  padding-top: 22px;
 }
 
 @media (max-width: 1024px) {
@@ -735,11 +737,11 @@ main.content {
 }
 
 .layout.collapsed {
-  grid-template-columns: 80px 1fr;
+  grid-template-columns: 130px 1fr;
 }
 
 .layout.collapsed .sidebar {
-  padding: 16px 10px;
+  padding: 18px 16px 24px;
 }
 
 .layout.collapsed .sidebar-head {
