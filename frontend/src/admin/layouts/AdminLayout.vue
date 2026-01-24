@@ -452,6 +452,10 @@ async function logoutAndClose() {
   color: #0f172a;
 }
 
+.breadcrumbs span {
+  color: #0f172a;
+}
+
 .breadcrumbs .icon {
   width: 38px;
   height: 38px;
@@ -546,15 +550,15 @@ async function logoutAndClose() {
   position: absolute;
   right: 0;
   top: 60px;
-  background: var(--surface);
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
   padding: 12px;
   display: grid;
   gap: 10px;
   min-width: 220px;
   z-index: 10;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e7eb;
 }
 
 .user-row {
@@ -568,13 +572,13 @@ async function logoutAndClose() {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
+  border: 1px solid #e5e7eb;
+  background: #f7f9fc;
   display: grid;
   place-items: center;
   overflow: hidden;
   font-weight: 800;
-  color: var(--text);
+  color: #0f172a;
 }
 
 .menu-avatar img {
