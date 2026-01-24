@@ -447,7 +447,7 @@ input {
 
 .row {
   display: grid;
-  grid-template-columns: 1.6fr 1.6fr 1.4fr 1fr 1fr 1.2fr auto;
+  grid-template-columns: 1.5fr 1.5fr 1.3fr 0.9fr 0.9fr 1.1fr auto;
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
@@ -527,7 +527,7 @@ input {
 @media (max-width: 960px) {
   .row,
   .row.head {
-    grid-template-columns: 1.4fr 1.4fr 1.2fr 1fr 1fr auto;
+    grid-template-columns: 1.3fr 1.3fr 1.1fr 0.9fr 0.9fr 1fr auto;
   }
 }
 
