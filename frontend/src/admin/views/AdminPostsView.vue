@@ -293,11 +293,17 @@ h2 {
 .table {
   display: grid;
   gap: 10px;
+  overflow-x: auto;
+}
+
+.row,
+.row.head {
+  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr auto;
+  min-width: 1100px;
 }
 
 .row {
   display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr auto;
   align-items: center;
   padding: 12px 10px;
   border-radius: 12px;
@@ -383,10 +389,10 @@ h2 {
 @media (max-width: 960px) {
   .row,
   .row.head {
-    grid-template-columns: 1.5fr 1.5fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr auto;
   }
   .row-actions {
-    grid-column: 1 / -1;
+    grid-column: auto;
     justify-content: flex-start;
   }
 }
@@ -395,10 +401,14 @@ h2 {
   .row.head {
     display: none;
   }
+  .table {
+    overflow-x: visible;
+  }
   .row {
     grid-template-columns: 1fr;
     align-items: flex-start;
     gap: 8px;
+    min-width: auto;
   }
   .row-actions {
     grid-column: 1 / -1;
