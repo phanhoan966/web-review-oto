@@ -16,7 +16,9 @@ interface ReviewRow {
   publishedAt?: string
 }
 
-const filters = ref({ title: '', author: '', date: '', vehicle: '' })
+const pendingFilters = ref({ title: '', author: '', date: '', vehicle: '' })
+const approvedFilters = ref({ title: '', author: '', date: '', vehicle: '' })
+const rejectedFilters = ref({ title: '', author: '', date: '', vehicle: '' })
 const pendingAll = ref<ReviewRow[]>([])
 const approvedAll = ref<ReviewRow[]>([])
 const rejectedAll = ref<ReviewRow[]>([])
@@ -36,15 +38,15 @@ function clampPage(meta: { page: number; size: number; total: number }) {
   return { ...meta, page }
 }
 
-function hasFilters() {
-  return Object.values(filters.value).some((v) => v.trim())
+function hasFilters(target: { title: string; author: string; date: string; vehicle: string }) {
+  return Object.values(target).some((v) => v.trim())
 }
 
-function filterReviews(list: ReviewRow[]) {
-  const title = filters.value.title.trim().toLowerCase()
-  const author = filters.value.author.trim().toLowerCase()
-  const date = filters.value.date.trim()
-  const vehicle = filters.value.vehicle.trim().toLowerCase()
+function filterReviews(list: ReviewRow[], target: { title: string; author: string; date: string; vehicle: string }) {
+  const title = target.title.trim().toLowerCase()
+  const author = target.author.trim().toLowerCase()
+  const date = target.date.trim()
+  const vehicle = target.vehicle.trim().toLowerCase()
   return list.filter((p) => {
     const matchesTitle = !title || (p.title || '').toLowerCase().includes(title)
     const matchesAuthor = !author || (p.authorName || '').toLowerCase().includes(author)
@@ -55,13 +57,21 @@ function filterReviews(list: ReviewRow[]) {
   })
 }
 
-function resetFilters() {
-  filters.value = { title: '', author: '', date: '', vehicle: '' }
+function resetPendingFilters() {
+  pendingFilters.value = { title: '', author: '', date: '', vehicle: '' }
+}
+
+function resetApprovedFilters() {
+  approvedFilters.value = { title: '', author: '', date: '', vehicle: '' }
+}
+
+function resetRejectedFilters() {
+  rejectedFilters.value = { title: '', author: '', date: '', vehicle: '' }
 }
 
 function applyPending() {
-  const filtered = filterReviews(pendingAll.value)
-  if (hasFilters()) {
+  const filtered = filterReviews(pendingAll.value, pendingFilters.value)
+  if (hasFilters(pendingFilters.value)) {
     const meta = clampPage({ ...pendingPage.value, total: filtered.length })
     const start = meta.page * meta.size
     pendingPage.value = meta
@@ -73,8 +83,8 @@ function applyPending() {
 }
 
 function applyApproved() {
-  const filtered = filterReviews(approvedAll.value)
-  if (hasFilters()) {
+  const filtered = filterReviews(approvedAll.value, approvedFilters.value)
+  if (hasFilters(approvedFilters.value)) {
     const meta = clampPage({ ...approvedPage.value, total: filtered.length })
     const start = meta.page * meta.size
     approvedPage.value = meta
@@ -86,8 +96,8 @@ function applyApproved() {
 }
 
 function applyRejected() {
-  const filtered = filterReviews(rejectedAll.value)
-  if (hasFilters()) {
+  const filtered = filterReviews(rejectedAll.value, rejectedFilters.value)
+  if (hasFilters(rejectedFilters.value)) {
     const meta = clampPage({ ...rejectedPage.value, total: filtered.length })
     const start = meta.page * meta.size
     rejectedPage.value = meta
@@ -103,13 +113,27 @@ const actionLoading = ref<number | null>(null)
 const errorMsg = ref('')
 
 watch(
-  filters,
+  pendingFilters,
   () => {
     pendingPage.value = { ...pendingPage.value, page: 0 }
-    approvedPage.value = { ...approvedPage.value, page: 0 }
-    rejectedPage.value = { ...rejectedPage.value, page: 0 }
     applyPending()
+  },
+  { deep: true }
+)
+
+watch(
+  approvedFilters,
+  () => {
+    approvedPage.value = { ...approvedPage.value, page: 0 }
     applyApproved()
+  },
+  { deep: true }
+)
+
+watch(
+  rejectedFilters,
+  () => {
+    rejectedPage.value = { ...rejectedPage.value, page: 0 }
     applyRejected()
   },
   { deep: true }
@@ -196,7 +220,7 @@ async function hidePost(id: number) {
 
 function changePendingPage(page: number) {
   pendingPage.value = { ...pendingPage.value, page }
-  if (hasFilters()) {
+  if (hasFilters(pendingFilters.value)) {
     applyPending()
     return
   }
@@ -205,7 +229,7 @@ function changePendingPage(page: number) {
 
 function changePendingSize(size: number) {
   pendingPage.value = { ...pendingPage.value, size, page: 0 }
-  if (hasFilters()) {
+  if (hasFilters(pendingFilters.value)) {
     applyPending()
     return
   }
@@ -214,7 +238,7 @@ function changePendingSize(size: number) {
 
 function changeApprovedPage(page: number) {
   approvedPage.value = { ...approvedPage.value, page }
-  if (hasFilters()) {
+  if (hasFilters(approvedFilters.value)) {
     applyApproved()
     return
   }
@@ -223,7 +247,7 @@ function changeApprovedPage(page: number) {
 
 function changeApprovedSize(size: number) {
   approvedPage.value = { ...approvedPage.value, size, page: 0 }
-  if (hasFilters()) {
+  if (hasFilters(approvedFilters.value)) {
     applyApproved()
     return
   }
@@ -232,7 +256,7 @@ function changeApprovedSize(size: number) {
 
 function changeRejectedPage(page: number) {
   rejectedPage.value = { ...rejectedPage.value, page }
-  if (hasFilters()) {
+  if (hasFilters(rejectedFilters.value)) {
     applyRejected()
     return
   }
@@ -241,7 +265,7 @@ function changeRejectedPage(page: number) {
 
 function changeRejectedSize(size: number) {
   rejectedPage.value = { ...rejectedPage.value, size, page: 0 }
-  if (hasFilters()) {
+  if (hasFilters(rejectedFilters.value)) {
     applyRejected()
     return
   }
@@ -262,32 +286,31 @@ function changeRejectedSize(size: number) {
       </div>
     </div>
 
-    <div class="filters">
-      <label>
-        <span>Tiêu đề</span>
-        <input v-model="filters.title" type="text" placeholder="Nhập tiêu đề" />
-      </label>
-      <label>
-        <span>Tác giả</span>
-        <input v-model="filters.author" type="text" placeholder="Nhập tên tác giả" />
-      </label>
-      <label>
-        <span>Ngày viết</span>
-        <input v-model="filters.date" type="text" placeholder="dd/mm/yyyy" />
-      </label>
-      <label>
-        <span>Loại xe</span>
-        <input v-model="filters.vehicle" type="text" placeholder="Nhập mẫu xe" />
-      </label>
-      <div class="filter-actions">
-        <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
-      </div>
-    </div>
-
     <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
     <p v-else-if="loading" class="muted">Đang tải...</p>
 
     <div v-else class="tables">
+      <div class="filters">
+        <label>
+          <span>Tiêu đề</span>
+          <input v-model="pendingFilters.title" type="text" placeholder="Nhập tiêu đề" />
+        </label>
+        <label>
+          <span>Tác giả</span>
+          <input v-model="pendingFilters.author" type="text" placeholder="Nhập tên tác giả" />
+        </label>
+        <label>
+          <span>Ngày viết</span>
+          <input v-model="pendingFilters.date" type="text" placeholder="dd/mm/yyyy" />
+        </label>
+        <label>
+          <span>Loại xe</span>
+          <input v-model="pendingFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+        </label>
+        <div class="filter-actions">
+          <button class="ghost" type="button" @click="resetPendingFilters">Xóa lọc</button>
+        </div>
+      </div>
       <div class="table">
         <div class="row head">
           <div>Tiêu đề</div>
@@ -318,6 +341,27 @@ function changeRejectedSize(size: number) {
       </div>
       <PaginationBar :page="pendingPage.page" :size="pendingPage.size" :total="pendingPage.total" @update:page="changePendingPage" @update:size="changePendingSize" />
 
+      <div class="filters">
+        <label>
+          <span>Tiêu đề</span>
+          <input v-model="approvedFilters.title" type="text" placeholder="Nhập tiêu đề" />
+        </label>
+        <label>
+          <span>Tác giả</span>
+          <input v-model="approvedFilters.author" type="text" placeholder="Nhập tên tác giả" />
+        </label>
+        <label>
+          <span>Ngày viết</span>
+          <input v-model="approvedFilters.date" type="text" placeholder="dd/mm/yyyy" />
+        </label>
+        <label>
+          <span>Loại xe</span>
+          <input v-model="approvedFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+        </label>
+        <div class="filter-actions">
+          <button class="ghost" type="button" @click="resetApprovedFilters">Xóa lọc</button>
+        </div>
+      </div>
       <div class="table">
         <div class="row head">
           <div>Tiêu đề</div>
@@ -347,6 +391,27 @@ function changeRejectedSize(size: number) {
       </div>
       <PaginationBar :page="approvedPage.page" :size="approvedPage.size" :total="approvedPage.total" @update:page="changeApprovedPage" @update:size="changeApprovedSize" />
 
+      <div class="filters">
+        <label>
+          <span>Tiêu đề</span>
+          <input v-model="rejectedFilters.title" type="text" placeholder="Nhập tiêu đề" />
+        </label>
+        <label>
+          <span>Tác giả</span>
+          <input v-model="rejectedFilters.author" type="text" placeholder="Nhập tên tác giả" />
+        </label>
+        <label>
+          <span>Ngày viết</span>
+          <input v-model="rejectedFilters.date" type="text" placeholder="dd/mm/yyyy" />
+        </label>
+        <label>
+          <span>Loại xe</span>
+          <input v-model="rejectedFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+        </label>
+        <div class="filter-actions">
+          <button class="ghost" type="button" @click="resetRejectedFilters">Xóa lọc</button>
+        </div>
+      </div>
       <div class="table">
         <div class="row head">
           <div>Tiêu đề</div>
@@ -402,6 +467,25 @@ function changeRejectedSize(size: number) {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   align-items: end;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+}
+
+.filters label span {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.filters input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .filter-actions {
