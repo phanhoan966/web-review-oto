@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useUiStore } from '../../stores/ui'
 import { buildAssetUrl } from '../../public/utils/assetUrl'
+import brandLogo from '../../assets/autoreview-logo.png'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -89,7 +90,7 @@ async function logoutAndClose() {
           <span class="status-dot"></span>
         </div>
         <div class="sidebar-meta">
-          <p class="eyebrow">AutoReview</p>
+          <img class="brand-mark" :src="brandLogo" alt="AutoReview" />
           <h3>{{ displayName }}</h3>
           <p class="muted">{{ auth.user?.email || 'auto@review.com' }}</p>
         </div>
@@ -242,6 +243,13 @@ async function logoutAndClose() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.brand-mark {
+  height: 28px;
+  width: auto;
+  display: block;
+  margin-bottom: 6px;
 }
 
 .sidebar-meta h3 {

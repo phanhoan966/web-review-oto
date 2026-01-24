@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useUiStore } from './stores/ui'
+import brandLogo from './assets/autoreview-logo.png'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -50,7 +51,9 @@ async function logout() {
   <div class="app-shell">
     <header v-if="!isAdminRoute" class="site-header">
       <div class="container header-inner">
-        <RouterLink class="brand" to="/">AutoReview</RouterLink>
+        <RouterLink class="brand" to="/">
+          <img class="brand-logo" :src="brandLogo" alt="AutoReview" />
+        </RouterLink>
         <nav class="nav">
           <RouterLink to="/">Trang chủ</RouterLink>
           <RouterLink v-if="auth.isAuthenticated" to="/reviews/new">Tạo bài</RouterLink>
@@ -110,9 +113,13 @@ async function logout() {
 }
 
 .brand {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.01em;
+  display: block;
+}
+
+.brand-logo {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .nav {
