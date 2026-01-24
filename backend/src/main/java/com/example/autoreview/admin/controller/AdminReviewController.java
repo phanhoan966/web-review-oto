@@ -57,6 +57,11 @@ public class AdminReviewController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ReviewDto> detail(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.getAdmin(id));
+    }
+
     @PostMapping("/{id}/reject")
     public ResponseEntity<Void> reject(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
         String email = currentUserResolver.resolveEmail(principal, request);

@@ -81,6 +81,12 @@ public class ReviewService {
         return reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();
     }
 
+    @Transactional(readOnly = true)
+    public ReviewDto getAdmin(Long id) {
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        return DtoMapper.toReviewDto(review);
+    }
+
     @Transactional
     public ReviewDto getPublic(Long id) {
         Review review = reviewRepository.findByIdAndStatus(id, ReviewStatus.APPROVED)

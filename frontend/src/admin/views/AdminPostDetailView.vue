@@ -39,7 +39,7 @@ async function load() {
   loading.value = true
   errorMsg.value = ''
   try {
-    const { data } = await client.get(`/reviews/${route.params.id}`)
+    const { data } = await client.get(`/admin/reviews/${route.params.id}`)
     review.value = data
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tải được bài viết'
