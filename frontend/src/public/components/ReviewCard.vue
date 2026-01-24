@@ -74,12 +74,7 @@ function formatRelativeTime(value?: string) {
 
 <template>
   <article class="card surface">
-    <RouterLink v-if="hasHero" class="hero" :to="detailPath">
-      <img :src="heroSrc" :alt="review.title" />
-    </RouterLink>
-    <div v-else class="hero placeholder" aria-hidden="true"></div>
     <div class="content">
-      <RouterLink class="title-link" :to="detailPath"><h2>{{ review.title }}</h2></RouterLink>
       <div class="author" :class="{ hoverable: !!profilePath }">
         <HoverPopover v-if="profilePath">
           <template #trigger>
@@ -113,12 +108,18 @@ function formatRelativeTime(value?: string) {
           </div>
         </div>
       </div>
-      <p class="excerpt">{{ review.excerpt }}</p>
-      <div class="metrics">
-        <div class="pill">❤ {{ review.likes ?? 0 }}</div>
-        <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
-        <div class="pill">👁 {{ review.views ?? 0 }} views</div>
-      </div>
+      <RouterLink class="title-link" :to="detailPath">
+        <h2>{{ review.title }}</h2>
+        <RouterLink class="hero" :to="detailPath">
+          <img v-if="heroSrc" :src="heroSrc" :alt="review.title" />
+        </RouterLink>
+        <i><p class="excerpt">{{ review.excerpt }}</p></i>
+        <div class="metrics">
+          <div class="pill">❤ {{ review.likes ?? 0 }}</div>
+          <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
+          <div class="pill">👁 {{ review.views ?? 0 }} views</div>
+        </div>
+      </RouterLink>
     </div>
   </article>
 </template>
@@ -135,7 +136,7 @@ function formatRelativeTime(value?: string) {
 .hero {
   overflow: hidden;
   border-radius: 18px;
-  height: 240px;
+  height: auto;
   display: block;
 }
 
@@ -146,7 +147,7 @@ function formatRelativeTime(value?: string) {
 
 .hero img {
   width: 100%;
-  height: 100%;
+  height: 300px;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
@@ -213,7 +214,7 @@ function formatRelativeTime(value?: string) {
 
 .excerpt {
   color: #2f3c4f;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.6;
   margin: 10px 0 6px 0;
 }

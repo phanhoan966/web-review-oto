@@ -311,7 +311,7 @@ function formatDate(value?: string) {
           </header>
 
           <div class="title">{{ review.title }}</div>
-          <p class="excerpt">{{ review.excerpt }}</p>
+          <i><p class="excerpt">{{ review.excerpt }}</p></i>
           <div class="body" v-html="review.content" />
 
           <div class="hero" v-if="review.heroImageUrl">
@@ -567,7 +567,7 @@ function formatDate(value?: string) {
 
 .excerpt {
   margin: 6px 0;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--text);
 }
 
