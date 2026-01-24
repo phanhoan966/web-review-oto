@@ -219,9 +219,9 @@ async function logoutAndClose() {
   align-items: center;
   padding: 12px;
   border-radius: 16px;
-  border: 1px solid #e3eaf7;
-  background: #ffffff;
-  box-shadow: 0 10px 26px rgba(33, 113, 255, 0.12);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .avatar-wrap {
@@ -267,16 +267,16 @@ async function logoutAndClose() {
 }
 
 .pill-icon {
-  border: 1px solid #dbe4f5;
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--surface);
   padding: 10px;
   font-size: 16px;
   cursor: pointer;
   display: grid;
   place-items: center;
   color: var(--text);
-  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .stats-grid {
@@ -288,11 +288,11 @@ async function logoutAndClose() {
 .stat-card {
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid #e3eaf7;
-  background: #ffffff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   display: grid;
   gap: 2px;
-  box-shadow: 0 12px 28px rgba(29, 78, 216, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .stat-value {
@@ -327,22 +327,22 @@ async function logoutAndClose() {
   gap: 14px;
   padding: 18px 16px;
   border-radius: 18px;
-  color: #0f172a;
+  color: var(--text);
   text-decoration: none;
-  background: #f7f9fc;
-  border: 1px solid #e2e9f6;
-  box-shadow: 0 10px 22px rgba(28, 100, 242, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .nav-item:hover {
   transform: translateX(3px);
-  border-color: #d0ddf6;
-  box-shadow: 0 12px 26px rgba(28, 100, 242, 0.12);
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, #1d8aff, #327bff);
+  background: linear-gradient(135deg, var(--accent), var(--primary));
   color: #fff;
   border-color: transparent;
   box-shadow: 0 18px 32px rgba(29, 122, 255, 0.3);
@@ -352,13 +352,13 @@ async function logoutAndClose() {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #e1ebff, #d3e5ff);
+  background: linear-gradient(135deg, rgba(33, 113, 255, 0.16), rgba(59, 169, 255, 0.08));
   display: grid;
   place-items: center;
   font-size: 20px;
-  color: #1f3a8a;
-  border: 1px solid #dbe6fd;
-  box-shadow: 0 8px 18px rgba(31, 58, 138, 0.08);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .nav-item.active .nav-icon {
@@ -397,24 +397,24 @@ async function logoutAndClose() {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid #e3eaf7;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
-  background: #ffffff;
+  background: var(--surface);
   cursor: pointer;
   font-weight: 700;
   color: var(--text);
-  box-shadow: 0 8px 18px rgba(29, 78, 216, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .theme-icon {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  border: 1px solid #e3eaf7;
+  border: 1px solid var(--border);
   display: grid;
   place-items: center;
-  background: #f5f7fb;
+  background: var(--chip-bg);
 }
 
 .support-card {
@@ -422,20 +422,20 @@ async function logoutAndClose() {
   grid-template-columns: auto 1fr auto;
   gap: 10px;
   align-items: center;
-  border: 1px solid #d9e6ff;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
-  background: #eef4ff;
-  box-shadow: 0 10px 22px rgba(33, 113, 255, 0.12);
-  color: #0f172a;
+  background: linear-gradient(135deg, rgba(33, 113, 255, 0.12), rgba(59, 169, 255, 0.08));
+  box-shadow: var(--shadow);
+  color: var(--text);
 }
 
 .support-icon {
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  border: 1px solid #d9e6ff;
-  background: #ffffff;
+  border: 1px solid var(--border);
+  background: var(--surface);
   display: grid;
   place-items: center;
   font-weight: 800;
@@ -446,16 +446,16 @@ async function logoutAndClose() {
   width: 100%;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid #d9e6ff;
-  background: #edf2ff;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
   font-weight: 800;
   cursor: pointer;
-  color: #1d4ed8;
-  box-shadow: 0 10px 22px rgba(33, 113, 255, 0.12);
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .pill-icon.ghost {
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .main {
@@ -585,15 +585,15 @@ async function logoutAndClose() {
   position: absolute;
   right: 0;
   top: 60px;
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  box-shadow: var(--shadow);
   padding: 12px;
   display: grid;
   gap: 10px;
   min-width: 220px;
   z-index: 10;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
 }
 
 .user-row {
@@ -607,13 +607,13 @@ async function logoutAndClose() {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid #e5e7eb;
-  background: #f7f9fc;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
   display: grid;
   place-items: center;
   overflow: hidden;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .menu-avatar img {
