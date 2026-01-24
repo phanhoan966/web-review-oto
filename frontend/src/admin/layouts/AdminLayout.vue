@@ -427,7 +427,8 @@ async function logoutAndClose() {
   display: grid;
   grid-template-rows: auto 1fr;
   min-height: 100vh;
-  background: var(--bg);
+  background: #f8fafc;
+  color: #0f172a;
   padding: 18px 16px 24px;
 }
 
