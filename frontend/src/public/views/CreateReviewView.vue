@@ -251,7 +251,8 @@ async function submit() {
 }
 
 .form-card {
-  width: min(1100px, 100%);
+  width: 100%;
+  max-width: 1100px;
   padding: 28px;
   border-radius: 20px;
   box-shadow: var(--shadow);
@@ -295,6 +296,22 @@ form {
 
 .editor-shell :deep(.ck-content) {
   min-height: 720px;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 16px 12px;
+  }
+
+  .form-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .editor-shell :deep(.ck-editor__editable_inline),
+  .editor-shell :deep(.ck-content) {
+    min-height: 480px;
+  }
 }
 
 .hero-row {
