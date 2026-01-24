@@ -298,8 +298,8 @@ h2 {
 
 .row,
 .row.head {
-  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr auto;
-  min-width: 1100px;
+  grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr minmax(140px, 1fr);
+  min-width: 1180px;
 }
 
 .row {
@@ -309,6 +309,14 @@ h2 {
   border-radius: 12px;
   background: var(--chip-bg);
   border: 1px solid var(--border);
+}
+
+.row > div:nth-child(4),
+.row > div:nth-child(5),
+.row > div:nth-child(6),
+.row > div:nth-child(7),
+.row > div:nth-child(8) {
+  text-align: center;
 }
 
 .row.head {
@@ -389,7 +397,7 @@ h2 {
 @media (max-width: 960px) {
   .row,
   .row.head {
-    grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr auto;
+    grid-template-columns: 2fr 1.2fr 1fr 0.9fr 0.9fr 0.9fr 1fr 1fr minmax(140px, 1fr);
   }
   .row-actions {
     grid-column: auto;
