@@ -14,7 +14,8 @@ const mostViewed = ref<ViewedItem[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 const page = ref(0)
-const pageSize = 10
+const initialSize = 3
+const nextSize = 5
 const hasMore = ref(true)
 
 onMounted(() => {
@@ -38,8 +39,9 @@ async function loadData(reset = false) {
   loading.value = true
   errorMsg.value = ''
   try {
+    const size = page.value === 0 ? initialSize : nextSize
     const [reviewsRes, reviewersRes, brandsRes, viewedRes] = await Promise.all([
-      client.get('/reviews', { params: { page: page.value, size: pageSize } }),
+      client.get('/reviews', { params: { page: page.value, size } }),
       client.get('/reviewers/top', { params: { limit: 3 } }),
       client.get('/brands/featured'),
       client.get('/reviews/most-viewed', { params: { limit: 3 } })
@@ -49,7 +51,7 @@ async function loadData(reset = false) {
     reviewers.value = reviewersRes.data || []
     brands.value = brandsRes.data || []
     mostViewed.value = viewedRes.data || []
-    if (items.length < pageSize) {
+    if (items.length < size) {
       hasMore.value = false
     } else {
       page.value += 1
