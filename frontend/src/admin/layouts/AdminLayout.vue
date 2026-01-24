@@ -80,7 +80,7 @@ async function logoutAndClose() {
 </script>
 
 <template>
-  <div class="layout" :class="{ collapsed, 'sidebar-open': sidebarOpen }">
+  <div class="layout admin-light" :class="{ collapsed, 'sidebar-open': sidebarOpen }">
     <aside class="sidebar">
       <div class="sidebar-head">
         <div class="avatar-wrap">
@@ -159,6 +159,9 @@ async function logoutAndClose() {
   background: #f5f7fb;
   color: #0f172a;
   align-items: start;
+}
+
+:global(.admin-light) {
   --bg: #f5f7fb;
   --surface: #ffffff;
   --text: #0f172a;
