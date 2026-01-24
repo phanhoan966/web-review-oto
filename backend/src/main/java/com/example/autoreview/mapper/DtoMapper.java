@@ -23,7 +23,6 @@ public class DtoMapper {
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setFollowers(user.getFollowers());
         dto.setRating(user.getRating());
-        dto.setReviewCount(user.getReviewCount());
         return dto;
     }
 
@@ -51,7 +50,6 @@ public class DtoMapper {
             dto.setAuthorAvatar(review.getAuthor().getAvatarUrl());
             dto.setAuthorUsername(review.getAuthor().getUsername());
             dto.setAuthorFollowers(review.getAuthor().getFollowers());
-            dto.setAuthorReviewCount(review.getAuthor().getReviewCount());
             dto.setAuthorRating(review.getAuthor().getRating());
             dto.setAuthorBio(null);
         }
@@ -69,7 +67,6 @@ public class DtoMapper {
             dto.setAuthorAvatar(comment.getAuthor().getAvatarUrl());
             dto.setAuthorUsername(comment.getAuthor().getUsername());
             dto.setAuthorFollowers(comment.getAuthor().getFollowers());
-            dto.setAuthorReviewCount(comment.getAuthor().getReviewCount());
             dto.setAuthorRating(comment.getAuthor().getRating());
 //            TODO BIO
             dto.setAuthorBio(null);
@@ -85,7 +82,6 @@ public class DtoMapper {
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setFollowers(user.getFollowers());
         dto.setRating(user.getRating());
-        dto.setReviewCount(user.getReviewCount());
         dto.setBio(null);
         return dto;
     }

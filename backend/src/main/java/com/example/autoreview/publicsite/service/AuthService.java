@@ -13,6 +13,7 @@ import com.example.autoreview.exception.ApiException;
 import com.example.autoreview.mapper.DtoMapper;
 import com.example.autoreview.repository.PasswordResetTokenRepository;
 import com.example.autoreview.repository.RefreshTokenRepository;
+import com.example.autoreview.repository.ReviewRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.security.JwtUtil;
 import com.example.autoreview.security.Roles;
@@ -41,15 +42,17 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ReviewRepository reviewRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final long refreshExpirationDays;
 
-    public AuthService(UserRepository userRepository, PasswordResetTokenRepository passwordResetTokenRepository, RefreshTokenRepository refreshTokenRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthenticationManager authenticationManager, @Value("${app.jwt.refresh-days:30}") long refreshExpirationDays) {
+    public AuthService(UserRepository userRepository, PasswordResetTokenRepository passwordResetTokenRepository, RefreshTokenRepository refreshTokenRepository, ReviewRepository reviewRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, AuthenticationManager authenticationManager, @Value("${app.jwt.refresh-days:30}") long refreshExpirationDays) {
         this.userRepository = userRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.reviewRepository = reviewRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
@@ -71,7 +74,6 @@ public class AuthService {
         user.getRoles().add("ROLE_USER");
         user.setFollowers(0);
         user.setRating(5.0);
-        user.setReviewCount(0);
         user.setAvatarUrl("https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=60");
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
@@ -195,7 +197,7 @@ public class AuthService {
         response.getUser().setAvatarUrl(user.getAvatarUrl());
         response.getUser().setFollowers(user.getFollowers());
         response.getUser().setRating(user.getRating());
-        response.getUser().setReviewCount(user.getReviewCount());
+        response.getUser().setReviewCount((int) reviewRepository.countByAuthorIdAndStatus(user.getId(), com.example.autoreview.domain.ReviewStatus.APPROVED));
         return response;
     }
 

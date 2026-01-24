@@ -20,6 +20,10 @@ import com.example.autoreview.repository.VehicleBrandRepository;
 import com.example.autoreview.security.Roles;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -43,11 +47,52 @@ public class ReviewService {
         this.commentRepository = commentRepository;
     }
 
+    private void applyAuthorReviewCounts(List<ReviewDto> dtos) {
+        Set<Long> authorIds = dtos.stream()
+                .map(ReviewDto::getAuthorId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (authorIds.isEmpty()) {
+            return;
+        }
+        Map<Long, Long> counts = reviewRepository.countApprovedByAuthorIds(authorIds).stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+        dtos.forEach(dto -> {
+            Long authorId = dto.getAuthorId();
+            if (authorId != null) {
+                dto.setAuthorReviewCount(counts.getOrDefault(authorId, 0L).intValue());
+            }
+        });
+    }
+
+    private void applyCommentAuthorReviewCounts(List<CommentDto> dtos) {
+        Set<Long> authorIds = dtos.stream()
+                .map(CommentDto::getAuthorUsername)
+                .filter(Objects::nonNull)
+                .map(username -> userRepository.findByUsername(username).map(User::getId).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (authorIds.isEmpty()) {
+            return;
+        }
+        Map<Long, Long> counts = reviewRepository.countApprovedByAuthorIds(authorIds).stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+        dtos.forEach(dto -> {
+            Long authorId = dto.getAuthorUsername() != null
+                    ? userRepository.findByUsername(dto.getAuthorUsername()).map(User::getId).orElse(null)
+                    : null;
+            if (authorId != null) {
+                dto.setAuthorReviewCount(counts.getOrDefault(authorId, 0L).intValue());
+            }
+        });
+    }
+
     @Transactional(readOnly = true)
     public ReviewListResponse getFeed(String brand, String fuelType, String priceSegment, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByFilters(ReviewStatus.APPROVED, brand, fuelType, priceSegment, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -56,6 +101,7 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByAuthorEmailOrderByCreatedAtDesc(email, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -65,6 +111,7 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(authorId, ReviewStatus.APPROVED, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -74,6 +121,7 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByAuthorUsernameAndStatusOrderByCreatedAtDesc(username, ReviewStatus.APPROVED, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -82,6 +130,7 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findAll(pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -90,19 +139,24 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByStatus(status, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
     @Transactional(readOnly = true)
     public List<ReviewDto> mostViewed(int limit) {
         PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "views"));
-        return reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();
+        List<ReviewDto> dtos = reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
+        return dtos;
     }
 
     @Transactional(readOnly = true)
     public ReviewDto getAdmin(Long id) {
         Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
-        return DtoMapper.toReviewDto(review);
+        ReviewDto dto = DtoMapper.toReviewDto(review);
+        applyAuthorReviewCounts(List.of(dto));
+        return dto;
     }
 
     @Transactional
@@ -111,7 +165,9 @@ public class ReviewService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
         reviewRepository.save(review);
-        return DtoMapper.toReviewDto(review);
+        ReviewDto dto = DtoMapper.toReviewDto(review);
+        applyAuthorReviewCounts(List.of(dto));
+        return dto;
     }
 
     @Transactional
@@ -136,9 +192,9 @@ public class ReviewService {
         review.setCommentsCount(0);
         review.setViews(0);
         reviewRepository.save(review);
-        author.setReviewCount((author.getReviewCount() == null ? 0 : author.getReviewCount()) + 1);
-        userRepository.save(author);
-        return DtoMapper.toReviewDto(review);
+        ReviewDto dto = DtoMapper.toReviewDto(review);
+        applyAuthorReviewCounts(List.of(dto));
+        return dto;
     }
 
     @Transactional
@@ -160,7 +216,9 @@ public class ReviewService {
         review.setPriceSegment(request.getPriceSegment());
         review.setUpdatedAt(Instant.now());
         reviewRepository.save(review);
-        return DtoMapper.toReviewDto(review);
+        ReviewDto dto = DtoMapper.toReviewDto(review);
+        applyAuthorReviewCounts(List.of(dto));
+        return dto;
     }
 
     @Transactional
@@ -207,7 +265,9 @@ public class ReviewService {
             Comment saved = commentRepository.save(comment);
             review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);
             reviewRepository.save(review);
-            return DtoMapper.toCommentDto(saved);
+            CommentDto dto = DtoMapper.toCommentDto(saved);
+            applyCommentAuthorReviewCounts(List.of(dto));
+            return dto;
         } catch (Exception ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Không thể lưu bình luận");
         }
@@ -220,7 +280,9 @@ public class ReviewService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return commentRepository.findByReviewOrderByCreatedAtDesc(review, pageable).map(DtoMapper::toCommentDto).getContent();
+        List<CommentDto> dtos = commentRepository.findByReviewOrderByCreatedAtDesc(review, pageable).map(DtoMapper::toCommentDto).getContent();
+        applyCommentAuthorReviewCounts(dtos);
+        return dtos;
     }
 
     @Transactional

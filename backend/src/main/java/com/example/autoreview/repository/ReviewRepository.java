@@ -30,4 +30,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findByAuthorUsernameAndStatusOrderByCreatedAtDesc(String username, ReviewStatus status, Pageable pageable);
 
     long countByBrandIdAndStatus(Long brandId, ReviewStatus status);
+
+    @Query("select r.author.id, count(r) from Review r where r.status = com.example.autoreview.domain.ReviewStatus.APPROVED and r.author.id in :authorIds group by r.author.id")
+    java.util.List<Object[]> countApprovedByAuthorIds(@org.springframework.data.repository.query.Param("authorIds") java.util.Set<Long> authorIds);
+
+    long countByAuthorIdAndStatus(Long authorId, ReviewStatus status);
 }
