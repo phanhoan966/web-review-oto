@@ -166,4 +166,12 @@ public class ReviewDto {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public Long getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(Long authorId) {
+        this.authorId = authorId;
+    }
 }
