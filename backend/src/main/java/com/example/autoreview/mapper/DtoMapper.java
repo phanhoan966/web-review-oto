@@ -50,6 +50,10 @@ public class DtoMapper {
             dto.setAuthorName(review.getAuthor().getUsername());
             dto.setAuthorAvatar(review.getAuthor().getAvatarUrl());
             dto.setAuthorUsername(review.getAuthor().getUsername());
+            dto.setAuthorFollowers(review.getAuthor().getFollowers());
+            dto.setAuthorReviewCount(review.getAuthor().getReviewCount());
+            dto.setAuthorRating(review.getAuthor().getRating());
+            dto.setAuthorBio(null);
         }
         return dto;
     }
@@ -76,6 +80,7 @@ public class DtoMapper {
         dto.setFollowers(user.getFollowers());
         dto.setRating(user.getRating());
         dto.setReviewCount(user.getReviewCount());
+        dto.setBio(null);
         return dto;
     }
 

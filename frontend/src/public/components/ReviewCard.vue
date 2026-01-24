@@ -13,6 +13,10 @@ export interface ReviewCardData {
   authorName: string
   authorAvatar?: string
   authorUsername?: string
+  authorFollowers?: number
+  authorReviewCount?: number
+  authorRating?: number
+  authorBio?: string
   brand?: string
   vehicleModel?: string
   vehicleYear?: number
@@ -40,7 +44,11 @@ const authorTooltip = computed(() => {
   const username = props.review.authorUsername
   const name = props.review.authorName
   const handle = username ? `@${username}` : ''
-  return [name, handle, 'Nhấn để xem hồ sơ'].filter(Boolean).join(' • ')
+  const followers = props.review.authorFollowers ?? 0
+  const posts = props.review.authorReviewCount ?? 0
+  const rating = props.review.authorRating ?? 0
+  const summary = `${followers} follower${followers === 1 ? '' : 's'} • ${posts} bài • ⭐ ${rating ? rating.toFixed(1) : '5.0'}`
+  return [name, handle, summary].filter(Boolean).join(' • ')
 })
 
 const heroSrc = computed(() => buildAssetUrl(props.review.heroImageUrl))
@@ -68,17 +76,32 @@ function formatRelativeTime(value?: string) {
     </RouterLink>
     <div class="content">
       <RouterLink class="title-link" :to="detailPath"><h2>{{ review.title }}</h2></RouterLink>
-      <div class="author">
+      <div class="author" :class="{ hoverable: !!profilePath }">
         <RouterLink v-if="profilePath" class="avatar-link" :to="profilePath" :title="authorTooltip">
           <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
         </RouterLink>
         <div v-else class="avatar-link" :title="authorTooltip">
           <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
         </div>
-        <div>
+        <div class="author-meta">
           <RouterLink v-if="profilePath" class="name-link" :to="profilePath" :title="authorTooltip">{{ review.authorName }}</RouterLink>
           <div v-else class="name">{{ review.authorName }}</div>
           <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
+        </div>
+        <div v-if="profilePath" class="author-popover">
+          <div class="pop-header">
+            <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+            <div>
+              <div class="pop-name">{{ review.authorName }}</div>
+              <div class="pop-handle">@{{ review.authorUsername }}</div>
+            </div>
+          </div>
+          <p class="pop-bio">{{ review.authorBio || 'Chưa có giới thiệu.' }}</p>
+          <div class="pop-stats">
+            <div><span class="value">{{ review.authorFollowers ?? 0 }}</span><span class="label">Followers</span></div>
+            <div><span class="value">{{ review.authorReviewCount ?? 0 }}</span><span class="label">Bài viết</span></div>
+            <div><span class="value">{{ review.authorRating?.toFixed(1) || '5.0' }}</span><span class="label">Rating</span></div>
+          </div>
         </div>
       </div>
       <p class="excerpt">{{ review.excerpt }}</p>
@@ -134,6 +157,13 @@ function formatRelativeTime(value?: string) {
   grid-template-columns: 46px 1fr;
   gap: 10px;
   align-items: center;
+  position: relative;
+}
+
+.author.hoverable:hover .author-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(4px);
 }
 
 .avatar-link {
@@ -147,6 +177,62 @@ function formatRelativeTime(value?: string) {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #eef2f7;
+}
+
+.author-popover {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  min-width: 260px;
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.pop-header {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.pop-name {
+  font-weight: 700;
+}
+
+.pop-handle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pop-bio {
+  margin: 8px 0 10px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pop-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pop-stats .value {
+  display: block;
+  font-weight: 800;
+}
+
+.pop-stats .label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .name {

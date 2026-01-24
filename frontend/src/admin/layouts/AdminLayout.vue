@@ -706,7 +706,7 @@ main.content {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 260px;
+    width: 150px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 20;

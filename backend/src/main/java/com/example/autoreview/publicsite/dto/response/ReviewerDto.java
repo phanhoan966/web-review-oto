@@ -8,6 +8,7 @@ public class ReviewerDto {
     private Integer followers;
     private Double rating;
     private Integer reviewCount;
+    private String bio;
 
     public Long getId() {
         return id;
@@ -63,5 +64,13 @@ public class ReviewerDto {
 
     public void setReviewCount(Integer reviewCount) {
         this.reviewCount = reviewCount;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 }

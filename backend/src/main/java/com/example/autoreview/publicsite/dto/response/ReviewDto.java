@@ -12,6 +12,10 @@ public class ReviewDto {
     private String authorName;
     private String authorAvatar;
     private String authorUsername;
+    private Integer authorFollowers;
+    private Integer authorReviewCount;
+    private Double authorRating;
+    private String authorBio;
     private String brand;
     private String vehicleModel;
     private Integer vehicleYear;
@@ -86,6 +90,38 @@ public class ReviewDto {
 
     public void setAuthorUsername(String authorUsername) {
         this.authorUsername = authorUsername;
+    }
+
+    public Integer getAuthorFollowers() {
+        return authorFollowers;
+    }
+
+    public void setAuthorFollowers(Integer authorFollowers) {
+        this.authorFollowers = authorFollowers;
+    }
+
+    public Integer getAuthorReviewCount() {
+        return authorReviewCount;
+    }
+
+    public void setAuthorReviewCount(Integer authorReviewCount) {
+        this.authorReviewCount = authorReviewCount;
+    }
+
+    public Double getAuthorRating() {
+        return authorRating;
+    }
+
+    public void setAuthorRating(Double authorRating) {
+        this.authorRating = authorRating;
+    }
+
+    public String getAuthorBio() {
+        return authorBio;
+    }
+
+    public void setAuthorBio(String authorBio) {
+        this.authorBio = authorBio;
     }
 
     public String getBrand() {
