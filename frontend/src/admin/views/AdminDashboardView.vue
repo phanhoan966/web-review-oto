@@ -249,6 +249,9 @@ button {
   padding: 18px;
   display: grid;
   gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
 }
 
 .kpi .card h2 {
