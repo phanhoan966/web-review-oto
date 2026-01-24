@@ -293,6 +293,10 @@ form {
   min-height: 460px;
 }
 
+.ck-content {
+    min-height: 460px;
+}
+
 .hero-row {
   display: grid;
   grid-template-columns: 1fr auto;
