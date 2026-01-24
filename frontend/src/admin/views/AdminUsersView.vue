@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import client from '../../api/client'
+import PaginationBar from '../components/PaginationBar.vue'
+import { resolvePageMeta } from '../utils/pageMeta'
 
 interface AdminUser {
   id: number
@@ -16,6 +18,14 @@ interface AdminUser {
 
 const auth = useAuthStore()
 const users = ref<AdminUser[]>([])
+const usersPage = ref({ page: 0, size: 10, total: 0 })
+
+function clampPage(meta: { page: number; size: number; total: number }) {
+  const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
+  const page = Math.min(Math.max(meta.page, 0), totalPages - 1)
+  return { ...meta, page }
+}
+
 const loading = ref(false)
 const saving = ref(false)
 const actionLoading = ref<number | null>(null)
@@ -151,12 +161,26 @@ async function deleteUser(id: number, target: AdminUser) {
   }
 }
 
+function changeUsersPage(page: number) {
+  usersPage.value = { ...usersPage.value, page }
+  load()
+}
+
+function changeUsersSize(size: number) {
+  usersPage.value = { ...usersPage.value, size, page: 0 }
+  load()
+}
+
 async function load() {
   loading.value = true
   errorMsg.value = ''
   try {
-    const { data } = await client.get('/admin/users')
-    users.value = data || []
+    const params = { page: usersPage.value.page, size: usersPage.value.size }
+    const { data } = await client.get('/admin/users', { params })
+    const list = Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : data?.users || []
+    users.value = list
+    const meta = resolvePageMeta(data, users.value.length, { ...usersPage.value })
+    usersPage.value = clampPage(meta)
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tải được danh sách user'
     users.value = []
@@ -239,6 +263,7 @@ async function load() {
       </div>
       <div v-if="!users.length" class="row empty">Không có user</div>
     </div>
+    <PaginationBar :page="usersPage.page" :size="usersPage.size" :total="usersPage.total" @update:page="changeUsersPage" @update:size="changeUsersSize" />
   </div>
 </template>
 

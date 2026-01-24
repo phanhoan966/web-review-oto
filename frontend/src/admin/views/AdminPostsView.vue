@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import client from '../../api/client'
+import PaginationBar from '../components/PaginationBar.vue'
+import { resolvePageMeta } from '../utils/pageMeta'
 
 interface ReviewRow {
   id: number
@@ -14,6 +16,15 @@ interface ReviewRow {
 const pending = ref<ReviewRow[]>([])
 const approved = ref<ReviewRow[]>([])
 const rejected = ref<ReviewRow[]>([])
+const pendingPage = ref({ page: 0, size: 10, total: 0 })
+const approvedPage = ref({ page: 0, size: 10, total: 0 })
+const rejectedPage = ref({ page: 0, size: 10, total: 0 })
+
+function clampPage(meta: { page: number; size: number; total: number }) {
+  const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
+  const page = Math.min(Math.max(meta.page, 0), totalPages - 1)
+  return { ...meta, page }
+}
 const loading = ref(false)
 const actionLoading = ref<number | null>(null)
 const errorMsg = ref('')
@@ -33,18 +44,27 @@ async function load() {
 }
 
 async function loadPending() {
-  const { data } = await client.get('/admin/reviews/pending', { params: { page: 0, size: 20 } })
-  pending.value = data.reviews || []
+  const params = { page: pendingPage.value.page, size: pendingPage.value.size }
+  const { data } = await client.get('/admin/reviews/pending', { params })
+  pending.value = data.reviews || data.content || []
+  const meta = resolvePageMeta(data, pending.value.length, { ...pendingPage.value })
+  pendingPage.value = clampPage(meta)
 }
 
 async function loadApproved() {
-  const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 20, status: 'APPROVED' } })
-  approved.value = data.reviews || []
+  const params = { page: approvedPage.value.page, size: approvedPage.value.size, status: 'APPROVED' }
+  const { data } = await client.get('/admin/reviews', { params })
+  approved.value = data.reviews || data.content || []
+  const meta = resolvePageMeta(data, approved.value.length, { ...approvedPage.value })
+  approvedPage.value = clampPage(meta)
 }
 
 async function loadRejected() {
-  const { data } = await client.get('/admin/reviews', { params: { page: 0, size: 20, status: 'REJECTED' } })
-  rejected.value = data.reviews || []
+  const params = { page: rejectedPage.value.page, size: rejectedPage.value.size, status: 'REJECTED' }
+  const { data } = await client.get('/admin/reviews', { params })
+  rejected.value = data.reviews || data.content || []
+  const meta = resolvePageMeta(data, rejected.value.length, { ...rejectedPage.value })
+  rejectedPage.value = clampPage(meta)
 }
 
 async function approve(id: number) {
@@ -80,6 +100,36 @@ async function hidePost(id: number) {
   } finally {
     actionLoading.value = null
   }
+}
+
+function changePendingPage(page: number) {
+  pendingPage.value = { ...pendingPage.value, page }
+  loadPending()
+}
+
+function changePendingSize(size: number) {
+  pendingPage.value = { ...pendingPage.value, size, page: 0 }
+  loadPending()
+}
+
+function changeApprovedPage(page: number) {
+  approvedPage.value = { ...approvedPage.value, page }
+  loadApproved()
+}
+
+function changeApprovedSize(size: number) {
+  approvedPage.value = { ...approvedPage.value, size, page: 0 }
+  loadApproved()
+}
+
+function changeRejectedPage(page: number) {
+  rejectedPage.value = { ...rejectedPage.value, page }
+  loadRejected()
+}
+
+function changeRejectedSize(size: number) {
+  rejectedPage.value = { ...rejectedPage.value, size, page: 0 }
+  loadRejected()
 }
 </script>
 
@@ -122,6 +172,7 @@ async function hidePost(id: number) {
         </div>
         <div v-if="!pending.length" class="row empty">Không có bài chờ duyệt</div>
       </div>
+      <PaginationBar :page="pendingPage.page" :size="pendingPage.size" :total="pendingPage.total" @update:page="changePendingPage" @update:size="changePendingSize" />
 
       <div class="table">
         <div class="row head">
@@ -144,6 +195,7 @@ async function hidePost(id: number) {
         </div>
         <div v-if="!approved.length" class="row empty">Không có bài đã duyệt</div>
       </div>
+      <PaginationBar :page="approvedPage.page" :size="approvedPage.size" :total="approvedPage.total" @update:page="changeApprovedPage" @update:size="changeApprovedSize" />
 
       <div class="table">
         <div class="row head">
@@ -166,6 +218,7 @@ async function hidePost(id: number) {
         </div>
         <div v-if="!rejected.length" class="row empty">Không có bài bị từ chối</div>
       </div>
+      <PaginationBar :page="rejectedPage.page" :size="rejectedPage.size" :total="rejectedPage.total" @update:page="changeRejectedPage" @update:size="changeRejectedSize" />
     </div>
   </div>
 </template>
