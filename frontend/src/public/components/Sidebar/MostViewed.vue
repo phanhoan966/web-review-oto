@@ -25,7 +25,8 @@ function heroSrc(item: ViewedItem) {
     <header class="widget-header">Xem nhiều nhất</header>
     <div class="items">
       <RouterLink v-for="item in props.items" :key="item.id" class="row" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
-        <img class="thumb" :src="heroSrc(item)" :alt="item.title" />
+        <img v-if="heroSrc(item)" class="thumb" :src="heroSrc(item)" :alt="item.title" />
+        <div v-else class="thumb placeholder" aria-hidden="true"></div>
         <div class="info">
           <div class="title">{{ item.title }}</div>
           <div class="meta">
@@ -68,6 +69,11 @@ function heroSrc(item: ViewedItem) {
   height: 56px;
   object-fit: cover;
   border-radius: 10px;
+}
+
+.thumb.placeholder {
+  background: linear-gradient(135deg, #f6f8fc, #e5ebf7);
+  border: 1px dashed #d5deec;
 }
 
 .title {

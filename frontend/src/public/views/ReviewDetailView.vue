@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick, computed } from 'vue'
+import { onMounted, ref, nextTick, computed, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import client from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
@@ -60,7 +60,7 @@ const errorMsg = ref('')
 
 watch(
   () => review.value?.title,
-  (title) => {
+  (title: string | undefined) => {
     document.title = title ? `${title} | Đánh Giá Xe` : 'Đánh Giá Xe'
   },
   { immediate: true }

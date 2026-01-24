@@ -54,6 +54,7 @@ const authorTooltip = computed(() => {
 })
 
 const heroSrc = computed(() => buildAssetUrl(props.review.heroImageUrl))
+const hasHero = computed(() => !!heroSrc.value)
 
 const relativeTime = computed(() => formatRelativeTime(props.review.publishedAt))
 
@@ -73,9 +74,10 @@ function formatRelativeTime(value?: string) {
 
 <template>
   <article class="card surface">
-    <RouterLink class="hero" :to="detailPath">
+    <RouterLink v-if="hasHero" class="hero" :to="detailPath">
       <img :src="heroSrc" :alt="review.title" />
     </RouterLink>
+    <div v-else class="hero placeholder" aria-hidden="true"></div>
     <div class="content">
       <RouterLink class="title-link" :to="detailPath"><h2>{{ review.title }}</h2></RouterLink>
       <div class="author" :class="{ hoverable: !!profilePath }">
@@ -135,6 +137,11 @@ function formatRelativeTime(value?: string) {
   border-radius: 18px;
   height: 240px;
   display: block;
+}
+
+.hero.placeholder {
+  background: linear-gradient(135deg, #f6f8fc, #e5ebf7);
+  border: 1px dashed #d5deec;
 }
 
 .hero img {
