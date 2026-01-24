@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import FilterChips from '../components/FilterChips.vue'
 import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
 import TopReviewers, { type ReviewerItem } from '../components/Sidebar/TopReviewers.vue'
 import FeaturedBrands, { type BrandItem } from '../components/Sidebar/FeaturedBrands.vue'
 import MostViewed, { type ViewedItem } from '../components/Sidebar/MostViewed.vue'
 import client from '../../api/client'
+
+const route = useRoute()
+const router = useRouter()
 
 const reviews = ref<ReviewCardData[]>([])
 const reviewers = ref<ReviewerItem[]>([])
@@ -17,6 +21,7 @@ const page = ref(0)
 const initialSize = 3
 const nextSize = 5
 const hasMore = ref(true)
+const selectedBrand = ref<string | null>(route.query.brand ? String(route.query.brand) : null)
 
 onMounted(() => {
   loadData(true)
@@ -26,6 +31,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll)
 })
+
+watch(
+  () => route.query.brand,
+  (val) => {
+    selectedBrand.value = val ? String(val) : null
+    loadData(true)
+  }
+)
 
 async function loadData(reset = false) {
   if (loading.value) return
@@ -41,7 +54,7 @@ async function loadData(reset = false) {
   try {
     const size = page.value === 0 ? initialSize : nextSize
     const [reviewsRes, reviewersRes, brandsRes, viewedRes] = await Promise.all([
-      client.get('/reviews', { params: { page: page.value, size } }),
+      client.get('/reviews', { params: { page: page.value, size, brand: selectedBrand.value || undefined } }),
       client.get('/reviewers/top', { params: { limit: 3 } }),
       client.get('/brands/featured'),
       client.get('/reviews/most-viewed', { params: { limit: 3 } })
@@ -80,6 +93,12 @@ function handleScroll() {
     loadData(false)
   }
 }
+
+function onBrandSelect(brand: BrandItem) {
+  selectedBrand.value = brand.name
+  router.push({ query: { ...route.query, brand: brand.name } })
+  loadData(true)
+}
 </script>
 
 <template>
@@ -105,7 +124,7 @@ function handleScroll() {
       </div>
       <aside class="sidebar">
         <TopReviewers :reviewers="reviewers" title="Top Reviewers" />
-        <FeaturedBrands :brands="brands" />
+        <FeaturedBrands :brands="brands" @select="onBrandSelect" />
         <MostViewed :items="mostViewed" />
       </aside>
     </section>

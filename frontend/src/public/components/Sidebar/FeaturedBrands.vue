@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import HoverPopover from '../common/HoverPopover.vue'
+import BrandPopoverCard from '../common/BrandPopoverCard.vue'
+
 export interface BrandItem {
   id: number
   name: string
   logoUrl?: string
+  reviewCount?: number
 }
+
+const emit = defineEmits<{
+  (e: 'select', brand: BrandItem): void
+}>()
 
 defineProps<{ brands: BrandItem[] }>()
 </script>
@@ -12,12 +20,17 @@ defineProps<{ brands: BrandItem[] }>()
   <section class="widget surface">
     <header class="widget-header">Hãng xe nổi bật</header>
     <div class="brands">
-      <div v-for="brand in brands" :key="brand.id" class="brand">
-        <div class="logo">
-          <img :src="brand.logoUrl" :alt="brand.name" />
-        </div>
-        <div class="name">{{ brand.name }}</div>
-      </div>
+      <HoverPopover v-for="brand in brands" :key="brand.id">
+        <template #trigger>
+          <button class="brand" type="button" @click="emit('select', brand)">
+            <div class="logo">
+              <img :src="brand.logoUrl" :alt="brand.name" />
+            </div>
+            <div class="name">{{ brand.name }}</div>
+          </button>
+        </template>
+        <BrandPopoverCard :name="brand.name" :logo-url="brand.logoUrl" :review-count="brand.reviewCount" />
+      </HoverPopover>
     </div>
   </section>
 </template>
@@ -43,6 +56,10 @@ defineProps<{ brands: BrandItem[] }>()
   gap: 10px;
 }
 
+.brand:focus-visible {
+  outline: 2px solid var(--primary);
+}
+
 .brand {
   display: grid;
   grid-template-columns: 56px 1fr;
@@ -52,6 +69,9 @@ defineProps<{ brands: BrandItem[] }>()
   border-radius: 12px;
   background: var(--chip-bg);
   border: 1px solid var(--border);
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
 }
 
 .logo {

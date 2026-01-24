@@ -4,6 +4,7 @@ public class BrandDto {
     private Long id;
     private String name;
     private String logoUrl;
+    private Long reviewCount;
 
     public Long getId() {
         return id;
@@ -27,5 +28,13 @@ public class BrandDto {
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
+    }
+
+    public Long getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Long reviewCount) {
+        this.reviewCount = reviewCount;
     }
 }
