@@ -246,12 +246,12 @@ async function submit() {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 40px 16px;
+  padding: 25px 16px;
   background: var(--bg);
 }
 
 .form-card {
-  width: min(780px, 100%);
+  width: min(1100px, 100%);
   padding: 28px;
   border-radius: 20px;
   box-shadow: var(--shadow);
