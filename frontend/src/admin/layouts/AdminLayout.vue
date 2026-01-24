@@ -186,21 +186,20 @@ async function logoutAndClose() {
 <style scoped lang="scss">
 .layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 280px 1fr;
   min-height: 100vh;
-  background: var(--bg);
+  background: #f4f7fb;
   color: var(--text);
 }
 
 .sidebar {
-  background: radial-gradient(circle at 20% 20%, rgba(43, 138, 239, 0.1), rgba(13, 110, 253, 0.08)), var(--surface);
+  background: linear-gradient(180deg, #f2f6ff, #e9f1ff);
   color: var(--text);
-  padding: 22px 18px;
+  padding: 18px 16px;
   display: grid;
   grid-template-rows: auto auto auto 1fr auto;
   gap: 14px;
-  border-right: 1px solid var(--border);
-  box-shadow: 8px 0 30px rgba(15, 23, 42, 0.06);
+  border-right: 1px solid #e3eaf7;
 }
 
 .sidebar-head {
@@ -208,25 +207,25 @@ async function logoutAndClose() {
   grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: center;
-  padding: 14px;
+  padding: 12px;
   border-radius: 16px;
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.08), rgba(43, 138, 239, 0.06));
-  box-shadow: var(--shadow);
+  border: 1px solid #e3eaf7;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(29, 78, 216, 0.08);
 }
 
 .avatar-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1d8aff, #3bb0ff);
   display: grid;
   place-items: center;
   font-weight: 800;
   color: #fff;
   position: relative;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.6);
 }
 
 .avatar-wrap img {
@@ -248,7 +247,7 @@ async function logoutAndClose() {
 }
 
 .sidebar-meta .muted {
-  margin: 2px 0 0;
+  margin: 4px 0 0;
 }
 
 .sidebar-actions {
@@ -258,16 +257,16 @@ async function logoutAndClose() {
 }
 
 .pill-icon {
-  border: 1px solid var(--border);
+  border: 1px solid #dbe4f5;
   border-radius: 12px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: #ffffff;
   padding: 10px;
   font-size: 16px;
   cursor: pointer;
   display: grid;
   place-items: center;
   color: var(--text);
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.08);
 }
 
 .stats-grid {
@@ -277,19 +276,19 @@ async function logoutAndClose() {
 }
 
 .stat-card {
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e3eaf7;
+  background: #ffffff;
   display: grid;
-  gap: 4px;
+  gap: 2px;
+  box-shadow: 0 12px 28px rgba(29, 78, 216, 0.08);
 }
 
 .stat-value {
   margin: 0;
   font-weight: 800;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .small {
@@ -311,41 +310,42 @@ async function logoutAndClose() {
 
 .nav-item {
   display: grid;
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 48px 1fr;
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
   border-radius: 14px;
   color: inherit;
   text-decoration: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: #ffffff;
+  border: 1px solid #e3eaf7;
+  box-shadow: 0 10px 22px rgba(29, 78, 216, 0.08);
   transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .nav-item:hover {
   transform: translateX(2px);
-  border-color: var(--accent);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  border-color: #1d8aff;
+  box-shadow: 0 12px 30px rgba(29, 78, 216, 0.12);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, #2171ff, #3ba9ff);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 16px 36px rgba(13, 110, 253, 0.26);
+  box-shadow: 0 16px 36px rgba(33, 113, 255, 0.25);
 }
 
 .nav-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  background: var(--chip-bg);
+  background: #f5f7fb;
   display: grid;
   place-items: center;
   font-size: 20px;
   color: var(--text);
+  border: 1px solid #e3eaf7;
 }
 
 .nav-item.active .nav-icon {
@@ -360,17 +360,17 @@ async function logoutAndClose() {
 }
 
 .nav-text .muted {
-  margin-top: 4px;
+  margin-top: 2px;
   color: var(--muted);
 }
 
 .nav-item.active .muted {
-  color: #e0e7ff;
+  color: #e7efff;
 }
 
 .sidebar-footer {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   margin-top: auto;
 }
 
@@ -378,24 +378,24 @@ async function logoutAndClose() {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid #e3eaf7;
   border-radius: 12px;
   padding: 10px 12px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: #ffffff;
   cursor: pointer;
   font-weight: 700;
   color: var(--text);
+  box-shadow: 0 8px 18px rgba(29, 78, 216, 0.08);
 }
 
 .theme-icon {
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid #e3eaf7;
   display: grid;
   place-items: center;
-  background: var(--chip-bg);
+  background: #f5f7fb;
 }
 
 .support-card {
@@ -403,19 +403,20 @@ async function logoutAndClose() {
   grid-template-columns: auto 1fr auto;
   gap: 10px;
   align-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid #d9e6ff;
   border-radius: 14px;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.06), rgba(43, 138, 239, 0.05));
-  box-shadow: var(--shadow);
+  background: #eef4ff;
+  box-shadow: 0 10px 22px rgba(33, 113, 255, 0.12);
+  color: #0f172a;
 }
 
 .support-icon {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid #d9e6ff;
+  background: #ffffff;
   display: grid;
   place-items: center;
   font-weight: 800;
@@ -426,16 +427,16 @@ async function logoutAndClose() {
   width: 100%;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid #d9e6ff;
+  background: #edf2ff;
   font-weight: 800;
   cursor: pointer;
-  color: var(--text);
-  box-shadow: var(--shadow);
+  color: #1d4ed8;
+  box-shadow: 0 10px 22px rgba(33, 113, 255, 0.12);
 }
 
 .pill-icon.ghost {
-  background: var(--surface);
+  background: #ffffff;
 }
 
 .main {
@@ -749,7 +750,7 @@ main.content {
 }
 
 .layout.collapsed {
-  grid-template-columns: 84px 1fr;
+  grid-template-columns: 80px 1fr;
 }
 
 .layout.collapsed .sidebar {
@@ -768,17 +769,15 @@ main.content {
 .layout.collapsed .support-card div,
 .layout.collapsed .support-card .pill-icon,
 .layout.collapsed .theme-toggle span:last-child,
-.layout.collapsed .logout-btn {
-  display: none;
-}
-
+.layout.collapsed .logout-btn,
 .layout.collapsed .stats-grid {
-  grid-template-columns: 1fr;
+  display: none;
 }
 
 .layout.collapsed .nav-item {
   grid-template-columns: 1fr;
   justify-items: center;
   padding: 12px;
+}
 }
 </style>
