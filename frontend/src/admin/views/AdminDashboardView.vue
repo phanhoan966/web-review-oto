@@ -89,7 +89,11 @@ async function fetchUsers() {
 }
 
 function goPending() {
-  router.push({ name: 'admin-posts' })
+  router.push({ name: 'admin-pending-posts' })
+}
+
+function openDetail(id: number) {
+  router.push({ name: 'admin-post-detail', params: { id } })
 }
 </script>
 
@@ -151,17 +155,27 @@ function goPending() {
         <h3>Hàng chờ duyệt</h3>
         <button class="ghost" @click="goPending">Xem tất cả</button>
       </div>
-      <div class="list">
-        <div v-for="item in pending" :key="item.id" class="row pending">
-          <div>
-            <p class="title">{{ item.title }}</p>
-            <p class="muted">{{ item.authorName || 'Ẩn danh' }} · {{ item.status || 'PENDING' }}</p>
-            <div class="tags">
-              <span v-for="t in [item.fuelType, item.priceSegment].filter(Boolean)" :key="t" class="tag">{{ t }}</span>
-            </div>
-          </div>
-          <div class="pill pending">Chờ duyệt</div>
+      <div class="table">
+        <div class="row head">
+          <div>Tiêu đề</div>
+          <div>Tác giả</div>
+          <div>Nhiên liệu</div>
+          <div>Phân khúc</div>
+          <div>Ngày</div>
+          <div></div>
         </div>
+        <div v-for="item in pending" :key="item.id" class="row">
+          <div class="title">{{ item.title }}</div>
+          <div class="muted">{{ item.authorName || 'Ẩn danh' }}</div>
+          <div class="muted">{{ item.fuelType || '-' }}</div>
+          <div class="muted">{{ item.priceSegment || '-' }}</div>
+          <div class="muted">{{ item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : '-' }}</div>
+          <div class="actions">
+            <span class="pill pending">Chờ duyệt</span>
+            <button class="ghost" type="button" @click="openDetail(item.id)">Xem</button>
+          </div>
+        </div>
+        <div v-if="!pending.length" class="row empty">Không có bài chờ duyệt</div>
       </div>
     </section>
   </div>
@@ -252,6 +266,42 @@ button {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
+}
+
+.table {
+  display: grid;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.table .row,
+.table .row.head {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr minmax(140px, 1fr);
+  min-width: 980px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+}
+
+.table .row.head {
+  font-weight: 700;
+  background: var(--surface);
+}
+
+.table .row.empty {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .kpi .card h2 {
