@@ -198,6 +198,7 @@ public class AuthService {
         response.getUser().setFollowers(user.getFollowers());
         response.getUser().setRating(user.getRating());
         response.getUser().setReviewCount((int) reviewRepository.countByAuthorIdAndStatus(user.getId(), com.example.autoreview.domain.ReviewStatus.APPROVED));
+        response.getUser().setRoles(user.getRoles());
         return response;
     }
 

@@ -23,6 +23,7 @@ public class DtoMapper {
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setFollowers(user.getFollowers());
         dto.setRating(user.getRating());
+        dto.setRoles(user.getRoles());
         return dto;
     }
 

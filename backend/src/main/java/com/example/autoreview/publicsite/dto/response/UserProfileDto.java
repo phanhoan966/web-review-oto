@@ -1,5 +1,7 @@
 package com.example.autoreview.publicsite.dto.response;
 
+import java.util.Set;
+
 public class UserProfileDto {
 
     private Long id;
@@ -9,6 +11,7 @@ public class UserProfileDto {
     private Integer followers;
     private Double rating;
     private Integer reviewCount;
+    private Set<String> roles;
 
     public Long getId() {
         return id;
@@ -64,5 +67,13 @@ public class UserProfileDto {
 
     public void setReviewCount(Integer reviewCount) {
         this.reviewCount = reviewCount;
+    }
+
+    public Set<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<String> roles) {
+        this.roles = roles;
     }
 }
