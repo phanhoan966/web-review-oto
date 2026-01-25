@@ -39,6 +39,12 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.listUsers(email));
     }
 
+    @GetMapping("/deleted")
+    public ResponseEntity<List<AdminUserDto>> deleted(@AuthenticationPrincipal Object principal, HttpServletRequest httpServletRequest) {
+        String email = currentUserResolver.resolveEmail(principal, httpServletRequest);
+        return ResponseEntity.ok(adminUserService.listDeletedUsers(email));
+    }
+
     @PostMapping
     public ResponseEntity<AdminUserDto> create(@Valid @RequestBody CreateUserRequest request, @AuthenticationPrincipal Object principal, HttpServletRequest httpServletRequest) {
         String email = currentUserResolver.resolveEmail(principal, httpServletRequest);
@@ -55,6 +61,12 @@ public class AdminUserController {
     public ResponseEntity<AdminUserDto> updateRoles(@PathVariable Long id, @Valid @RequestBody UpdateUserRolesRequest request, @AuthenticationPrincipal Object principal, HttpServletRequest httpServletRequest) {
         String email = currentUserResolver.resolveEmail(principal, httpServletRequest);
         return ResponseEntity.ok(adminUserService.updateRoles(email, id, request.getRoles()));
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<AdminUserDto> restore(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest httpServletRequest) {
+        String email = currentUserResolver.resolveEmail(principal, httpServletRequest);
+        return ResponseEntity.ok(adminUserService.restoreUser(email, id));
     }
 
     @DeleteMapping("/{id}")

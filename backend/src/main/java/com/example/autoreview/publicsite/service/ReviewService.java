@@ -239,6 +239,22 @@ public class ReviewService {
         reviewRepository.save(review);
     }
 
+    @Transactional
+    public void restoreRejected(Long id, String approverEmail) {
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        User approver = userRepository.findByEmail(approverEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!hasAdminRole(approver)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+        }
+        if (review.getStatus() != ReviewStatus.REJECTED) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Chỉ khôi phục được bài bị từ chối");
+        }
+        review.setStatus(ReviewStatus.PENDING);
+        review.setPublishedAt(null);
+        review.setUpdatedAt(Instant.now());
+        reviewRepository.save(review);
+    }
+
     @Transactional(readOnly = true)
     public Page<ReviewDto> listPending(int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));

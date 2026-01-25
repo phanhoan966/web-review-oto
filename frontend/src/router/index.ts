@@ -11,7 +11,9 @@ import AdminLoginView from '../admin/views/AdminLoginView.vue'
 import AdminDashboardView from '../admin/views/AdminDashboardView.vue'
 import AdminLayout from '../admin/layouts/AdminLayout.vue'
 import AdminUsersView from '../admin/views/AdminUsersView.vue'
+import AdminDeletedUsersView from '../admin/views/AdminDeletedUsersView.vue'
 import AdminPostsView from '../admin/views/AdminPostsView.vue'
+import AdminRejectedPostsView from '../admin/views/AdminRejectedPostsView.vue'
 import AdminPostDetailView from '../admin/views/AdminPostDetailView.vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -32,7 +34,9 @@ const router = createRouter({
         { path: '', redirect: { name: 'admin-dashboard' } },
         { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboardView },
         { path: 'users', name: 'admin-users', component: AdminUsersView },
+        { path: 'users/deleted', name: 'admin-deleted-users', component: AdminDeletedUsersView },
         { path: 'posts', name: 'admin-posts', component: AdminPostsView },
+        { path: 'posts/rejected', name: 'admin-rejected-posts', component: AdminRejectedPostsView },
         { path: 'posts/:id', name: 'admin-post-detail', component: AdminPostDetailView }
       ]
     },

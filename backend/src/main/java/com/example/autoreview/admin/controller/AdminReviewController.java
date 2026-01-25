@@ -68,4 +68,11 @@ public class AdminReviewController {
         reviewService.approve(id, email, false);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.restoreRejected(id, email);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -37,6 +37,14 @@ public class AdminUserService {
                 .toList();
     }
 
+    public List<AdminUserDto> listDeletedUsers(String actorEmail) {
+        User actor = requireActor(actorEmail);
+        enforcePermission(actor, null, null, Action.LIST);
+        return userRepository.findDeleted().stream()
+                .map(this::toDto)
+                .toList();
+    }
+
     public AdminUserDto createUser(String actorEmail, CreateUserRequest request) {
         User actor = requireActor(actorEmail);
         validateRoles(request.getRoles());
@@ -86,6 +94,16 @@ public class AdminUserService {
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
         return toDto(user);
+    }
+
+    public AdminUserDto restoreUser(String actorEmail, Long id) {
+        User actor = requireActor(actorEmail);
+        User target = userRepository.findAnyById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
+        enforcePermission(actor, target, target.getRoles(), Action.RESTORE);
+        target.setDeleted(false);
+        target.setUpdatedAt(Instant.now());
+        userRepository.save(target);
+        return toDto(target);
     }
 
     public void deleteUser(String actorEmail, Long id) {
@@ -192,6 +210,12 @@ public class AdminUserService {
             }
             return;
         }
+        if (action == Action.RESTORE) {
+            if (targetIsSelf || targetManager || targetAdmin || targetSystem) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+            }
+            return;
+        }
 
         throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
     }
@@ -200,7 +224,8 @@ public class AdminUserService {
         LIST,
         CREATE,
         UPDATE,
-        DELETE
+        DELETE,
+        RESTORE
     }
 
     private AdminUserDto toDto(User user) {
