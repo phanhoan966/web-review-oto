@@ -29,8 +29,16 @@ function scrollChildren(name: string, delta: number) {
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
-  { label: 'Quản lý user', name: 'admin-users', icon: '👥', desc: 'Người dùng & reviewer' },
-  { label: 'User đã xóa', name: 'admin-deleted-users', icon: '🗂', desc: 'Khôi phục tài khoản' },
+  {
+    label: 'Quản lý user',
+    name: 'admin-users',
+    icon: '👥',
+    desc: 'Người dùng & reviewer',
+    children: [
+      { label: 'Tất cả user', name: 'admin-users', icon: '👥', desc: 'Người dùng & reviewer' },
+      { label: 'User đã xóa', name: 'admin-deleted-users', icon: '🗂', desc: 'Khôi phục tài khoản' }
+    ]
+  },
   {
     label: 'Quản lý bài viết',
     name: 'admin-posts',
@@ -133,8 +141,8 @@ async function logoutAndClose() {
           </RouterLink>
           <div v-if="item.children" class="nav-children-wrap">
             <div class="scroll-controls">
-              <button type="button" aria-label="Cuộn lên" @click.stop="scrollChildren(item.name, -80)">↑</button>
-              <button type="button" aria-label="Cuộn xuống" @click.stop="scrollChildren(item.name, 80)">↓</button>
+              <button type="button" aria-label="Cuộn lên" @click.stop="scrollChildren(item.name, -80)">^</button>
+              <button type="button" aria-label="Cuộn xuống" @click.stop="scrollChildren(item.name, 80)">v</button>
             </div>
             <div class="nav-children" :ref="(el) => setChildRef(item.name, el)">
               <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
@@ -380,14 +388,15 @@ async function logoutAndClose() {
   position: relative;
   display: grid;
   gap: 8px;
+  padding-right: 10px;
 }
 
 .scroll-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   display: grid;
-  grid-auto-flow: column;
   gap: 6px;
-  justify-content: end;
-  padding: 0 6px;
 }
 
 .scroll-controls button {
@@ -396,9 +405,11 @@ async function logoutAndClose() {
   border-radius: 10px;
   padding: 6px 8px;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text);
   box-shadow: var(--shadow);
+  width: 36px;
+  height: 32px;
 }
 
 .nav-children {
