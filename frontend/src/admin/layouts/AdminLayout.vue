@@ -403,11 +403,11 @@ async function logoutAndClose() {
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  width: 100%;
 }
 
 .nav-sub:hover {
-  transform: translateX(3px);
   border-color: var(--accent);
   box-shadow: var(--shadow);
 }
@@ -451,11 +451,11 @@ async function logoutAndClose() {
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  width: 100%;
 }
 
 .nav-item:hover {
-  transform: translateX(3px);
   border-color: var(--accent);
   box-shadow: var(--shadow);
 }
