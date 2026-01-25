@@ -134,8 +134,8 @@ async function logoutAndClose() {
               </div>
             </RouterLink>
             <button v-if="item.children" type="button" class="nav-toggle" :aria-expanded="isExpanded(item.name)" @click.stop="toggleExpand(item.name)">
-              <span v-if="isExpanded(item.name)">▾</span>
-              <span v-else>▸</span>
+              <span v-if="isExpanded(item.name)">⌄</span>
+              <span v-else>›</span>
             </button>
           </div>
           <div v-if="item.children && isExpanded(item.name)" class="nav-children-wrap">
@@ -474,6 +474,26 @@ async function logoutAndClose() {
   color: inherit;
   flex: 1;
   min-width: 0;
+}
+
+.nav-toggle {
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  color: var(--muted);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  font-weight: 800;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.nav-toggle:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .nav-item:hover {
