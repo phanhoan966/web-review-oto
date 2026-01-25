@@ -14,6 +14,18 @@ const collapsed = ref(false)
 const profileOpen = ref(false)
 const sidebarOpen = ref(false)
 const isMobileView = ref(false)
+const childRefs = ref<Record<string, HTMLElement | null>>({})
+
+function setChildRef(name: string, el: HTMLElement | null) {
+  childRefs.value[name] = el
+}
+
+function scrollChildren(name: string, delta: number) {
+  const el = childRefs.value[name]
+  if (el) {
+    el.scrollBy({ top: delta, behavior: 'smooth' })
+  }
+}
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
@@ -119,14 +131,20 @@ async function logoutAndClose() {
               <p class="muted small">{{ item.desc }}</p>
             </div>
           </RouterLink>
-          <div v-if="item.children" class="nav-children">
-            <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
-              <div class="nav-icon">{{ child.icon }}</div>
-              <div class="nav-text">
-                <p>{{ child.label }}</p>
-                <p class="muted small">{{ child.desc }}</p>
-              </div>
-            </RouterLink>
+          <div v-if="item.children" class="nav-children-wrap">
+            <div class="scroll-controls">
+              <button type="button" aria-label="Cuộn lên" @click.stop="scrollChildren(item.name, -80)">↑</button>
+              <button type="button" aria-label="Cuộn xuống" @click.stop="scrollChildren(item.name, 80)">↓</button>
+            </div>
+            <div class="nav-children" :ref="(el) => setChildRef(item.name, el)">
+              <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
+                <div class="nav-icon">{{ child.icon }}</div>
+                <div class="nav-text">
+                  <p>{{ child.label }}</p>
+                  <p class="muted small">{{ child.desc }}</p>
+                </div>
+              </RouterLink>
+            </div>
           </div>
         </div>
       </nav>
@@ -358,10 +376,46 @@ async function logoutAndClose() {
   margin-bottom: 10px;
 }
 
+.nav-children-wrap {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.scroll-controls {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 6px;
+  justify-content: end;
+  padding: 0 6px;
+}
+
+.scroll-controls button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
 .nav-children {
   display: grid;
   gap: 8px;
-  padding-left: 10px;
+  padding-left: 18px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.nav-children::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav-children::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
 }
 
 .nav-sub {
