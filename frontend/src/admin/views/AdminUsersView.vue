@@ -450,7 +450,6 @@ async function load() {
   align-items: end;
   padding: 12px;
   border-radius: 12px;
-  background: var(--surface);
   border: 1px solid var(--border);
 }
 
