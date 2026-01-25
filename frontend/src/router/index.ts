@@ -56,17 +56,23 @@ router.beforeEach(async (to, _from, next) => {
     await auth.hydrate()
   }
   const isAdminRoute = to.path.startsWith('/admin')
+  const roles = auth.user?.roles || []
+  const hasAdminRole = roles.includes('ROLE_SYSTEM_ADMIN') || roles.includes('ROLE_MANAGER') || roles.includes('ROLE_ADMIN')
 
   if ((to.name === 'login' || to.name === 'register' || to.name === 'forgot-password') && auth.isAuthenticated) {
     next({ name: 'feed' })
     return
   }
   if (to.name === 'admin-login' && auth.isAuthenticated) {
-    next({ name: 'admin-dashboard' })
+    next({ name: hasAdminRole ? 'admin-dashboard' : 'feed' })
     return
   }
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     next({ name: isAdminRoute ? 'admin-login' : 'login' })
+    return
+  }
+  if (isAdminRoute && auth.isAuthenticated && !hasAdminRole) {
+    next({ name: 'feed' })
     return
   }
   next()
