@@ -85,4 +85,8 @@ function heroSrc(item: ViewedItem) {
   color: var(--muted);
   font-size: 13px;
 }
+
+.row {
+  overflow: hidden;
+}
 </style>

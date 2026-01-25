@@ -152,7 +152,7 @@ h1 {
 
 .layout {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
+  grid-template-columns: 2.5fr 1fr;
   gap: 18px;
 }
 

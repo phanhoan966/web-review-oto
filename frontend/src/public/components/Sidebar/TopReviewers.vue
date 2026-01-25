@@ -92,6 +92,10 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
 
 .row:hover .name {
   text-decoration: underline;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .avatar-wrap {
@@ -109,6 +113,10 @@ defineProps<{ title?: string; reviewers: ReviewerItem[] }>()
 
 .name {
   font-weight: 600;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .meta {

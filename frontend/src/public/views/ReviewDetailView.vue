@@ -290,8 +290,8 @@ function formatDate(value?: string) {
 </script>
 
 <template>
-  <div class="page">
-    <div class="container layout" v-if="!loading && !errorMsg && review">
+  <div class="container page">
+    <div class="layout" v-if="!loading && !errorMsg && review">
       <div class="main">
         <article class="card">
           <header class="post-head">
@@ -445,11 +445,10 @@ function formatDate(value?: string) {
           </div>
         </section>
       </div>
-
       <aside class="side">
-        <TopReviewers :reviewers="reviewers" title="Top Reviewers" />
-        <FeaturedBrands :brands="brands" @select="onBrandSelect" />
         <MostViewed :items="mostViewed" />
+        <FeaturedBrands :brands="brands" @select="onBrandSelect" />
+        <TopReviewers :reviewers="reviewers" title="Top Reviewers" />
       </aside>
     </div>
 
@@ -477,11 +476,12 @@ function formatDate(value?: string) {
   background: var(--bg);
   min-height: 100vh;
   padding: 20px 0 40px;
+  display: grid;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 720px) 320px;
+  grid-template-columns: 2.5fr 1fr;
   gap: 20px;
 }
 
@@ -793,7 +793,7 @@ function formatDate(value?: string) {
 }
 
 .side {
-  display: grid;
+  display: flow;
   gap: 12px;
 }
 
