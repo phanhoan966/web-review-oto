@@ -219,6 +219,17 @@ async function hidePost(id: number) {
   }
 }
 
+async function sendToPending(id: number) {
+  actionLoading.value = id
+  try {
+    await client.post(`/admin/reviews/${id}/restore`)
+    await loadPending()
+    await loadRejected()
+  } finally {
+    actionLoading.value = null
+  }
+}
+
 function changePendingPage(page: number) {
   pendingPage.value = { ...pendingPage.value, page }
   if (hasFilters(pendingFilters.value)) {
@@ -441,7 +452,8 @@ function changeRejectedSize(size: number) {
           <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
           <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
           <div class="row-actions">
-            <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt lại</button>
+            <button class="ghost" :disabled="actionLoading === p.id" @click="sendToPending(p.id)">Pending</button>
+            <button class="danger" :disabled="actionLoading === p.id" @click="reject(p.id)">REJECTED</button>
           </div>
         </div>
         <div v-if="!rejected.length" class="row empty">Không có bài bị từ chối</div>
