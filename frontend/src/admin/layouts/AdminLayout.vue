@@ -98,7 +98,7 @@ function closeProfileMenu() {
 
 function goProfile() {
   profileOpen.value = false
-  router.push({ name: 'profile' })
+  router.push({ name: 'admin-profile' })
 }
 
 async function logoutAndClose() {

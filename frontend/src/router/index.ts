@@ -15,6 +15,7 @@ import AdminDeletedUsersView from '../admin/views/AdminDeletedUsersView.vue'
 import AdminPostsView from '../admin/views/AdminPostsView.vue'
 import AdminRejectedPostsView from '../admin/views/AdminRejectedPostsView.vue'
 import AdminPostDetailView from '../admin/views/AdminPostDetailView.vue'
+import AdminProfileView from '../admin/views/AdminProfileView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -39,7 +40,8 @@ const router = createRouter({
         { path: 'posts/approved', name: 'admin-approved-posts', component: AdminPostsView },
         { path: 'posts/pending', name: 'admin-pending-posts', component: AdminPostsView },
         { path: 'posts/rejected', name: 'admin-rejected-posts', component: AdminRejectedPostsView },
-        { path: 'posts/:id', name: 'admin-post-detail', component: AdminPostDetailView }
+        { path: 'posts/:id', name: 'admin-post-detail', component: AdminPostDetailView },
+        { path: 'profile', name: 'admin-profile', component: AdminProfileView }
       ]
     },
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },

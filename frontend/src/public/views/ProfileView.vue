@@ -11,20 +11,6 @@ const reviews = ref<(ReviewCardData & { status?: string })[]>([])
 const loading = ref(false)
 const errorMsg = ref('')
 
-const details = computed(() => {
-  const user = auth.user
-  if (!user) return []
-  return [
-    { label: 'ID', value: user.id ?? '-' },
-    { label: 'Tên', value: user.username ?? '-' },
-    { label: 'Email', value: user.email ?? '-' },
-    { label: 'Roles', value: (user.roles || []).join(', ') || '-' },
-    { label: 'Người theo dõi', value: user.followers ?? 0 },
-    { label: 'Số bài review', value: user.reviewCount ?? 0 },
-    { label: 'Điểm đánh giá', value: user.rating?.toFixed?.(1) ?? (user.rating ?? '-') }
-  ]
-})
-
 onMounted(async () => {
   await auth.ensureHydrated()
   if (auth.isAuthenticated) {
@@ -64,12 +50,6 @@ async function loadReviews() {
         <div>
           <h1>{{ auth.user.username }}</h1>
           <p class="muted">{{ auth.user.email }}</p>
-        </div>
-      </div>
-      <div class="details">
-        <div v-for="item in details" :key="item.label" class="detail-row">
-          <p class="label">{{ item.label }}</p>
-          <p class="value">{{ item.value }}</p>
         </div>
       </div>
       <div class="stats">
@@ -132,34 +112,6 @@ async function loadReviews() {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-  margin: 8px 0;
-}
-
-.detail-row {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 4px;
-}
-
-.detail-row .label {
-  margin: 0;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.detail-row .value {
-  margin: 0;
-  font-weight: 700;
 }
 
 .avatar {
