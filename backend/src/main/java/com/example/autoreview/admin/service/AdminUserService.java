@@ -156,6 +156,12 @@ public class AdminUserService {
             if (action == Action.LIST) {
                 return;
             }
+            if (action == Action.UPDATE && targetIsSelf) {
+                if (nextHasSystem || nextHasManager) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+                return;
+            }
             throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
         }
 
