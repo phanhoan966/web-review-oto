@@ -413,10 +413,8 @@ async function logoutAndClose() {
 
 .nav-item {
   margin-bottom: 10px;
-  display: block;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  display: flex;
+  align-items: center;
   gap: 14px;
   padding: 18px 16px;
   border-radius: 18px;
