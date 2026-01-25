@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
@@ -17,6 +18,8 @@ interface AdminUser {
   createdAt?: string
 }
 
+const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 const allUsers = ref<AdminUser[]>([])
 const users = ref<AdminUser[]>([])
@@ -71,7 +74,10 @@ const roleLabels: Record<string, string> = {
 }
 
 const editingUser = computed(() => users.value.find((u) => u.id === editingId.value) || null)
-const canCreate = computed(() => canModify())
+const isCreateMode = computed(() => route.query.mode === 'create')
+const isEditMode = computed(() => route.query.mode === 'edit' && route.query.id)
+const isFormView = computed(() => Boolean(isCreateMode.value || isEditMode.value))
+const canCreate = computed(() => hasRole('ROLE_SYSTEM_ADMIN') || hasRole('ROLE_MANAGER'))
 
 watch(
   filters,
@@ -84,6 +90,13 @@ watch(
 
 onMounted(load)
 
+watch(
+  () => route.query,
+  () => {
+    syncRouteForm()
+  }
+)
+
 function hasRole(role: string) {
   return (auth.user?.roles || []).includes(role)
 }
@@ -91,31 +104,34 @@ function hasRole(role: string) {
 function roleOptions(target?: AdminUser | null) {
   if (hasRole('ROLE_SYSTEM_ADMIN')) return ['ROLE_SYSTEM_ADMIN', 'ROLE_MANAGER', 'ROLE_ADMIN', 'ROLE_USER']
   if (hasRole('ROLE_MANAGER')) {
-    if (target && target.id === auth.user?.id && (target.roles || []).includes('ROLE_MANAGER')) {
-      return ['ROLE_MANAGER', 'ROLE_ADMIN', 'ROLE_USER']
+    if (target && target.id === auth.user?.id) {
+      return ['ROLE_MANAGER', 'ROLE_USER']
     }
-    return ['ROLE_ADMIN', 'ROLE_USER']
-  }
-  if (hasRole('ROLE_ADMIN')) {
-    if (target && target.id === auth.user?.id) return ['ROLE_ADMIN', 'ROLE_USER']
     return ['ROLE_USER']
   }
   return []
 }
 
-function canModify(target?: AdminUser | null) {
-  if (!auth.user) return false
-  const isSelf = target && target.id === auth.user.id
-  const targetRoles = new Set(target?.roles || [])
+function canEdit(target?: AdminUser | null) {
+  if (!auth.user || !target) return false
+  const isSelf = target.id === auth.user.id
+  const roles = new Set(target.roles || [])
   if (hasRole('ROLE_SYSTEM_ADMIN')) return true
   if (hasRole('ROLE_MANAGER')) {
-    if (targetRoles.has('ROLE_SYSTEM_ADMIN')) return false
-    if (!isSelf && targetRoles.has('ROLE_MANAGER')) return false
+    if (roles.has('ROLE_SYSTEM_ADMIN') || roles.has('ROLE_ADMIN')) return false
+    if (!isSelf && roles.has('ROLE_MANAGER')) return false
     return true
   }
-  if (hasRole('ROLE_ADMIN')) {
-    if (targetRoles.has('ROLE_SYSTEM_ADMIN') || targetRoles.has('ROLE_MANAGER')) return false
-    if (!isSelf && targetRoles.has('ROLE_ADMIN')) return false
+  return false
+}
+
+function canDeleteUser(target?: AdminUser | null) {
+  if (!auth.user || !target) return false
+  const roles = new Set(target.roles || [])
+  if (hasRole('ROLE_SYSTEM_ADMIN')) return true
+  if (hasRole('ROLE_MANAGER')) {
+    if (target.id === auth.user.id) return false
+    if (roles.has('ROLE_SYSTEM_ADMIN') || roles.has('ROLE_ADMIN') || roles.has('ROLE_MANAGER')) return false
     return true
   }
   return false
@@ -128,8 +144,44 @@ function resetForm() {
   formError.value = ''
 }
 
+function syncRouteForm() {
+  if (route.query.mode === 'create') {
+    startCreate()
+    return
+  }
+  if (route.query.mode === 'edit' && route.query.id) {
+    const id = Number(route.query.id)
+    const target = allUsers.value.find((u) => u.id === id)
+    if (target) {
+      startEdit(target)
+      return
+    }
+  }
+  if (isFormView.value) {
+    router.push({ query: {} })
+  }
+}
+
+function openCreate() {
+  if (!canCreate.value) return
+  router.push({ query: { mode: 'create' } })
+}
+
+function openEdit(user: AdminUser) {
+  if (!canEdit(user)) return
+  router.push({ query: { mode: 'edit', id: String(user.id) } })
+}
+
+function startCreate() {
+  if (!canCreate.value) return
+  formMode.value = 'create'
+  editingId.value = null
+  form.value = { username: '', email: '', password: '', roles: ['ROLE_USER'] }
+  formError.value = ''
+}
+
 function startEdit(user: AdminUser) {
-  if (!canModify(user)) return
+  if (!canEdit(user)) return
   formMode.value = 'edit'
   editingId.value = user.id
   form.value = {
@@ -154,7 +206,8 @@ function toggleRole(role: string) {
 }
 
 async function submit() {
-  if (!canCreate.value && formMode.value === 'create') return
+  if (isCreateMode.value && !canCreate.value) return
+  if (isEditMode.value && editingUser.value && !canEdit(editingUser.value)) return
   if (!form.value.username || !form.value.email || (formMode.value === 'create' && !form.value.password)) {
     formError.value = 'Thiếu thông tin bắt buộc'
     return
@@ -179,6 +232,7 @@ async function submit() {
     }
     await load()
     resetForm()
+    router.push({ query: {} })
   } catch (error: any) {
     formError.value = error.response?.data?.message || 'Không lưu được user'
   } finally {
@@ -187,7 +241,8 @@ async function submit() {
 }
 
 async function deleteUser(id: number, target: AdminUser) {
-  if (!canModify(target)) return
+  if (!canDeleteUser(target)) return
+  if (!window.confirm('Bạn có chắc chắn muốn xoá user này?')) return
   actionLoading.value = id
   try {
     await client.delete(`/admin/users/${id}`)
@@ -220,6 +275,7 @@ async function load() {
     const meta = resolvePageMeta(data, allUsers.value.length, { ...usersPage.value, total: allUsers.value.length })
     usersPage.value = clampPage(meta)
     applyPaging()
+    syncRouteForm()
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tải được danh sách user'
     allUsers.value = []
@@ -240,28 +296,16 @@ async function load() {
       </div>
       <div class="actions">
         <button class="ghost" @click="load" :disabled="loading">Làm mới</button>
+        <button v-if="isFormView" class="ghost" type="button" @click="router.push({ query: {} })">Về danh sách</button>
+        <button v-else-if="canCreate" class="primary" type="button" @click="openCreate">Thêm user</button>
       </div>
     </div>
 
-    <div class="filters">
-      <label>
-        <span>Tên</span>
-        <input v-model="filters.name" type="text" placeholder="Nhập tên" />
-      </label>
-      <label>
-        <span>Email</span>
-        <input v-model="filters.email" type="text" placeholder="Nhập email" />
-      </label>
-      <label>
-        <span>Năm sinh</span>
-        <input v-model="filters.year" type="number" inputmode="numeric" placeholder="Ví dụ 1995" />
-      </label>
-      <div class="filter-actions">
-        <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
+    <div v-if="isFormView" class="form">
+      <div class="form-head">
+        <p class="eyebrow">{{ formMode === 'create' ? 'Thêm user' : 'Chỉnh sửa user' }}</p>
+        <h3>{{ formMode === 'create' ? 'Tạo tài khoản mới' : 'Cập nhật tài khoản' }}</h3>
       </div>
-    </div>
-
-    <div v-if="canCreate" class="form">
       <div class="form-grid">
         <label>
           <span>Họ tên</span>
@@ -278,7 +322,7 @@ async function load() {
         <div class="roles">
           <span>Roles</span>
           <div class="role-pills">
-            <label v-for="role in roleOptions(editingUser)" :key="role" class="pill-option">
+            <label v-for="role in roleOptions(isCreateMode ? null : editingUser)" :key="role" class="pill-option">
               <input type="checkbox" :value="role" :checked="form.roles.includes(role)" @change="toggleRole(role)" />
               <span>{{ roleLabels[role] || role }}</span>
             </label>
@@ -288,40 +332,60 @@ async function load() {
       <div class="form-actions">
         <p v-if="formError" class="error">{{ formError }}</p>
         <div class="gap">
-          <button class="ghost" type="button" @click="resetForm" :disabled="saving">Hủy</button>
+          <button class="ghost" type="button" @click="router.push({ query: {} }); resetForm()" :disabled="saving">Hủy</button>
           <button class="primary" type="button" @click="submit" :disabled="saving">{{ formMode === 'create' ? 'Thêm user' : 'Lưu thay đổi' }}</button>
         </div>
       </div>
     </div>
 
-    <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
-    <p v-else-if="loading" class="muted">Đang tải...</p>
-
-    <div v-else class="table">
-      <div class="row head">
-        <div>Họ tên</div>
-        <div>Email</div>
-        <div>Roles</div>
-        <div>Theo dõi</div>
-        <div>Bài viết</div>
-        <div>Tham gia</div>
-        <div></div>
-      </div>
-      <div v-for="u in users" :key="u.id" class="row">
-        <div class="name">{{ u.username }}</div>
-        <div class="muted">{{ u.email }}</div>
-        <div class="role-list">{{ (u.roles || []).map((r) => roleLabels[r] || r).join(', ') }}</div>
-        <div>{{ u.followers ?? 0 }}</div>
-        <div>{{ u.reviewCount ?? 0 }}</div>
-        <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
-        <div class="row-actions">
-          <button class="ghost" :disabled="!canModify(u) || actionLoading === u.id" @click="startEdit(u)">Sửa</button>
-          <button class="danger" :disabled="!canModify(u) || actionLoading === u.id" @click="deleteUser(u.id, u)">Xóa</button>
+    <div v-else>
+      <div class="filters">
+        <label>
+          <span>Tên</span>
+          <input v-model="filters.name" type="text" placeholder="Nhập tên" />
+        </label>
+        <label>
+          <span>Email</span>
+          <input v-model="filters.email" type="text" placeholder="Nhập email" />
+        </label>
+        <label>
+          <span>Năm sinh</span>
+          <input v-model="filters.year" type="number" inputmode="numeric" placeholder="Ví dụ 1995" />
+        </label>
+        <div class="filter-actions">
+          <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
         </div>
       </div>
-      <div v-if="!users.length" class="row empty">Không có user</div>
+
+      <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+      <p v-else-if="loading" class="muted">Đang tải...</p>
+
+      <div v-else class="table">
+        <div class="row head">
+          <div>Họ tên</div>
+          <div>Email</div>
+          <div>Roles</div>
+          <div>Theo dõi</div>
+          <div>Bài viết</div>
+          <div>Tham gia</div>
+          <div></div>
+        </div>
+        <div v-for="u in users" :key="u.id" class="row">
+          <div class="name">{{ u.username }}</div>
+          <div class="muted">{{ u.email }}</div>
+          <div class="role-list">{{ (u.roles || []).map((r) => roleLabels[r] || r).join(', ') }}</div>
+          <div>{{ u.followers ?? 0 }}</div>
+          <div>{{ u.reviewCount ?? 0 }}</div>
+          <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
+          <div class="row-actions">
+            <button class="ghost" :disabled="!canEdit(u) || actionLoading === u.id" @click="openEdit(u)">Sửa</button>
+            <button class="danger" :disabled="!canDeleteUser(u) || actionLoading === u.id" @click="deleteUser(u.id, u)">Xóa</button>
+          </div>
+        </div>
+        <div v-if="!users.length" class="row empty">Không có user</div>
+      </div>
+      <PaginationBar :page="usersPage.page" :size="usersPage.size" :total="usersPage.total" @update:page="changeUsersPage" @update:size="changeUsersSize" />
     </div>
-    <PaginationBar :page="usersPage.page" :size="usersPage.size" :total="usersPage.total" @update:page="changeUsersPage" @update:size="changeUsersSize" />
   </div>
 </template>
 
