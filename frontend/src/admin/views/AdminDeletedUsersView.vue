@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
+import ConfirmDialog from '../../components/ConfirmDialog.vue'
 
 interface AdminUser {
   id: number
@@ -19,6 +20,8 @@ const page = ref({ page: 0, size: 10, total: 0 })
 const loading = ref(false)
 const actionLoading = ref<number | null>(null)
 const errorMsg = ref('')
+const confirmVisible = ref(false)
+const confirmTarget = ref<AdminUser | null>(null)
 
 const roleLabels: Record<string, string> = {
   ROLE_SYSTEM_ADMIN: 'System Admin',
@@ -90,8 +93,16 @@ function changeSize(size: number) {
   apply()
 }
 
-async function restore(id: number) {
+function requestRestore(user: AdminUser) {
+  confirmTarget.value = user
+  confirmVisible.value = true
+}
+
+async function confirmRestore() {
+  if (!confirmTarget.value) return
+  const id = confirmTarget.value.id
   actionLoading.value = id
+  confirmVisible.value = false
   try {
     await client.post(`/admin/users/${id}/restore`)
     await load()
@@ -99,6 +110,7 @@ async function restore(id: number) {
     errorMsg.value = error.response?.data?.message || 'Không khôi phục được user'
   } finally {
     actionLoading.value = null
+    confirmTarget.value = null
   }
 }
 </script>
@@ -147,13 +159,21 @@ async function restore(id: number) {
         <div class="role-list">{{ (u.roles || []).map((r) => roleLabels[r] || r).join(', ') }}</div>
         <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
         <div class="row-actions">
-          <button class="primary" :disabled="actionLoading === u.id" @click="restore(u.id)">Khôi phục</button>
+          <button class="primary" :disabled="actionLoading === u.id" @click="requestRestore(u)">Khôi phục</button>
         </div>
       </div>
       <div v-if="!users.length" class="row empty">Không có user đã xóa</div>
       <PaginationBar :page="page.page" :size="page.size" :total="page.total" @update:page="changePage" @update:size="changeSize" />
     </div>
   </div>
+  <ConfirmDialog
+    v-model="confirmVisible"
+    :title="'Khôi phục user'"
+    :message="confirmTarget ? `Khôi phục ${confirmTarget.username}?` : ''"
+    cancel-text="Hủy"
+    confirm-text="Khôi phục"
+    @confirm="confirmRestore"
+  />
 </template>
 
 <style scoped lang="scss">

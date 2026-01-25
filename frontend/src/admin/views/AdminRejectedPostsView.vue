@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
+import ConfirmDialog from '../../components/ConfirmDialog.vue'
 import { resolvePageMeta } from '../utils/pageMeta'
 
 interface ReviewRow {
@@ -26,6 +27,9 @@ const page = ref({ page: 0, size: 10, total: 0 })
 const loading = ref(false)
 const actionLoading = ref<number | null>(null)
 const errorMsg = ref('')
+const confirmVisible = ref(false)
+const confirmTarget = ref<ReviewRow | null>(null)
+const confirmMode = ref<'restore' | 'approve' | null>(null)
 
 function clampPage(meta: { page: number; size: number; total: number }) {
   const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
@@ -118,25 +122,40 @@ function changeSize(size: number) {
   load()
 }
 
-async function restore(id: number) {
-  actionLoading.value = id
-  try {
-    await client.post(`/admin/reviews/${id}/restore`)
-    await load()
-  } catch (error: any) {
-    errorMsg.value = error.response?.data?.message || 'Không khôi phục được bài viết'
-  } finally {
-    actionLoading.value = null
-  }
+function requestRestore(post: ReviewRow) {
+  confirmTarget.value = post
+  confirmMode.value = 'restore'
+  confirmVisible.value = true
 }
 
-async function approve(id: number) {
+function requestApprove(post: ReviewRow) {
+  confirmTarget.value = post
+  confirmMode.value = 'approve'
+  confirmVisible.value = true
+}
+
+async function confirmAction() {
+  if (!confirmTarget.value || !confirmMode.value) return
+  const id = confirmTarget.value.id
   actionLoading.value = id
+  confirmVisible.value = false
   try {
-    await client.post(`/admin/reviews/${id}/approve`)
+    if (confirmMode.value === 'restore') {
+      await client.post(`/admin/reviews/${id}/restore`)
+    } else {
+      await client.post(`/admin/reviews/${id}/approve`)
+    }
     await load()
+  } catch (error: any) {
+    if (confirmMode.value === 'restore') {
+      errorMsg.value = error.response?.data?.message || 'Không khôi phục được bài viết'
+    } else {
+      errorMsg.value = error.response?.data?.message || 'Không duyệt được bài viết'
+    }
   } finally {
     actionLoading.value = null
+    confirmTarget.value = null
+    confirmMode.value = null
   }
 }
 </script>
@@ -203,14 +222,22 @@ async function approve(id: number) {
         <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
         <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
         <div class="row-actions">
-          <button class="ghost" :disabled="actionLoading === p.id" @click="restore(p.id)">Khôi phục</button>
-          <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt</button>
+          <button class="ghost" :disabled="actionLoading === p.id" @click="requestRestore(p)">Khôi phục</button>
+          <button class="primary" :disabled="actionLoading === p.id" @click="requestApprove(p)">Duyệt</button>
         </div>
       </div>
       <div v-if="!reviews.length" class="row empty">Không có bài bị từ chối</div>
       <PaginationBar :page="page.page" :size="page.size" :total="page.total" @update:page="changePage" @update:size="changeSize" />
     </div>
   </div>
+  <ConfirmDialog
+    v-model="confirmVisible"
+    :title="confirmMode === 'approve' ? 'Duyệt bài viết' : 'Khôi phục bài viết'"
+    :message="confirmTarget ? `${confirmMode === 'approve' ? 'Duyệt' : 'Khôi phục'} bài “${confirmTarget.title}”?` : ''"
+    cancel-text="Hủy"
+    confirm-text="OK"
+    @confirm="confirmAction"
+  />
 </template>
 
 <style scoped lang="scss">
