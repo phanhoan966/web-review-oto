@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
 import { resolvePageMeta } from '../utils/pageMeta'
@@ -32,6 +33,12 @@ const rejectedBase = ref({ page: 0, size: 10, total: 0 })
 const pendingPage = ref({ page: 0, size: 10, total: 0 })
 const approvedPage = ref({ page: 0, size: 10, total: 0 })
 const rejectedPage = ref({ page: 0, size: 10, total: 0 })
+
+const route = useRoute()
+
+const showPending = computed(() => route.name === 'admin-posts' || route.name === 'admin-pending-posts')
+const showApproved = computed(() => route.name === 'admin-posts' || route.name === 'admin-approved-posts')
+const showRejected = computed(() => route.name === 'admin-posts')
 
 function clampPage(meta: { page: number; size: number; total: number }) {
   const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
@@ -142,11 +149,23 @@ watch(
 
 onMounted(load)
 
+watch(
+  () => route.name,
+  () => {
+    load()
+  }
+)
+
 async function load() {
   loading.value = true
   errorMsg.value = ''
   try {
-    await Promise.all([loadPending(), loadApproved(), loadRejected()])
+    const tasks: Promise<void>[] = []
+    if (showPending.value) tasks.push(loadPending())
+    if (showApproved.value) tasks.push(loadApproved())
+    if (showRejected.value) tasks.push(loadRejected())
+    if (!tasks.length) tasks.push(loadPending())
+    await Promise.all(tasks)
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tải được bài viết'
   } finally {
@@ -302,163 +321,169 @@ function changeRejectedSize(size: number) {
     <p v-else-if="loading" class="muted">Đang tải...</p>
 
     <div v-else class="tables">
-      <div class="filters">
-        <label>
-          <span>Tiêu đề</span>
-          <input v-model="pendingFilters.title" type="text" placeholder="Nhập tiêu đề" />
-        </label>
-        <label>
-          <span>Tác giả</span>
-          <input v-model="pendingFilters.author" type="text" placeholder="Nhập tên tác giả" />
-        </label>
-        <label>
-          <span>Ngày viết</span>
-          <input v-model="pendingFilters.date" type="date" />
-        </label>
-        <label>
-          <span>Loại xe</span>
-          <input v-model="pendingFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
-        </label>
-        <div class="filter-actions">
-          <button class="ghost" type="button" @click="resetPendingFilters">Xóa lọc</button>
-        </div>
-      </div>
-      <div class="table">
-        <div class="row head">
-          <div>Tiêu đề</div>
-          <div>Tác giả</div>
-          <div>Trạng thái</div>
-          <div>Lượt xem</div>
-          <div>Thả tim</div>
-          <div>Bình luận</div>
-          <div>Loại xe</div>
-          <div>Ngày viết</div>
-          <div>Ngày xuất bản</div>
-          <div></div>
-        </div>
-        <div v-for="p in pending" :key="p.id" class="row">
-          <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
-          <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
-          <div><span class="status pending">{{ p.status || 'PENDING' }}</span></div>
-          <div>{{ p.views ?? 0 }}</div>
-          <div>{{ p.likes ?? 0 }}</div>
-          <div>{{ p.commentsCount ?? 0 }}</div>
-          <div class="muted">{{ p.vehicleModel || '-' }}</div>
-          <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
-          <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
-          <div class="row-actions">
-            <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt</button>
-            <button class="danger" :disabled="actionLoading === p.id" @click="reject(p.id)">Từ chối</button>
+      <div v-if="showPending">
+        <div class="filters">
+          <label>
+            <span>Tiêu đề</span>
+            <input v-model="pendingFilters.title" type="text" placeholder="Nhập tiêu đề" />
+          </label>
+          <label>
+            <span>Tác giả</span>
+            <input v-model="pendingFilters.author" type="text" placeholder="Nhập tên tác giả" />
+          </label>
+          <label>
+            <span>Ngày viết</span>
+            <input v-model="pendingFilters.date" type="date" />
+          </label>
+          <label>
+            <span>Loại xe</span>
+            <input v-model="pendingFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+          </label>
+          <div class="filter-actions">
+            <button class="ghost" type="button" @click="resetPendingFilters">Xóa lọc</button>
           </div>
         </div>
-        <div v-if="!pending.length" class="row empty">Không có bài chờ duyệt</div>
+        <div class="table">
+          <div class="row head">
+            <div>Tiêu đề</div>
+            <div>Tác giả</div>
+            <div>Trạng thái</div>
+            <div>Lượt xem</div>
+            <div>Thả tim</div>
+            <div>Bình luận</div>
+            <div>Loại xe</div>
+            <div>Ngày viết</div>
+            <div>Ngày xuất bản</div>
+            <div></div>
+          </div>
+          <div v-for="p in pending" :key="p.id" class="row">
+            <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
+            <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
+            <div><span class="status pending">{{ p.status || 'PENDING' }}</span></div>
+            <div>{{ p.views ?? 0 }}</div>
+            <div>{{ p.likes ?? 0 }}</div>
+            <div>{{ p.commentsCount ?? 0 }}</div>
+            <div class="muted">{{ p.vehicleModel || '-' }}</div>
+            <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
+            <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
+            <div class="row-actions">
+              <button class="primary" :disabled="actionLoading === p.id" @click="approve(p.id)">Duyệt</button>
+              <button class="danger" :disabled="actionLoading === p.id" @click="reject(p.id)">Từ chối</button>
+            </div>
+          </div>
+          <div v-if="!pending.length" class="row empty">Không có bài chờ duyệt</div>
+        </div>
+        <PaginationBar :page="pendingPage.page" :size="pendingPage.size" :total="pendingPage.total" @update:page="changePendingPage" @update:size="changePendingSize" />
       </div>
-      <PaginationBar :page="pendingPage.page" :size="pendingPage.size" :total="pendingPage.total" @update:page="changePendingPage" @update:size="changePendingSize" />
 
-      <div class="filters">
-        <label>
-          <span>Tiêu đề</span>
-          <input v-model="approvedFilters.title" type="text" placeholder="Nhập tiêu đề" />
-        </label>
-        <label>
-          <span>Tác giả</span>
-          <input v-model="approvedFilters.author" type="text" placeholder="Nhập tên tác giả" />
-        </label>
-        <label>
-          <span>Ngày viết</span>
-          <input v-model="approvedFilters.date" type="date" />
-        </label>
-        <label>
-          <span>Loại xe</span>
-          <input v-model="approvedFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
-        </label>
-        <div class="filter-actions">
-          <button class="ghost" type="button" @click="resetApprovedFilters">Xóa lọc</button>
-        </div>
-      </div>
-      <div class="table">
-        <div class="row head">
-          <div>Tiêu đề</div>
-          <div>Tác giả</div>
-          <div>Trạng thái</div>
-          <div>Lượt xem</div>
-          <div>Thả tim</div>
-          <div>Bình luận</div>
-          <div>Loại xe</div>
-          <div>Ngày viết</div>
-          <div>Ngày xuất bản</div>
-          <div></div>
-        </div>
-        <div v-for="p in approved" :key="p.id" class="row">
-          <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
-          <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
-          <div><span class="status approved">{{ p.status || 'APPROVED' }}</span></div>
-          <div>{{ p.views ?? 0 }}</div>
-          <div>{{ p.likes ?? 0 }}</div>
-          <div>{{ p.commentsCount ?? 0 }}</div>
-          <div class="muted">{{ p.vehicleModel || '-' }}</div>
-          <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
-          <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
-          <div class="row-actions">
-            <button class="ghost" :disabled="actionLoading === p.id" @click="hidePost(p.id)">Ẩn</button>
+      <div v-if="showApproved">
+        <div class="filters">
+          <label>
+            <span>Tiêu đề</span>
+            <input v-model="approvedFilters.title" type="text" placeholder="Nhập tiêu đề" />
+          </label>
+          <label>
+            <span>Tác giả</span>
+            <input v-model="approvedFilters.author" type="text" placeholder="Nhập tên tác giả" />
+          </label>
+          <label>
+            <span>Ngày viết</span>
+            <input v-model="approvedFilters.date" type="date" />
+          </label>
+          <label>
+            <span>Loại xe</span>
+            <input v-model="approvedFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+          </label>
+          <div class="filter-actions">
+            <button class="ghost" type="button" @click="resetApprovedFilters">Xóa lọc</button>
           </div>
         </div>
-        <div v-if="!approved.length" class="row empty">Không có bài đã duyệt</div>
+        <div class="table">
+          <div class="row head">
+            <div>Tiêu đề</div>
+            <div>Tác giả</div>
+            <div>Trạng thái</div>
+            <div>Lượt xem</div>
+            <div>Thả tim</div>
+            <div>Bình luận</div>
+            <div>Loại xe</div>
+            <div>Ngày viết</div>
+            <div>Ngày xuất bản</div>
+            <div></div>
+          </div>
+          <div v-for="p in approved" :key="p.id" class="row">
+            <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
+            <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
+            <div><span class="status approved">{{ p.status || 'APPROVED' }}</span></div>
+            <div>{{ p.views ?? 0 }}</div>
+            <div>{{ p.likes ?? 0 }}</div>
+            <div>{{ p.commentsCount ?? 0 }}</div>
+            <div class="muted">{{ p.vehicleModel || '-' }}</div>
+            <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
+            <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
+            <div class="row-actions">
+              <button class="ghost" :disabled="actionLoading === p.id" @click="hidePost(p.id)">Ẩn</button>
+            </div>
+          </div>
+          <div v-if="!approved.length" class="row empty">Không có bài đã duyệt</div>
+        </div>
+        <PaginationBar :page="approvedPage.page" :size="approvedPage.size" :total="approvedPage.total" @update:page="changeApprovedPage" @update:size="changeApprovedSize" />
       </div>
-      <PaginationBar :page="approvedPage.page" :size="approvedPage.size" :total="approvedPage.total" @update:page="changeApprovedPage" @update:size="changeApprovedSize" />
 
-      <div class="filters">
-        <label>
-          <span>Tiêu đề</span>
-          <input v-model="rejectedFilters.title" type="text" placeholder="Nhập tiêu đề" />
-        </label>
-        <label>
-          <span>Tác giả</span>
-          <input v-model="rejectedFilters.author" type="text" placeholder="Nhập tên tác giả" />
-        </label>
-        <label>
-          <span>Ngày viết</span>
-          <input v-model="rejectedFilters.date" type="date" />
-        </label>
-        <label>
-          <span>Loại xe</span>
-          <input v-model="rejectedFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
-        </label>
-        <div class="filter-actions">
-          <button class="ghost" type="button" @click="resetRejectedFilters">Xóa lọc</button>
-        </div>
-      </div>
-      <div class="table">
-        <div class="row head">
-          <div>Tiêu đề</div>
-          <div>Tác giả</div>
-          <div>Trạng thái</div>
-          <div>Lượt xem</div>
-          <div>Thả tim</div>
-          <div>Bình luận</div>
-          <div>Loại xe</div>
-          <div>Ngày viết</div>
-          <div>Ngày xuất bản</div>
-          <div></div>
-        </div>
-        <div v-for="p in rejected" :key="p.id" class="row">
-          <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
-          <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
-          <div><span class="status rejected">{{ p.status || 'REJECTED' }}</span></div>
-          <div>{{ p.views ?? 0 }}</div>
-          <div>{{ p.likes ?? 0 }}</div>
-          <div>{{ p.commentsCount ?? 0 }}</div>
-          <div class="muted">{{ p.vehicleModel || '-' }}</div>
-          <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
-          <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
-          <div class="row-actions">
-            <button class="ghost" :disabled="actionLoading === p.id" @click="sendToPending(p.id)">Pending</button>
-            <button class="danger" :disabled="actionLoading === p.id" @click="reject(p.id)">REJECTED</button>
+      <div v-if="showRejected">
+        <div class="filters">
+          <label>
+            <span>Tiêu đề</span>
+            <input v-model="rejectedFilters.title" type="text" placeholder="Nhập tiêu đề" />
+          </label>
+          <label>
+            <span>Tác giả</span>
+            <input v-model="rejectedFilters.author" type="text" placeholder="Nhập tên tác giả" />
+          </label>
+          <label>
+            <span>Ngày viết</span>
+            <input v-model="rejectedFilters.date" type="date" />
+          </label>
+          <label>
+            <span>Loại xe</span>
+            <input v-model="rejectedFilters.vehicle" type="text" placeholder="Nhập mẫu xe" />
+          </label>
+          <div class="filter-actions">
+            <button class="ghost" type="button" @click="resetRejectedFilters">Xóa lọc</button>
           </div>
         </div>
-        <div v-if="!rejected.length" class="row empty">Không có bài bị từ chối</div>
+        <div class="table">
+          <div class="row head">
+            <div>Tiêu đề</div>
+            <div>Tác giả</div>
+            <div>Trạng thái</div>
+            <div>Lượt xem</div>
+            <div>Thả tim</div>
+            <div>Bình luận</div>
+            <div>Loại xe</div>
+            <div>Ngày viết</div>
+            <div>Ngày xuất bản</div>
+            <div></div>
+          </div>
+          <div v-for="p in rejected" :key="p.id" class="row">
+            <RouterLink class="title link" :to="{ name: 'admin-post-detail', params: { id: p.id } }">{{ p.title }}</RouterLink>
+            <div class="muted">{{ p.authorName || 'Ẩn danh' }}</div>
+            <div><span class="status rejected">{{ p.status || 'REJECTED' }}</span></div>
+            <div>{{ p.views ?? 0 }}</div>
+            <div>{{ p.likes ?? 0 }}</div>
+            <div>{{ p.commentsCount ?? 0 }}</div>
+            <div class="muted">{{ p.vehicleModel || '-' }}</div>
+            <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
+            <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
+            <div class="row-actions">
+              <button class="ghost" :disabled="actionLoading === p.id" @click="sendToPending(p.id)">Pending</button>
+              <button class="danger" :disabled="actionLoading === p.id" @click="reject(p.id)">REJECTED</button>
+            </div>
+          </div>
+          <div v-if="!rejected.length" class="row empty">Không có bài bị từ chối</div>
+        </div>
+        <PaginationBar :page="rejectedPage.page" :size="rejectedPage.size" :total="rejectedPage.total" @update:page="changeRejectedPage" @update:size="changeRejectedSize" />
       </div>
-      <PaginationBar :page="rejectedPage.page" :size="rejectedPage.size" :total="rejectedPage.total" @update:page="changeRejectedPage" @update:size="changeRejectedSize" />
     </div>
   </div>
 </template>

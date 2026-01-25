@@ -19,10 +19,17 @@ const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
   { label: 'Quản lý user', name: 'admin-users', icon: '👥', desc: 'Người dùng & reviewer' },
   { label: 'User đã xóa', name: 'admin-deleted-users', icon: '🗂', desc: 'Khôi phục tài khoản' },
-  { label: 'Bài pending', name: 'admin-pending-posts', icon: '⏳', desc: 'Chờ duyệt' },
-  { label: 'Bài đã duyệt', name: 'admin-approved-posts', icon: '✅', desc: 'Đã xuất bản' },
-  { label: 'Bài bị từ chối', name: 'admin-rejected-posts', icon: '🚫', desc: 'Xem và khôi phục' },
-  { label: 'Quản lý bài viết', name: 'admin-posts', icon: '📰', desc: 'Duyệt và xuất bài' }
+  {
+    label: 'Quản lý bài viết',
+    name: 'admin-posts',
+    icon: '📰',
+    desc: 'Duyệt và xuất bài',
+    children: [
+      { label: 'Bài pending', name: 'admin-pending-posts', icon: '⏳', desc: 'Chờ duyệt' },
+      { label: 'Bài đã duyệt', name: 'admin-approved-posts', icon: '✅', desc: 'Đã xuất bản' },
+      { label: 'Bài bị từ chối', name: 'admin-rejected-posts', icon: '🚫', desc: 'Xem và khôi phục' }
+    ]
+  }
 ]
 
 const activeName = computed(() => route.name)
@@ -100,13 +107,28 @@ async function logoutAndClose() {
         </div>
       </div>
       <nav class="nav">
-        <RouterLink v-for="item in nav" :key="item.name" :to="{ name: item.name }" class="nav-item" :class="{ active: activeName === item.name }">
-          <div class="nav-icon">{{ item.icon }}</div>
-          <div class="nav-text">
-            <p>{{ item.label }}</p>
-            <p class="muted small">{{ item.desc }}</p>
+        <div v-for="item in nav" :key="item.name" class="nav-group">
+          <RouterLink
+            :to="{ name: item.name }"
+            class="nav-item"
+            :class="{ active: activeName === item.name || (item.children && item.children.some((child) => child.name === activeName)) }"
+          >
+            <div class="nav-icon">{{ item.icon }}</div>
+            <div class="nav-text">
+              <p>{{ item.label }}</p>
+              <p class="muted small">{{ item.desc }}</p>
+            </div>
+          </RouterLink>
+          <div v-if="item.children" class="nav-children">
+            <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
+              <div class="nav-icon">{{ child.icon }}</div>
+              <div class="nav-text">
+                <p>{{ child.label }}</p>
+                <p class="muted small">{{ child.desc }}</p>
+              </div>
+            </RouterLink>
           </div>
-        </RouterLink>
+        </div>
       </nav>
     </aside>
     <div v-if="isMobileView && sidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
@@ -328,6 +350,65 @@ async function logoutAndClose() {
   display: flow;
   gap: 14px;
   margin-top: 4px;
+}
+
+.nav-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.nav-children {
+  display: grid;
+  gap: 8px;
+  padding-left: 10px;
+}
+
+.nav-sub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px;
+  border-radius: 14px;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.nav-sub:hover {
+  transform: translateX(3px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.nav-sub.active {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 18px 32px rgba(29, 122, 255, 0.3);
+}
+
+.nav-sub .nav-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(33, 113, 255, 0.16), rgba(59, 169, 255, 0.08));
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.nav-sub.active .nav-icon {
+  background: #ffffff;
+  color: #1d8aff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: none;
 }
 
 .nav-item {
