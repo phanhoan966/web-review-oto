@@ -109,6 +109,9 @@ function roleOptions(target?: AdminUser | null) {
     }
     return ['ROLE_USER']
   }
+  if (hasRole('ROLE_ADMIN') && target && target.id === auth.user?.id) {
+    return ['ROLE_ADMIN', 'ROLE_USER']
+  }
   return []
 }
 
@@ -121,6 +124,9 @@ function canEdit(target?: AdminUser | null) {
     if (roles.has('ROLE_SYSTEM_ADMIN') || roles.has('ROLE_ADMIN')) return false
     if (!isSelf && roles.has('ROLE_MANAGER')) return false
     return true
+  }
+  if (hasRole('ROLE_ADMIN')) {
+    return isSelf
   }
   return false
 }

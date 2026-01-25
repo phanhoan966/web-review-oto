@@ -165,34 +165,32 @@ public class AdminUserService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
         }
 
-        if (isManager) {
-            if (action == Action.LIST) {
-                return;
+        if (action == Action.LIST) {
+            return;
+        }
+        if (action == Action.CREATE) {
+            if (nextHasManager || nextHasAdmin || nextHasSystem) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
             }
-            if (action == Action.CREATE) {
-                if (nextHasManager || nextHasAdmin || nextHasSystem) {
-                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
-                }
-                return;
+            return;
+        }
+        if (action == Action.UPDATE) {
+            if (!targetIsSelf && (targetManager || targetAdmin || targetSystem)) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
             }
-            if (action == Action.UPDATE) {
-                if (!targetIsSelf && (targetManager || targetAdmin || targetSystem)) {
-                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
-                }
-                if (!targetIsSelf && (nextHasManager || nextHasAdmin || nextHasSystem)) {
-                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
-                }
-                if (targetIsSelf && (nextHasAdmin || nextHasSystem)) {
-                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
-                }
-                return;
+            if (!targetIsSelf && (nextHasManager || nextHasAdmin || nextHasSystem)) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
             }
-            if (action == Action.DELETE) {
-                if (targetIsSelf || targetManager || targetAdmin || targetSystem) {
-                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
-                }
-                return;
+            if (targetIsSelf && (nextHasAdmin || nextHasSystem)) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
             }
+            return;
+        }
+        if (action == Action.DELETE) {
+            if (targetIsSelf || targetManager || targetAdmin || targetSystem) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+            }
+            return;
         }
 
         throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
