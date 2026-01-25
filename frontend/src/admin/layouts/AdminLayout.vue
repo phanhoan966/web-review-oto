@@ -489,6 +489,7 @@ async function logoutAndClose() {
   box-shadow: var(--shadow);
   font-weight: 800;
   transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', system-ui, -apple-system, sans-serif;
 }
 
 .nav-toggle:hover {
