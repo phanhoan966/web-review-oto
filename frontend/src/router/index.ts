@@ -36,6 +36,8 @@ const router = createRouter({
         { path: 'users', name: 'admin-users', component: AdminUsersView },
         { path: 'users/deleted', name: 'admin-deleted-users', component: AdminDeletedUsersView },
         { path: 'posts', name: 'admin-posts', component: AdminPostsView },
+        { path: 'posts/approved', name: 'admin-approved-posts', component: AdminPostsView },
+        { path: 'posts/pending', name: 'admin-pending-posts', component: AdminPostsView },
         { path: 'posts/rejected', name: 'admin-rejected-posts', component: AdminRejectedPostsView },
         { path: 'posts/:id', name: 'admin-post-detail', component: AdminPostDetailView }
       ]

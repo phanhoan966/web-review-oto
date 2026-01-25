@@ -19,8 +19,10 @@ const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
   { label: 'Quản lý user', name: 'admin-users', icon: '👥', desc: 'Người dùng & reviewer' },
   { label: 'User đã xóa', name: 'admin-deleted-users', icon: '🗂', desc: 'Khôi phục tài khoản' },
-  { label: 'Quản lý bài viết', name: 'admin-posts', icon: '📰', desc: 'Duyệt và xuất bài' },
-  { label: 'Bài bị từ chối', name: 'admin-rejected-posts', icon: '🚫', desc: 'Xem và khôi phục' }
+  { label: 'Bài pending', name: 'admin-pending-posts', icon: '⏳', desc: 'Chờ duyệt' },
+  { label: 'Bài đã duyệt', name: 'admin-approved-posts', icon: '✅', desc: 'Đã xuất bản' },
+  { label: 'Bài bị từ chối', name: 'admin-rejected-posts', icon: '🚫', desc: 'Xem và khôi phục' },
+  { label: 'Quản lý bài viết', name: 'admin-posts', icon: '📰', desc: 'Duyệt và xuất bài' }
 ]
 
 const activeName = computed(() => route.name)
