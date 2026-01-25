@@ -345,52 +345,54 @@ async function load() {
     </div>
 
     <div v-else>
-      <div class="filters">
-        <label>
-          <span>Tên</span>
-          <input v-model="filters.name" type="text" placeholder="Nhập tên" />
-        </label>
-        <label>
-          <span>Email</span>
-          <input v-model="filters.email" type="text" placeholder="Nhập email" />
-        </label>
-        <label>
-          <span>Năm sinh</span>
-          <input v-model="filters.year" type="number" inputmode="numeric" placeholder="Ví dụ 1995" />
-        </label>
-        <div class="filter-actions">
-          <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
-        </div>
-      </div>
-
-      <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
-      <p v-else-if="loading" class="muted">Đang tải...</p>
-
-      <div v-else class="table">
-        <div class="row head">
-          <div>Họ tên</div>
-          <div>Email</div>
-          <div>Roles</div>
-          <div>Theo dõi</div>
-          <div>Bài viết</div>
-          <div>Tham gia</div>
-          <div></div>
-        </div>
-        <div v-for="u in users" :key="u.id" class="row">
-          <div class="name">{{ u.username }}</div>
-          <div class="muted">{{ u.email }}</div>
-          <div class="role-list">{{ (u.roles || []).map((r) => roleLabels[r] || r).join(', ') }}</div>
-          <div>{{ u.followers ?? 0 }}</div>
-          <div>{{ u.reviewCount ?? 0 }}</div>
-          <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
-          <div class="row-actions">
-            <button class="ghost" :disabled="!canEdit(u) || actionLoading === u.id" @click="openEdit(u)">Sửa</button>
-            <button class="danger" :disabled="!canDeleteUser(u) || actionLoading === u.id" @click="deleteUser(u.id, u)">Xóa</button>
+      <div class="table-card">
+        <div class="filters">
+          <label>
+            <span>Tên</span>
+            <input v-model="filters.name" type="text" placeholder="Nhập tên" />
+          </label>
+          <label>
+            <span>Email</span>
+            <input v-model="filters.email" type="text" placeholder="Nhập email" />
+          </label>
+          <label>
+            <span>Năm sinh</span>
+            <input v-model="filters.year" type="number" inputmode="numeric" placeholder="Ví dụ 1995" />
+          </label>
+          <div class="filter-actions">
+            <button class="ghost" type="button" @click="resetFilters">Xóa lọc</button>
           </div>
         </div>
-        <div v-if="!users.length" class="row empty">Không có user</div>
+
+        <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+        <p v-else-if="loading" class="muted">Đang tải...</p>
+
+        <div v-else class="table">
+          <div class="row head">
+            <div>Họ tên</div>
+            <div>Email</div>
+            <div>Roles</div>
+            <div>Theo dõi</div>
+            <div>Bài viết</div>
+            <div>Tham gia</div>
+            <div></div>
+          </div>
+          <div v-for="u in users" :key="u.id" class="row">
+            <div class="name">{{ u.username }}</div>
+            <div class="muted">{{ u.email }}</div>
+            <div class="role-list">{{ (u.roles || []).map((r) => roleLabels[r] || r).join(', ') }}</div>
+            <div>{{ u.followers ?? 0 }}</div>
+            <div>{{ u.reviewCount ?? 0 }}</div>
+            <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
+            <div class="row-actions">
+              <button class="ghost" :disabled="!canEdit(u) || actionLoading === u.id" @click="openEdit(u)">Sửa</button>
+              <button class="danger" :disabled="!canDeleteUser(u) || actionLoading === u.id" @click="deleteUser(u.id, u)">Xóa</button>
+            </div>
+          </div>
+          <div v-if="!users.length" class="row empty">Không có user</div>
+        </div>
+        <PaginationBar :page="usersPage.page" :size="usersPage.size" :total="usersPage.total" @update:page="changeUsersPage" @update:size="changeUsersSize" />
       </div>
-      <PaginationBar :page="usersPage.page" :size="usersPage.size" :total="usersPage.total" @update:page="changeUsersPage" @update:size="changeUsersSize" />
     </div>
   </div>
 </template>
@@ -413,11 +415,24 @@ async function load() {
   gap: 14px;
 }
 
+.table-card {
+  display: grid;
+  gap: 14px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+}
+
 .filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   align-items: end;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .filter-actions {
