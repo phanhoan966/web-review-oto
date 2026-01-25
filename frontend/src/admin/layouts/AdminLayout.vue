@@ -134,8 +134,9 @@ async function logoutAndClose() {
               </div>
             </RouterLink>
             <button v-if="item.children" type="button" class="nav-toggle" :aria-expanded="isExpanded(item.name)" @click.stop="toggleExpand(item.name)">
-              <span v-if="isExpanded(item.name)">⌄</span>
-              <span v-else>›</span>
+              <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true" :class="{ collapsed: !isExpanded(item.name) }">
+                <path d="M6.343 9.515a1 1 0 0 1 1.414 0L12 13.758l4.243-4.243a1 1 0 1 1 1.414 1.414l-5 5a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 0-1.414Z" />
+              </svg>
             </button>
           </div>
           <div v-if="item.children && isExpanded(item.name)" class="nav-children-wrap">
@@ -487,14 +488,23 @@ async function logoutAndClose() {
   place-items: center;
   cursor: pointer;
   box-shadow: var(--shadow);
-  font-weight: 800;
   transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', system-ui, -apple-system, sans-serif;
 }
 
 .nav-toggle:hover {
   border-color: var(--accent);
   color: var(--text);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  transition: transform 0.2s ease;
+}
+
+.chevron.collapsed {
+  transform: rotate(-90deg);
 }
 
 .nav-item:hover {
