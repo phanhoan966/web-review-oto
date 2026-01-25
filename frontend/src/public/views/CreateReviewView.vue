@@ -201,7 +201,7 @@ async function submit() {
       <h1>Tạo bài review</h1>
       <p class="sub">Bài viết sẽ ở trạng thái chờ duyệt.</p>
       <form @submit.prevent="submit">
-        <label>Tiêu đề</label>
+        <label>Tiêu đề<span class="required">*</span></label>
         <input v-model="form.title" required maxlength="200" />
 
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
@@ -216,10 +216,10 @@ async function submit() {
           </label>
         </div>
 
-        <label>Tóm tắt</label>
+        <label>Tóm tắt<span class="required">*</span></label>
         <textarea v-model="form.excerpt" required maxlength="256" rows="2" />
 
-        <label>Nội dung</label>
+        <label>Nội dung<span class="required">*</span></label>
         <div class="editor-shell" :class="{ ready: editorReady }">
           <div ref="editorHost"></div>
           <p v-if="editorError" class="error">{{ editorError }}</p>
@@ -231,7 +231,7 @@ async function submit() {
 
         <div class="row">
           <div>
-            <label>Hãng xe</label>
+            <label>Hãng xe<span class="required">*</span></label>
             <select v-model="form.brandId" required>
               <option value="" disabled>Chọn hãng</option>
               <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
@@ -291,6 +291,11 @@ h1 {
 .sub {
   margin: 6px 0 12px;
   color: var(--muted);
+}
+
+.required {
+  color: #e11d48;
+  margin-left: 4px;
 }
 
 form {

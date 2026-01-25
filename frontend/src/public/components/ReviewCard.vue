@@ -166,6 +166,10 @@ function formatRelativeTime(value?: string) {
   letter-spacing: -0.01em;
 }
 
+.content {
+  overflow: hidden;
+}
+
 .author {
   position: relative;
 }
