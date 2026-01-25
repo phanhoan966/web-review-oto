@@ -34,8 +34,9 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AdminUserDto>> list() {
-        return ResponseEntity.ok(adminUserService.listUsers());
+    public ResponseEntity<List<AdminUserDto>> list(@AuthenticationPrincipal Object principal, HttpServletRequest httpServletRequest) {
+        String email = currentUserResolver.resolveEmail(principal, httpServletRequest);
+        return ResponseEntity.ok(adminUserService.listUsers(email));
     }
 
     @PostMapping

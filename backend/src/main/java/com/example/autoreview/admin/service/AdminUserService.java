@@ -29,7 +29,9 @@ public class AdminUserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<AdminUserDto> listUsers() {
+    public List<AdminUserDto> listUsers(String actorEmail) {
+        User actor = requireActor(actorEmail);
+        enforcePermission(actor, null, null, Action.LIST);
         return userRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
                 .map(this::toDto)
                 .toList();
@@ -45,7 +47,7 @@ public class AdminUserService {
             throw new ApiException(HttpStatus.CONFLICT, "Username already exists");
         }
         Set<String> nextRoles = normalizeRoles(request.getRoles());
-        enforcePermission(actor, null, nextRoles);
+        enforcePermission(actor, null, nextRoles, Action.CREATE);
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
@@ -64,7 +66,7 @@ public class AdminUserService {
         User actor = requireActor(actorEmail);
         User user = userRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         Set<String> nextRoles = request.getRoles() != null ? normalizeRoles(request.getRoles()) : user.getRoles();
-        enforcePermission(actor, user, nextRoles);
+        enforcePermission(actor, user, nextRoles, Action.UPDATE);
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername()) && userRepository.existsByUsername(request.getUsername())) {
             throw new ApiException(HttpStatus.CONFLICT, "Username already exists");
         }
@@ -89,7 +91,7 @@ public class AdminUserService {
     public void deleteUser(String actorEmail, Long id) {
         User actor = requireActor(actorEmail);
         User target = userRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
-        enforcePermission(actor, target, target.getRoles());
+        enforcePermission(actor, target, target.getRoles(), Action.DELETE);
         userRepository.delete(target);
     }
 
@@ -98,7 +100,7 @@ public class AdminUserService {
         User actor = requireActor(actorEmail);
         User user = userRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         Set<String> next = normalizeRoles(roles);
-        enforcePermission(actor, user, next);
+        enforcePermission(actor, user, next, Action.UPDATE);
         user.setRoles(next);
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
@@ -131,7 +133,7 @@ public class AdminUserService {
         return user.getRoles() != null && user.getRoles().contains(role);
     }
 
-    private void enforcePermission(User actor, User target, Set<String> nextRoles) {
+    private void enforcePermission(User actor, User target, Set<String> nextRoles, Action action) {
         boolean isSystem = hasRole(actor, Roles.SYSTEM_ADMIN);
         boolean isManager = hasRole(actor, Roles.MANAGER);
         boolean isAdmin = hasRole(actor, Roles.ADMIN);
@@ -142,35 +144,59 @@ public class AdminUserService {
         boolean targetSystem = target != null && hasRole(target, Roles.SYSTEM_ADMIN);
         boolean targetManager = target != null && hasRole(target, Roles.MANAGER);
         boolean targetAdmin = target != null && hasRole(target, Roles.ADMIN);
-        boolean nextHasSystem = nextRoles.contains(Roles.SYSTEM_ADMIN);
-        boolean nextHasManager = nextRoles.contains(Roles.MANAGER);
-        boolean nextHasAdmin = nextRoles.contains(Roles.ADMIN);
+        boolean nextHasSystem = nextRoles != null && nextRoles.contains(Roles.SYSTEM_ADMIN);
+        boolean nextHasManager = nextRoles != null && nextRoles.contains(Roles.MANAGER);
+        boolean nextHasAdmin = nextRoles != null && nextRoles.contains(Roles.ADMIN);
 
         if (isSystem) {
             return;
         }
 
-        if (isManager) {
-            if (targetSystem || nextHasSystem) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+        if (isAdmin) {
+            if (action == Action.LIST) {
+                return;
             }
-            if (!targetIsSelf && (targetManager || nextHasManager)) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
-            }
-            return;
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
         }
 
-        if (isAdmin) {
-            if (targetSystem || nextHasSystem || targetManager || nextHasManager) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+        if (isManager) {
+            if (action == Action.LIST) {
+                return;
             }
-            if (!targetIsSelf && (targetAdmin || nextHasAdmin)) {
-                throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+            if (action == Action.CREATE) {
+                if (nextHasManager || nextHasAdmin || nextHasSystem) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+                return;
             }
-            return;
+            if (action == Action.UPDATE) {
+                if (!targetIsSelf && (targetManager || targetAdmin || targetSystem)) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+                if (!targetIsSelf && (nextHasManager || nextHasAdmin || nextHasSystem)) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+                if (targetIsSelf && (nextHasAdmin || nextHasSystem)) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+                return;
+            }
+            if (action == Action.DELETE) {
+                if (targetIsSelf || targetManager || targetAdmin || targetSystem) {
+                    throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+                }
+                return;
+            }
         }
 
         throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
+    }
+
+    private enum Action {
+        LIST,
+        CREATE,
+        UPDATE,
+        DELETE
     }
 
     private AdminUserDto toDto(User user) {

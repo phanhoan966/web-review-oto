@@ -13,9 +13,13 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class User {
 
     @Id
@@ -44,6 +48,9 @@ public class User {
     private Double rating;
 
     private Integer reviewCount;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     private Instant createdAt;
 
@@ -119,6 +126,14 @@ public class User {
 
     public void setReviewCount(Integer reviewCount) {
         this.reviewCount = reviewCount;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public Instant getCreatedAt() {
