@@ -29,7 +29,7 @@ const actionLoading = ref<number | null>(null)
 const errorMsg = ref('')
 const confirmVisible = ref(false)
 const confirmTarget = ref<ReviewRow | null>(null)
-const confirmMode = ref<'restore' | 'approve' | null>(null)
+const confirmMode = ref<'restore' | 'pending' | null>(null)
 
 function clampPage(meta: { page: number; size: number; total: number }) {
   const totalPages = meta.size ? Math.max(1, Math.ceil(Math.max(meta.total, 0) / meta.size)) : 1
@@ -128,9 +128,9 @@ function requestRestore(post: ReviewRow) {
   confirmVisible.value = true
 }
 
-function requestApprove(post: ReviewRow) {
+function requestPending(post: ReviewRow) {
   confirmTarget.value = post
-  confirmMode.value = 'approve'
+  confirmMode.value = 'pending'
   confirmVisible.value = true
 }
 
@@ -141,16 +141,16 @@ async function confirmAction() {
   confirmVisible.value = false
   try {
     if (confirmMode.value === 'restore') {
-      await client.post(`/admin/reviews/${id}/restore`)
-    } else {
       await client.post(`/admin/reviews/${id}/approve`)
+    } else {
+      await client.post(`/admin/reviews/${id}/restore`)
     }
     await load()
   } catch (error: any) {
     if (confirmMode.value === 'restore') {
       errorMsg.value = error.response?.data?.message || 'Không khôi phục được bài viết'
     } else {
-      errorMsg.value = error.response?.data?.message || 'Không duyệt được bài viết'
+      errorMsg.value = error.response?.data?.message || 'Không chuyển pending được bài viết'
     }
   } finally {
     actionLoading.value = null
@@ -222,8 +222,8 @@ async function confirmAction() {
         <div class="muted">{{ p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '-' }}</div>
         <div class="muted">{{ p.publishedAt ? new Date(p.publishedAt).toLocaleDateString() : '-' }}</div>
         <div class="row-actions">
-          <button class="ghost" :disabled="actionLoading === p.id" @click="requestRestore(p)">Khôi phục</button>
-          <button class="primary" :disabled="actionLoading === p.id" @click="requestApprove(p)">Duyệt</button>
+          <button class="ghost" :disabled="actionLoading === p.id" @click="requestPending(p)">Pending</button>
+          <button class="primary" :disabled="actionLoading === p.id" @click="requestRestore(p)">Khôi phục</button>
         </div>
       </div>
       <div v-if="!reviews.length" class="row empty">Không có bài bị từ chối</div>
@@ -232,8 +232,8 @@ async function confirmAction() {
   </div>
   <ConfirmDialog
     v-model="confirmVisible"
-    :title="confirmMode === 'approve' ? 'Duyệt bài viết' : 'Khôi phục bài viết'"
-    :message="confirmTarget ? `${confirmMode === 'approve' ? 'Duyệt' : 'Khôi phục'} bài “${confirmTarget.title}”?` : ''"
+    :title="confirmMode === 'pending' ? 'Chuyển pending' : 'Khôi phục bài viết'"
+    :message="confirmTarget ? `${confirmMode === 'pending' ? 'Chuyển pending' : 'Khôi phục'} bài “${confirmTarget.title}”?` : ''"
     cancel-text="Hủy"
     confirm-text="OK"
     @confirm="confirmAction"
