@@ -10,6 +10,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 @Entity
 @Table(name = "comments")
@@ -26,6 +28,7 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "author_id", nullable = true)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User author;
 
     @ManyToOne(fetch = FetchType.LAZY)
