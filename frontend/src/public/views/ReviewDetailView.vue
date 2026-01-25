@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, computed, watch } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute, RouterLink, useRouter } from 'vue-router'
 import client from '../../api/client'
 import { useAuthStore } from '../../stores/auth'
 import { slugify } from '../utils/slugify'
 import { buildAssetUrl } from '../utils/assetUrl'
 import HoverPopover from '../components/common/HoverPopover.vue'
 import ReviewerPopoverCard from '../components/common/ReviewerPopoverCard.vue'
+import TopReviewers, { type ReviewerItem } from '../components/Sidebar/TopReviewers.vue'
+import FeaturedBrands, { type BrandItem } from '../components/Sidebar/FeaturedBrands.vue'
+import MostViewed, { type ViewedItem } from '../components/Sidebar/MostViewed.vue'
 
 interface ReviewDetail {
   id: number
