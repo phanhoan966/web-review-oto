@@ -74,13 +74,20 @@ async function loadBrands() {
 }
 
 function slugify(value: string) {
+  // return value
+  //   .toLowerCase()
+  //   .normalize('NFD')
+  //   .replace(/\p{Diacritic}/gu, '')
+  //   .replace(/[^a-z0-9]+/g, '-')
+  //   .replace(/(^-|-$)/g, '')
+  //   .trim()
   return value
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .trim()
+    .replace(/đ/g, "d")                   // FIX đ
+    .normalize("NFD")                     // tách dấu
+    .replace(/[\u0300-\u036f]/g, "")     // xoá dấu
+    .replace(/[^a-z0-9]+/g, "-")         // ký tự lạ → -
+    .replace(/^-+|-+$/g, "")             // xoá - đầu/cuối
 }
 
 async function onHeroFile(event: Event) {
@@ -200,15 +207,6 @@ async function submit() {
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
         <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}</p>
 
-        <label>Tóm tắt</label>
-        <textarea v-model="form.excerpt" required maxlength="256" rows="2" />
-
-        <label>Nội dung</label>
-        <div class="editor-shell" :class="{ ready: editorReady }">
-          <div ref="editorHost"></div>
-          <p v-if="editorError" class="error">{{ editorError }}</p>
-        </div>
-
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
         <div class="hero-row">
           <input v-model="form.heroImageUrl" placeholder="https://..." />
@@ -216,6 +214,15 @@ async function submit() {
             Upload
             <input type="file" accept="image/*" :disabled="uploading" @change="onHeroFile" />
           </label>
+        </div>
+
+        <label>Tóm tắt</label>
+        <textarea v-model="form.excerpt" required maxlength="256" rows="2" />
+
+        <label>Nội dung</label>
+        <div class="editor-shell" :class="{ ready: editorReady }">
+          <div ref="editorHost"></div>
+          <p v-if="editorError" class="error">{{ editorError }}</p>
         </div>
         <p v-if="uploadError" class="error">{{ uploadError }}</p>
         <div v-if="form.heroImageUrl || heroPreview" class="hero-preview">
