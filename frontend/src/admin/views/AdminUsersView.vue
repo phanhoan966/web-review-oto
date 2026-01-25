@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import client from '../../api/client'
 import PaginationBar from '../components/PaginationBar.vue'
+import ConfirmDialog from '../../components/ConfirmDialog.vue'
 import { resolvePageMeta } from '../utils/pageMeta'
 
 interface AdminUser {
@@ -66,6 +67,8 @@ const formError = ref('')
 const formMode = ref<'create' | 'edit'>('create')
 const editingId = ref<number | null>(null)
 const form = ref({ username: '', email: '', password: '', roles: ['ROLE_USER'] as string[] })
+const confirmVisible = ref(false)
+const confirmTarget = ref<AdminUser | null>(null)
 const roleLabels: Record<string, string> = {
   ROLE_SYSTEM_ADMIN: 'System Admin',
   ROLE_MANAGER: 'Manager',
@@ -246,17 +249,25 @@ async function submit() {
   }
 }
 
-async function deleteUser(id: number, target: AdminUser) {
+function requestDelete(target: AdminUser) {
   if (!canDeleteUser(target)) return
-  if (!window.confirm('Bạn có chắc chắn muốn xoá user này?')) return
-  actionLoading.value = id
+  confirmTarget.value = target
+  confirmVisible.value = true
+}
+
+async function confirmDelete() {
+  if (!confirmTarget.value) return
+  const target = confirmTarget.value
+  actionLoading.value = target.id
+  confirmVisible.value = false
   try {
-    await client.delete(`/admin/users/${id}`)
+    await client.delete(`/admin/users/${target.id}`)
     await load()
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không xoá được user'
   } finally {
     actionLoading.value = null
+    confirmTarget.value = null
   }
 }
 
@@ -386,7 +397,7 @@ async function load() {
             <div class="muted">{{ u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-' }}</div>
             <div class="row-actions">
               <button class="ghost" :disabled="!canEdit(u) || actionLoading === u.id" @click="openEdit(u)">Sửa</button>
-              <button class="danger" :disabled="!canDeleteUser(u) || actionLoading === u.id" @click="deleteUser(u.id, u)">Xóa</button>
+              <button class="danger" :disabled="!canDeleteUser(u) || actionLoading === u.id" @click="requestDelete(u)">Xóa</button>
             </div>
           </div>
           <div v-if="!users.length" class="row empty">Không có user</div>
@@ -395,6 +406,14 @@ async function load() {
       </div>
     </div>
   </div>
+  <ConfirmDialog
+    v-model="confirmVisible"
+    :title="'Xóa người dùng'"
+    :message="confirmTarget ? `Bạn có chắc muốn xóa ${confirmTarget.username}?` : ''"
+    cancel-text="Hủy"
+    confirm-text="Xóa"
+    @confirm="confirmDelete"
+  />
 </template>
 
 <style scoped lang="scss">
