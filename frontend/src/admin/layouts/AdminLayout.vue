@@ -141,8 +141,8 @@ async function logoutAndClose() {
           </RouterLink>
           <div v-if="item.children" class="nav-children-wrap">
             <div class="scroll-controls">
-              <button type="button" aria-label="Cuộn lên" @click.stop="scrollChildren(item.name, -80)">^</button>
-              <button type="button" aria-label="Cuộn xuống" @click.stop="scrollChildren(item.name, 80)">v</button>
+              <button type="button" aria-label="Cuộn lên" @click.stop="scrollChildren(item.name, -80)">▲</button>
+              <button type="button" aria-label="Cuộn xuống" @click.stop="scrollChildren(item.name, 80)">▼</button>
             </div>
             <div class="nav-children" :ref="(el) => setChildRef(item.name, el)">
               <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
@@ -401,15 +401,23 @@ async function logoutAndClose() {
 
 .scroll-controls button {
   border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 10px;
-  padding: 6px 8px;
+  background: var(--chip-bg);
+  border-radius: 50%;
+  padding: 0;
   cursor: pointer;
   font-weight: 800;
-  color: var(--text);
+  color: var(--muted);
   box-shadow: var(--shadow);
-  width: 36px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.scroll-controls button:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .nav-children {
