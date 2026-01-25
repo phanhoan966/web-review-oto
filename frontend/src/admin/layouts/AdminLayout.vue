@@ -14,18 +14,6 @@ const collapsed = ref(false)
 const profileOpen = ref(false)
 const sidebarOpen = ref(false)
 const isMobileView = ref(false)
-const childRefs = ref<Record<string, HTMLElement | null>>({})
-
-function setChildRef(name: string, el: HTMLElement | null) {
-  childRefs.value[name] = el
-}
-
-function scrollChildren(name: string, delta: number) {
-  const el = childRefs.value[name]
-  if (el) {
-    el.scrollBy({ top: delta, behavior: 'smooth' })
-  }
-}
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
@@ -140,11 +128,7 @@ async function logoutAndClose() {
             </div>
           </RouterLink>
           <div v-if="item.children" class="nav-children-wrap">
-            <div class="scroll-controls">
-              <button type="button" aria-label="Cuộn lên" @click.stop="scrollChildren(item.name, -80)">▲</button>
-              <button type="button" aria-label="Cuộn xuống" @click.stop="scrollChildren(item.name, 80)">▼</button>
-            </div>
-            <div class="nav-children" :ref="(el) => setChildRef(item.name, el)">
+            <div class="nav-children">
               <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
                 <div class="nav-icon">{{ child.icon }}</div>
                 <div class="nav-text">
@@ -389,35 +373,6 @@ async function logoutAndClose() {
   display: grid;
   gap: 8px;
   padding-right: 10px;
-}
-
-.scroll-controls {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: grid;
-  gap: 6px;
-}
-
-.scroll-controls button {
-  border: 1px solid var(--border);
-  background: var(--chip-bg);
-  border-radius: 50%;
-  padding: 0;
-  cursor: pointer;
-  font-weight: 800;
-  color: var(--muted);
-  box-shadow: var(--shadow);
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  line-height: 1;
-}
-
-.scroll-controls button:hover {
-  border-color: var(--accent);
-  color: var(--text);
 }
 
 .nav-children {
