@@ -53,6 +53,7 @@ const defaultAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_165075409
 const anonAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
 
 const route = useRoute()
+const router = useRouter()
 const review = ref<ReviewDetail | null>(null)
 const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
 const profilePath = computed(() =>
@@ -60,6 +61,10 @@ const profilePath = computed(() =>
 )
 const loading = ref(false)
 const errorMsg = ref('')
+
+const reviewers = ref<ReviewerItem[]>([])
+const brands = ref<BrandItem[]>([])
+const mostViewed = ref<ViewedItem[]>([])
 
 watch(
   () => review.value?.title,
@@ -97,6 +102,7 @@ const modalError = ref('')
 onMounted(() => {
   load()
   loadComments(true, false)
+  loadSidebar()
 })
 
 async function load() {
@@ -113,6 +119,27 @@ async function load() {
   } finally {
     loading.value = false
   }
+}
+
+async function loadSidebar() {
+  try {
+    const [reviewersRes, brandsRes, viewedRes] = await Promise.all([
+      client.get('/reviewers/top', { params: { limit: 3 } }),
+      client.get('/brands/featured'),
+      client.get('/reviews/most-viewed', { params: { limit: 3 } })
+    ])
+    reviewers.value = reviewersRes.data || []
+    brands.value = brandsRes.data || []
+    mostViewed.value = viewedRes.data || []
+  } catch (error) {
+    reviewers.value = []
+    brands.value = []
+    mostViewed.value = []
+  }
+}
+
+function onBrandSelect(brand: BrandItem) {
+  router.push({ name: 'feed-brand', params: { brand: brand.name } })
 }
 
 async function loadComments(reset = false, autoScroll = true, highlightNew = true) {
@@ -420,27 +447,9 @@ function formatDate(value?: string) {
       </div>
 
       <aside class="side">
-        <div class="card side-card">
-          <input class="search" placeholder="Tìm kiếm" />
-        </div>
-        <div class="card side-card">
-          <div class="side-title">Người liên quan</div>
-          <div class="side-user">
-            <div>
-              <div class="name">{{ review.authorName || 'Reviewer' }}</div>
-              <div class="muted">Chuyên gia xe và đánh giá</div>
-            </div>
-            <button class="ghost">Theo dõi</button>
-          </div>
-        </div>
-        <div class="card side-card">
-          <div class="side-title">Tin nổi bật</div>
-          <ul class="trends">
-            <li>Xe điện</li>
-            <li>Hybrid</li>
-            <li>Suất ưu đãi</li>
-          </ul>
-        </div>
+        <TopReviewers :reviewers="reviewers" title="Top Reviewers" />
+        <FeaturedBrands :brands="brands" @select="onBrandSelect" />
+        <MostViewed :items="mostViewed" />
       </aside>
     </div>
 
@@ -786,41 +795,6 @@ function formatDate(value?: string) {
 .side {
   display: grid;
   gap: 12px;
-}
-
-.side-card {
-  display: grid;
-  gap: 12px;
-}
-
-.search {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--pill-border);
-  background: var(--pill-bg);
-  color: var(--text);
-}
-
-.side-title {
-  font-weight: 800;
-}
-
-.side-user {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.trends {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 8px;
-  color: var(--text);
-  font-weight: 700;
 }
 
 .status {

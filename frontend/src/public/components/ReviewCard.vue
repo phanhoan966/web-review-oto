@@ -74,6 +74,10 @@ function formatRelativeTime(value?: string) {
 
 <template>
   <article class="card surface">
+    <RouterLink v-if="hasHero" class="hero" :to="detailPath">
+      <img :src="heroSrc" :alt="review.title" />
+    </RouterLink>
+    <div v-else class="hero placeholder" aria-hidden="true"></div>
     <div class="content">
       <div class="author" :class="{ hoverable: !!profilePath }">
         <HoverPopover v-if="profilePath">
