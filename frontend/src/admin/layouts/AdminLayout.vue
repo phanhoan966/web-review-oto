@@ -14,6 +14,15 @@ const collapsed = ref(false)
 const profileOpen = ref(false)
 const sidebarOpen = ref(false)
 const isMobileView = ref(false)
+const expanded = ref<Record<string, boolean>>({})
+
+function isExpanded(name: string) {
+  return expanded.value[name] ?? true
+}
+
+function toggleExpand(name: string) {
+  expanded.value[name] = !isExpanded(name)
+}
 
 const nav = [
   { label: 'Dashboard', name: 'admin-dashboard', icon: '📊', desc: 'Số liệu tổng quan' },
@@ -116,18 +125,20 @@ async function logoutAndClose() {
       </div>
       <nav class="nav">
         <div v-for="item in nav" :key="item.name" class="nav-group">
-          <RouterLink
-            :to="{ name: item.name }"
-            class="nav-item"
-            :class="{ active: activeName === item.name || (item.children && item.children.some((child) => child.name === activeName)) }"
-          >
-            <div class="nav-icon">{{ item.icon }}</div>
-            <div class="nav-text">
-              <p>{{ item.label }}</p>
-              <p class="muted small">{{ item.desc }}</p>
-            </div>
-          </RouterLink>
-          <div v-if="item.children" class="nav-children-wrap">
+          <div class="nav-item" :class="{ active: activeName === item.name || (item.children && item.children.some((child) => child.name === activeName)) }">
+            <RouterLink :to="{ name: item.name }" class="nav-link">
+              <div class="nav-icon">{{ item.icon }}</div>
+              <div class="nav-text">
+                <p>{{ item.label }}</p>
+                <p class="muted small">{{ item.desc }}</p>
+              </div>
+            </RouterLink>
+            <button v-if="item.children" type="button" class="nav-toggle" :aria-expanded="isExpanded(item.name)" @click.stop="toggleExpand(item.name)">
+              <span v-if="isExpanded(item.name)">▾</span>
+              <span v-else>▸</span>
+            </button>
+          </div>
+          <div v-if="item.children && isExpanded(item.name)" class="nav-children-wrap">
             <div class="nav-children">
               <RouterLink v-for="child in item.children" :key="child.name" :to="{ name: child.name }" class="nav-sub" :class="{ active: activeName === child.name }">
                 <div class="nav-icon">{{ child.icon }}</div>
@@ -381,6 +392,7 @@ async function logoutAndClose() {
   padding-left: 18px;
   max-height: 240px;
   overflow-y: auto;
+  padding-right: 4px;
 }
 
 .nav-children::-webkit-scrollbar {
@@ -447,12 +459,21 @@ async function logoutAndClose() {
   padding: 18px 16px;
   border-radius: 18px;
   color: var(--text);
-  text-decoration: none;
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   width: 100%;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
 }
 
 .nav-item:hover {
