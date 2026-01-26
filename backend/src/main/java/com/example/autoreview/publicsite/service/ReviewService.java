@@ -314,8 +314,8 @@ public class ReviewService {
         if (review.getStatus() != ReviewStatus.APPROVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        var roots = commentRepository.findByReviewAndParentIsNullOrderByCreatedAtDesc(review, pageable).getContent();
+        PageRequest pageable = PageRequest.of(page, size);
+        var roots = commentRepository.findByReviewAndParentIsNullOrderByLikesDescCreatedAtDesc(review, pageable).getContent();
         List<Comment> children = roots.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(roots);
         List<Comment> grandchildren = children.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(children);
         List<CommentDto> result = new java.util.ArrayList<>();
