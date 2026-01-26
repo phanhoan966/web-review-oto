@@ -151,10 +151,7 @@ function mergeComments(items: CommentDetail[], reset = false) {
 }
 
 const auth = useAuthStore()
-const replyMode = ref<'auth' | 'anon'>('auth')
 const modalVisible = ref(false)
-const modalEmail = ref('')
-const modalError = ref('')
 
 const totalComments = ref(0)
 
@@ -252,22 +249,6 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
   }
 }
 
-function openModal(mode: 'auth' | 'anon') {
-  replyMode.value = mode
-  modalError.value = ''
-  modalEmail.value = auth.user?.email || ''
-  if (mode === 'auth' && auth.user) {
-    modalVisible.value = false
-    submitComment()
-    return
-  }
-  modalVisible.value = true
-}
-
-function validateEmail(value: string) {
-  return /^[\w-.]+@[\w-]+\.[\w-.]+$/.test(value)
-}
-
 async function submitComment() {
   const content = newComment.value.trim()
   if (!content) {
@@ -275,43 +256,23 @@ async function submitComment() {
     return
   }
   formError.value = ''
-
-  if (replyMode.value === 'auth') {
-    if (!auth.user) {
-      modalError.value = 'Bạn cần đăng nhập để trả lời'
-      modalVisible.value = true
-      return
-    }
-    if (!validateEmail(modalEmail.value) || modalEmail.value !== auth.user.email) {
-      modalError.value = 'Email không đúng với tài khoản của bạn'
-      modalVisible.value = true
-      return
-    }
+  if (!auth.user) {
+    modalVisible.value = true
+    return
   }
-
-  if (replyMode.value === 'anon') {
-    if (!validateEmail(modalEmail.value)) {
-      modalError.value = 'Email không hợp lệ'
-      modalVisible.value = true
-      return
-    }
-    if (auth.user && modalEmail.value !== auth.user.email) {
-      modalError.value = 'Email không đúng với tài khoản của bạn'
-      modalVisible.value = true
-      return
-    }
-  }
-
-  const anonymous = replyMode.value === 'anon'
   submitting.value = true
   commentsError.value = ''
   modalVisible.value = false
   try {
     const parentId = replyTarget.value?.id ?? null
-    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content, anonymous, parentId })
-    data.anonymous = anonymous
+    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, {
+      content,
+      anonymous: false,
+      parentId
+    })
+    data.anonymous = false
     data.parentId = parentId
-    if (!anonymous && replyMode.value === 'auth' && auth.user) {
+    if (auth.user) {
       data.authorName = auth.user.username
       data.authorAvatar = auth.user.avatarUrl
     }
@@ -406,6 +367,16 @@ function startReply(comment: CommentDetail) {
     input?.focus()
     input?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
   })
+}
+
+function goLogin() {
+  modalVisible.value = false
+  router.push({ name: 'login', query: { redirect: route.fullPath } })
+}
+
+function goRegister() {
+  modalVisible.value = false
+  router.push({ name: 'register', query: { redirect: route.fullPath } })
 }
 
 const visibleRoots = computed(() => {
@@ -540,8 +511,7 @@ function formatDate(value?: string) {
                 <div class="comment-actions">
                   <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">Tải lại bình luận</button>
                   <div class="action-group">
-                    <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Bình luận ẩn danh</button>
-                    <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                    <button class="primary" type="button" @click="submitComment" :disabled="submitting">
                       {{ submitting ? 'Đang gửi...' : 'Đăng bình luận' }}
                     </button>
                   </div>
@@ -603,8 +573,7 @@ function formatDate(value?: string) {
                         <div class="comment-actions">
                           <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
                           <div class="action-group">
-                            <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                            <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                            <button class="primary" type="button" @click="submitComment" :disabled="submitting">
                               {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
                             </button>
                           </div>
@@ -644,8 +613,7 @@ function formatDate(value?: string) {
                         <div class="comment-actions">
                           <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
                           <div class="action-group">
-                            <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                            <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                            <button class="primary" type="button" @click="submitComment" :disabled="submitting">
                               {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
                             </button>
                           </div>
@@ -708,8 +676,7 @@ function formatDate(value?: string) {
                             <div class="comment-actions">
                               <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
                               <div class="action-group">
-                                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                                <button class="primary" type="button" @click="submitComment" :disabled="submitting">
                                   {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
                                 </button>
                               </div>
@@ -749,8 +716,7 @@ function formatDate(value?: string) {
                             <div class="comment-actions">
                               <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
                               <div class="action-group">
-                                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                                <button class="primary" type="button" @click="submitComment" :disabled="submitting">
                                   {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
                                 </button>
                               </div>
@@ -798,8 +764,7 @@ function formatDate(value?: string) {
                                 <div class="comment-actions">
                                   <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
                                   <div class="action-group">
-                                    <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                                    <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                                    <button class="primary" type="button" @click="submitComment" :disabled="submitting">
                                       {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
                                     </button>
                                   </div>
@@ -831,13 +796,12 @@ function formatDate(value?: string) {
 
     <div v-if="modalVisible" class="modal">
       <div class="modal-card">
-        <h4>Xác nhận email</h4>
-        <p class="muted">Nhập email {{ replyMode === 'auth' ? 'tài khoản' : 'của bạn' }} để tiếp tục</p>
-        <input v-model="modalEmail" type="email" placeholder="your@email.com" />
-        <div v-if="modalError" class="modal-error">{{ modalError }}</div>
+        <h4>Cần đăng nhập</h4>
+        <p class="muted">Vui lòng đăng nhập hoặc đăng ký để bình luận</p>
         <div class="modal-actions">
-          <button class="ghost" type="button" @click="modalVisible = false">Huỷ</button>
-          <button class="primary" type="button" @click="submitComment">Xác nhận</button>
+          <button class="ghost" type="button" @click="modalVisible = false">Đóng</button>
+          <button class="ghost" type="button" @click="goRegister">Đăng ký</button>
+          <button class="primary" type="button" @click="goLogin">Đăng nhập</button>
         </div>
       </div>
     </div>
