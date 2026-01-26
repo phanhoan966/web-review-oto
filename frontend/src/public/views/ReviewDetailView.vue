@@ -47,6 +47,7 @@ interface CommentDetail {
   authorBio?: string
   anonymous?: boolean
   createdAt?: string
+  likes?: number
 }
 
 const defaultAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
@@ -88,8 +89,12 @@ const hasMore = ref(true)
 
 const commentsSection = ref<HTMLElement | null>(null)
 const commentList = ref<HTMLElement | null>(null)
+const commentInput = ref<HTMLTextAreaElement | null>(null)
 const highlightedIds = ref<Set<number>>(new Set())
 const slideIds = ref<Set<number>>(new Set())
+const likesState = ref<Record<number, { count: number; liked: boolean }>>({})
+const commentTab = ref<'top' | 'newest'>('top')
+const replyTarget = ref<CommentDetail | null>(null)
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
@@ -159,6 +164,7 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
       params: { page: page.value, size: pageSize }
     })
     comments.value = reset ? data : [...comments.value, ...data]
+    initLikes(data)
     if (data.length < pageSize) {
       hasMore.value = false
     } else {
@@ -249,7 +255,9 @@ async function submitComment() {
       data.authorAvatar = auth.user.avatarUrl
     }
     comments.value = [data, ...comments.value]
+    initLikes([data])
     newComment.value = ''
+    replyTarget.value = null
     commentsVisible.value = true
     markHighlighted([data])
     markSlide([data])
@@ -272,6 +280,47 @@ function markHighlighted(items: CommentDetail[]) {
     highlightedIds.value = new Set()
   }, 3000)
 }
+
+function initLikes(items: CommentDetail[]) {
+  const next = { ...likesState.value }
+  items.forEach((c) => {
+    if (!next[c.id]) {
+      next[c.id] = { count: c.likes ?? 0, liked: false }
+    }
+  })
+  likesState.value = next
+}
+
+function toggleLike(id: number) {
+  const current = likesState.value[id] || { count: 0, liked: false }
+  const liked = !current.liked
+  const count = Math.max(0, current.count + (liked ? 1 : -1))
+  likesState.value = { ...likesState.value, [id]: { count, liked } }
+}
+
+function startReply(comment: CommentDetail) {
+  replyTarget.value = comment
+  const prefix = comment.authorUsername || comment.authorName || 'người dùng'
+  newComment.value = `@${prefix} `
+  nextTick(() => {
+    commentInput.value?.focus()
+  })
+}
+
+const visibleComments = computed(() => {
+  const list = [...comments.value]
+  const withLikes = list.map((c) => {
+    const like = likesState.value[c.id] || { count: 0, liked: false }
+    return { ...c, _like: like.count, _liked: like.liked }
+  })
+  if (commentTab.value === 'newest') {
+    return withLikes.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+  }
+  return withLikes.sort((a, b) => {
+    if (b._like !== a._like) return b._like - a._like
+    return (b.createdAt || '').localeCompare(a.createdAt || '')
+  })
+})
 
 function markSlide(items: CommentDetail[]) {
   slideIds.value = new Set(items.map((c) => c.id))
@@ -368,7 +417,8 @@ function formatDate(value?: string) {
         <section class="card reply">
           <div class="reply-head">Cho review của bạn về xe</div>
           <form class="comment-form" @submit.prevent>
-            <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+            <textarea ref="commentInput" v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+            <div v-if="replyTarget" class="replying">Trả lời {{ replyTarget.authorName || replyTarget.authorUsername || 'bình luận' }}</div>
             <div v-if="formError" class="form-error">{{ formError }}</div>
             <div class="comment-actions">
               <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
@@ -386,6 +436,10 @@ function formatDate(value?: string) {
 
         <section class="card comments" ref="commentsSection">
           <div class="comments-head">
+            <div class="tabs">
+              <button class="tab" :class="{ active: commentTab === 'top' }" type="button" @click="commentTab = 'top'">Quan tâm nhất</button>
+              <button class="tab" :class="{ active: commentTab === 'newest' }" type="button" @click="commentTab = 'newest'">Mới nhất</button>
+            </div>
             <h3>Bình luận ({{ comments.length }})</h3>
           </div>
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
@@ -394,7 +448,7 @@ function formatDate(value?: string) {
             <div v-if="!comments.length" class="status">Chưa có bình luận</div>
             <div v-else class="comment-list" ref="commentList">
               <div
-                v-for="comment in comments"
+                v-for="comment in visibleComments"
                 :key="comment.id"
                 class="comment-item"
                 :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
@@ -414,6 +468,12 @@ function formatDate(value?: string) {
                           <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                         </div>
                         <p>{{ comment.content }}</p>
+                        <div class="comment-actions-row">
+                          <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                            ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                          </button>
+                          <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -437,6 +497,12 @@ function formatDate(value?: string) {
                       <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                     </div>
                     <p>{{ comment.content }}</p>
+                    <div class="comment-actions-row">
+                      <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                        ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                      </button>
+                      <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -677,6 +743,12 @@ function formatDate(value?: string) {
   gap: 8px;
 }
 
+.replying {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: -4px;
+}
+
 .primary,
 .ghost,
 .pill {
@@ -706,6 +778,32 @@ function formatDate(value?: string) {
   gap: 12px;
 }
 
+.comments-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  font-weight: 700;
+}
+
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
 .comment-list {
   display: grid;
   gap: 12px;
@@ -726,6 +824,19 @@ function formatDate(value?: string) {
   grid-template-columns: 40px 1fr;
   gap: 10px;
   align-items: flex-start;
+}
+
+.chip-btn {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f7f9fc;
+  font-weight: 700;
+}
+
+.chip-btn.liked {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .comment-name {
