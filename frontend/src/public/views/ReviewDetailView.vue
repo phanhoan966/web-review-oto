@@ -696,7 +696,7 @@ function formatDate(value?: string) {
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
                             ❤ {{ likesState[child.id]?.count ?? 0 }}
                           </button>
-                          <button class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
+                          <button v-if="canReply(child.id)" class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
                         </div>
                         <div v-if="replyTarget?.id === child.id" class="inline-form nested">
                           <form class="comment-form" @submit.prevent>
@@ -737,12 +737,62 @@ function formatDate(value?: string) {
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
                             ❤ {{ likesState[child.id]?.count ?? 0 }}
                           </button>
-                          <button class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
+                          <button v-if="canReply(child.id)" class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
                         </div>
                         <div v-if="replyTarget?.id === child.id" class="inline-form nested">
                           <form class="comment-form" @submit.prevent>
                             <textarea
                               :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                              v-model="newComment"
+                              rows="3"
+                              placeholder="Phản hồi bình luận này..."
+                            />
+                            <div class="replying">Đang trả lời bình luận</div>
+                            <div v-if="formError" class="form-error">{{ formError }}</div>
+                            <div class="comment-actions">
+                              <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                              <div class="action-group">
+                                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="child.children?.length" class="grandchild-list">
+                  <div
+                    v-for="grand in child.children"
+                    :key="grand.id"
+                    class="comment-grandchild"
+                    :class="{ flash: highlightedIds.has(grand.id), 'slide-in': slideIds.has(grand.id) }"
+                  >
+                    <div class="comment-row grand-row">
+                      <div class="comment-trigger">
+                        <div class="comment-avatar">
+                          <img :src="grand.anonymous ? anonAvatar : grand.authorAvatar || defaultAvatar" alt="avatar" />
+                        </div>
+                        <div class="comment-meta">
+                          <strong>{{ grand.anonymous ? 'Ẩn danh' : grand.authorName || grand.authorUsername || 'Ẩn danh' }}</strong>
+                          <span class="date-time-comment muted">{{ formatDate(grand.createdAt) }}</span>
+                        </div>
+                      </div>
+                      <div class="comment-content">
+                        <p>{{ grand.content }}</p>
+                        <div class="comment-actions-row">
+                          <button class="chip-btn" type="button" :class="{ liked: likesState[grand.id]?.liked }" @click="toggleLike(grand.id)">
+                            ❤ {{ likesState[grand.id]?.count ?? 0 }}
+                          </button>
+                          <button v-if="canReply(grand.id)" class="chip-btn" type="button" @click="startReply(grand)">Trả lời</button>
+                        </div>
+                        <div v-if="replyTarget?.id === grand.id" class="inline-form nested">
+                          <form class="comment-form" @submit.prevent>
+                            <textarea
+                              :ref="(el) => setReplyInputRef(grand.id, el as HTMLTextAreaElement | null)"
                               v-model="newComment"
                               rows="3"
                               placeholder="Phản hồi bình luận này..."
@@ -1103,6 +1153,26 @@ function formatDate(value?: string) {
   border-radius: 12px;
   padding: 8px 10px;
   border: 1px solid var(--border);
+}
+
+.grandchild-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-left: 16px;
+  border-left: 2px dashed var(--border);
+}
+
+.comment-grandchild {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+}
+
+.grand-row .comment-avatar img {
+  width: 32px;
+  height: 32px;
 }
 
 .comment-trigger {
