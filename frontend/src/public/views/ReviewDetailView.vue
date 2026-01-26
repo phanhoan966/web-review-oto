@@ -91,13 +91,14 @@ const hasMore = ref(true)
 
 const commentsSection = ref<HTMLElement | null>(null)
 const commentList = ref<HTMLElement | null>(null)
-const commentInput = ref<HTMLTextAreaElement | null>(null)
-const replyBox = ref<HTMLElement | null>(null)
 const highlightedIds = ref<Set<number>>(new Set())
 const slideIds = ref<Set<number>>(new Set())
 const likesState = ref<Record<number, { count: number; liked: boolean }>>({})
 const commentTab = ref<'top' | 'newest'>('top')
 const replyTarget = ref<CommentDetail | null>(null)
+const rootComposerVisible = ref(true)
+const rootInput = ref<HTMLTextAreaElement | null>(null)
+const replyInputs = ref<Record<number, HTMLTextAreaElement | null>>({})
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
@@ -196,6 +197,8 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
     page.value = 0
     hasMore.value = true
     comments.value = []
+    rootComposerVisible.value = true
+    replyTarget.value = null
   }
   if (!hasMore.value && !reset) {
     return
@@ -358,13 +361,34 @@ async function toggleLike(id: number) {
   }
 }
 
+function setReplyInputRef(id: number, el: HTMLTextAreaElement | null) {
+  const next = { ...replyInputs.value }
+  if (el) {
+    next[id] = el
+  } else {
+    delete next[id]
+  }
+  replyInputs.value = next
+}
+
+function startRoot() {
+  replyTarget.value = null
+  rootComposerVisible.value = true
+  newComment.value = ''
+  nextTick(() => {
+    rootInput.value?.focus()
+  })
+}
+
 function startReply(comment: CommentDetail) {
   replyTarget.value = comment
+  rootComposerVisible.value = false
   const prefix = comment.authorUsername || comment.authorName || 'người dùng'
   newComment.value = `@${prefix} `
   nextTick(() => {
-    replyBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    commentInput.value?.focus()
+    const input = replyInputs.value[comment.id]
+    input?.focus()
+    input?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
 }
 
@@ -390,6 +414,13 @@ function markSlide(items: CommentDetail[]) {
   slideTimer = window.setTimeout(() => {
     slideIds.value = new Set()
   }, 600)
+}
+
+function cancelReply() {
+  replyTarget.value = null
+  rootComposerVisible.value = true
+  newComment.value = ''
+  formError.value = ''
 }
 
 function formatDate(value?: string) {
@@ -485,6 +516,21 @@ function formatDate(value?: string) {
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
           <div v-else-if="commentsVisible">
+            <div class="inline-form" v-if="rootComposerVisible">
+              <form class="comment-form" @submit.prevent>
+                <textarea ref="rootInput" v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+                <div v-if="formError" class="form-error">{{ formError }}</div>
+                <div class="comment-actions">
+                  <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">Tải lại bình luận</button>
+                  <div class="action-group">
+                    <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Bình luận ẩn danh</button>
+                    <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                      {{ submitting ? 'Đang gửi...' : 'Đăng bình luận' }}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
             <div v-if="!totalComments" class="status">Chưa có bình luận</div>
             <div v-else class="comment-list" ref="commentList">
               <div
@@ -527,6 +573,27 @@ function formatDate(value?: string) {
                       </button>
                       <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
                     </div>
+                    <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
+                      <form class="comment-form" @submit.prevent>
+                        <textarea
+                          :ref="(el) => setReplyInputRef(comment.id, el as HTMLTextAreaElement | null)"
+                          v-model="newComment"
+                          rows="3"
+                          placeholder="Phản hồi bình luận này..."
+                        />
+                        <div class="replying">Đang trả lời {{ comment.authorName || comment.authorUsername || 'bình luận' }}</div>
+                        <div v-if="formError" class="form-error">{{ formError }}</div>
+                        <div class="comment-actions">
+                          <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                          <div class="action-group">
+                            <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                            <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                              {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                 </div>
                 <div v-else class="comment-row">
@@ -546,6 +613,27 @@ function formatDate(value?: string) {
                         ❤ {{ likesState[comment.id]?.count ?? 0 }}
                       </button>
                       <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                    </div>
+                    <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
+                      <form class="comment-form" @submit.prevent>
+                        <textarea
+                          :ref="(el) => setReplyInputRef(comment.id, el as HTMLTextAreaElement | null)"
+                          v-model="newComment"
+                          rows="3"
+                          placeholder="Phản hồi bình luận này..."
+                        />
+                        <div class="replying">Đang trả lời bình luận</div>
+                        <div v-if="formError" class="form-error">{{ formError }}</div>
+                        <div class="comment-actions">
+                          <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                          <div class="action-group">
+                            <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                            <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                              {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
                     </div>
                   </div>
                 </div>
@@ -590,6 +678,27 @@ function formatDate(value?: string) {
                           </button>
                           <button class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
                         </div>
+                        <div v-if="replyTarget?.id === child.id" class="inline-form nested">
+                          <form class="comment-form" @submit.prevent>
+                            <textarea
+                              :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                              v-model="newComment"
+                              rows="3"
+                              placeholder="Phản hồi bình luận này..."
+                            />
+                            <div class="replying">Đang trả lời {{ child.authorName || child.authorUsername || 'bình luận' }}</div>
+                            <div v-if="formError" class="form-error">{{ formError }}</div>
+                            <div class="comment-actions">
+                              <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                              <div class="action-group">
+                                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
                       </div>
                     </div>
                     <div v-else class="comment-row child-row">
@@ -610,6 +719,27 @@ function formatDate(value?: string) {
                           </button>
                           <button class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
                         </div>
+                        <div v-if="replyTarget?.id === child.id" class="inline-form nested">
+                          <form class="comment-form" @submit.prevent>
+                            <textarea
+                              :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                              v-model="newComment"
+                              rows="3"
+                              placeholder="Phản hồi bình luận này..."
+                            />
+                            <div class="replying">Đang trả lời bình luận</div>
+                            <div v-if="formError" class="form-error">{{ formError }}</div>
+                            <div class="comment-actions">
+                              <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                              <div class="action-group">
+                                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                                </button>
+                              </div>
+                            </div>
+                          </form>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -617,25 +747,6 @@ function formatDate(value?: string) {
               </div>
               <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false, true)">Xem thêm bình luận</button>
             </div>
-          </div>
-          <div ref="replyBox" class="reply-box">
-            <div class="reply-head">Cho review của bạn về xe</div>
-            <form class="comment-form" @submit.prevent>
-              <textarea ref="commentInput" v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
-              <div v-if="replyTarget" class="replying">Trả lời {{ replyTarget.authorName || replyTarget.authorUsername || 'bình luận' }}</div>
-              <div v-if="formError" class="form-error">{{ formError }}</div>
-              <div class="comment-actions">
-                <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
-                  {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
-                </button>
-                <div class="action-group">
-                  <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                  <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
-                    {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
-                  </button>
-                </div>
-              </div>
-            </form>
           </div>
         </section>
       </div>
@@ -932,9 +1043,16 @@ function formatDate(value?: string) {
   border-color: var(--primary);
 }
 
-.reply-box {
-  border-top: 1px solid var(--border);
-  padding-top: 10px;
+.inline-form {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+}
+
+.inline-form.nested {
+  margin-top: 10px;
 }
 
 .comment-list {
