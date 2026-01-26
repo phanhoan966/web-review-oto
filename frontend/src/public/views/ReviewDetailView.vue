@@ -119,8 +119,11 @@ function mergeComments(items: CommentDetail[], reset = false) {
   map.forEach((node) => {
     if (!node.parentId) return
     const parent = map.get(node.parentId)
-    if (parent && !parent.children.some((child) => child.id === node.id)) {
-      parent.children.push(node)
+    if (parent) {
+      parent.children = parent.children || []
+      if (!parent.children.some((child) => child.id === node.id)) {
+        parent.children.push(node)
+      }
     }
   })
   const sortByDate = (a: CommentDetail, b: CommentDetail) => (a.createdAt || '').localeCompare(b.createdAt || '')
