@@ -13,5 +13,7 @@ import org.springframework.stereotype.Repository;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByReviewOrderByCreatedAtAsc(Review review);
 
-    Page<Comment> findByReviewOrderByCreatedAtDesc(Review review, Pageable pageable);
+    Page<Comment> findByReviewAndParentIsNullOrderByCreatedAtDesc(Review review, Pageable pageable);
+
+    List<Comment> findByParentInOrderByCreatedAtAsc(List<Comment> parents);
 }

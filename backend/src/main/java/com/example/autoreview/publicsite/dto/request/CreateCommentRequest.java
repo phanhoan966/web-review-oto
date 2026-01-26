@@ -11,6 +11,8 @@ public class CreateCommentRequest {
 
     private boolean anonymous;
 
+    private Long parentId;
+
     public String getContent() {
         return content;
     }
@@ -25,5 +27,13 @@ public class CreateCommentRequest {
 
     public void setAnonymous(boolean anonymous) {
         this.anonymous = anonymous;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
     }
 }

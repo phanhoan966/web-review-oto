@@ -35,8 +35,15 @@ public class Comment {
     @JoinColumn(name = "review_id")
     private Review review;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
+
     @Column(nullable = false)
     private boolean anonymous;
+
+    @Column(nullable = false)
+    private Integer likes = 0;
 
     public Long getId() {
         return id;
@@ -78,11 +85,27 @@ public class Comment {
         this.review = review;
     }
 
+    public Comment getParent() {
+        return parent;
+    }
+
+    public void setParent(Comment parent) {
+        this.parent = parent;
+    }
+
     public boolean isAnonymous() {
         return anonymous;
     }
 
     public void setAnonymous(boolean anonymous) {
         this.anonymous = anonymous;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 }

@@ -48,6 +48,8 @@ interface CommentDetail {
   anonymous?: boolean
   createdAt?: string
   likes?: number
+  parentId?: number | null
+  children?: CommentDetail[]
 }
 
 const defaultAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
@@ -99,11 +101,52 @@ const replyTarget = ref<CommentDetail | null>(null)
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
+function flattenComments(list: CommentDetail[]): CommentDetail[] {
+  return list.flatMap((item) => [item, ...(item.children ? flattenComments(item.children) : [])])
+}
+
+function mergeComments(items: CommentDetail[], reset = false) {
+  const existing = new Map<number, CommentDetail>()
+  if (!reset) {
+    flattenComments(comments.value).forEach((c) => {
+      existing.set(c.id, { ...c, children: [...(c.children || [])] })
+    })
+  }
+  items.forEach((raw) => {
+    const current = existing.get(raw.id)
+    const merged = { ...(current || {}), ...raw, children: current?.children ? [...current.children] : [] }
+    existing.set(raw.id, merged)
+  })
+  existing.forEach((node) => {
+    node.children = node.children || []
+  })
+  existing.forEach((node) => {
+    if (node.parentId) {
+      const parent = existing.get(node.parentId)
+      if (parent) {
+        parent.children = parent.children || []
+        if (!parent.children.some((child) => child.id === node.id)) {
+          parent.children.push(node)
+        }
+      }
+    }
+  })
+  const roots = Array.from(existing.values()).filter((item) => !item.parentId)
+  roots.forEach((root) => {
+    if (root.children?.length) {
+      root.children = [...root.children].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
+    }
+  })
+  return roots
+}
+
 const auth = useAuthStore()
 const replyMode = ref<'auth' | 'anon'>('auth')
 const modalVisible = ref(false)
 const modalEmail = ref('')
 const modalError = ref('')
+
+const totalComments = computed(() => flattenComments(comments.value).length)
 
 onMounted(() => {
   load()
@@ -164,9 +207,10 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
     const { data } = await client.get<CommentDetail[]>(`/reviews/${route.params.id}/comments`, {
       params: { page: page.value, size: pageSize }
     })
-    comments.value = reset ? data : [...comments.value, ...data]
+    const rootCount = Array.isArray(data) ? data.filter((item) => !item.parentId).length : 0
+    comments.value = mergeComments(data, reset)
     initLikes(data)
-    if (data.length < pageSize) {
+    if (rootCount < pageSize) {
       hasMore.value = false
     } else {
       page.value += 1
@@ -249,13 +293,15 @@ async function submitComment() {
   commentsError.value = ''
   modalVisible.value = false
   try {
-    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content, anonymous })
+    const parentId = replyTarget.value?.id ?? null
+    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, { content, anonymous, parentId })
     data.anonymous = anonymous
+    data.parentId = parentId
     if (!anonymous && replyMode.value === 'auth' && auth.user) {
       data.authorName = auth.user.username
       data.authorAvatar = auth.user.avatarUrl
     }
-    comments.value = [data, ...comments.value]
+    comments.value = mergeComments([data], false)
     initLikes([data])
     newComment.value = ''
     replyTarget.value = null
@@ -285,18 +331,31 @@ function markHighlighted(items: CommentDetail[]) {
 function initLikes(items: CommentDetail[]) {
   const next = { ...likesState.value }
   items.forEach((c) => {
-    if (!next[c.id]) {
+    const existing = next[c.id]
+    if (!existing) {
       next[c.id] = { count: c.likes ?? 0, liked: false }
+    } else {
+      next[c.id] = { ...existing, count: c.likes ?? existing.count }
     }
   })
   likesState.value = next
 }
 
-function toggleLike(id: number) {
+async function toggleLike(id: number) {
   const current = likesState.value[id] || { count: 0, liked: false }
   const liked = !current.liked
   const count = Math.max(0, current.count + (liked ? 1 : -1))
   likesState.value = { ...likesState.value, [id]: { count, liked } }
+  try {
+    if (liked) {
+      await client.post(`/comments/${id}/like`)
+    } else {
+      await client.post(`/comments/${id}/unlike`)
+    }
+  } catch (error: any) {
+    likesState.value = { ...likesState.value, [id]: current }
+    commentsError.value = error.response?.data?.message || 'Không thể cập nhật lượt thích'
+  }
 }
 
 function startReply(comment: CommentDetail) {
@@ -309,18 +368,17 @@ function startReply(comment: CommentDetail) {
   })
 }
 
-const visibleComments = computed(() => {
-  const list = [...comments.value]
-  const withLikes = list.map((c) => {
-    const like = likesState.value[c.id] || { count: 0, liked: false }
-    return { ...c, _like: like.count, _liked: like.liked }
-  })
+const visibleRoots = computed(() => {
+  const list = comments.value || []
+  const sortByDate = (a: CommentDetail, b: CommentDetail) => (b.createdAt || '').localeCompare(a.createdAt || '')
   if (commentTab.value === 'newest') {
-    return withLikes.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+    return [...list].sort(sortByDate)
   }
-  return withLikes.sort((a, b) => {
-    if (b._like !== a._like) return b._like - a._like
-    return (b.createdAt || '').localeCompare(a.createdAt || '')
+  return [...list].sort((a, b) => {
+    const likeA = likesState.value[a.id]?.count ?? 0
+    const likeB = likesState.value[b.id]?.count ?? 0
+    if (likeB !== likeA) return likeB - likeA
+    return sortByDate(a, b)
   })
 })
 
@@ -422,15 +480,15 @@ function formatDate(value?: string) {
               <button class="tab" :class="{ active: commentTab === 'top' }" type="button" @click="commentTab = 'top'">Quan tâm nhất</button>
               <button class="tab" :class="{ active: commentTab === 'newest' }" type="button" @click="commentTab = 'newest'">Mới nhất</button>
             </div>
-            <h3>Bình luận ({{ comments.length }})</h3>
+            <h3>Bình luận ({{ totalComments }})</h3>
           </div>
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
           <div v-else-if="commentsVisible">
-            <div v-if="!comments.length" class="status">Chưa có bình luận</div>
+            <div v-if="!totalComments" class="status">Chưa có bình luận</div>
             <div v-else class="comment-list" ref="commentList">
               <div
-                v-for="comment in visibleComments"
+                v-for="comment in visibleRoots"
                 :key="comment.id"
                 class="comment-item"
                 :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
@@ -488,6 +546,71 @@ function formatDate(value?: string) {
                         ❤ {{ likesState[comment.id]?.count ?? 0 }}
                       </button>
                       <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="comment.children?.length" class="child-list">
+                  <div
+                    v-for="child in comment.children"
+                    :key="child.id"
+                    class="comment-child"
+                    :class="{ flash: highlightedIds.has(child.id), 'slide-in': slideIds.has(child.id) }"
+                  >
+                    <div v-if="!child.anonymous && (child.authorUsername || child.authorName)" class="comment-row child-row">
+                      <HoverPopover>
+                        <template #trigger>
+                          <div class="comment-trigger">
+                            <div class="comment-avatar">
+                              <img :src="child.authorAvatar || defaultAvatar" alt="avatar" />
+                            </div>
+                            <div class="comment-meta">
+                              <RouterLink v-if="child.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
+                                {{ child.authorName || child.authorUsername }}
+                              </RouterLink>
+                              <strong v-else class="comment-name">{{ child.authorName }}</strong>
+                              <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
+                            </div>
+                          </div>
+                        </template>
+                        <ReviewerPopoverCard
+                          :name="child.authorName || child.authorUsername || 'Reviewer'"
+                          :username="child.authorUsername"
+                          :avatar-url="child.authorAvatar"
+                          :bio="child.authorBio"
+                          :followers="child.authorFollowers"
+                          :review-count="child.authorReviewCount"
+                          :rating="child.authorRating"
+                        />
+                      </HoverPopover>
+                      <div class="comment-content">
+                        <p>{{ child.content }}</p>
+                        <div class="comment-actions-row">
+                          <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
+                            ❤ {{ likesState[child.id]?.count ?? 0 }}
+                          </button>
+                          <button class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="comment-row child-row">
+                      <div class="comment-trigger">
+                        <div class="comment-avatar">
+                          <img :src="child.anonymous ? anonAvatar : child.authorAvatar || defaultAvatar" alt="avatar" />
+                        </div>
+                        <div class="comment-meta">
+                          <strong>{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
+                          <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
+                        </div>
+                      </div>
+                      <div class="comment-content">
+                        <p>{{ child.content }}</p>
+                        <div class="comment-actions-row">
+                          <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
+                            ❤ {{ likesState[child.id]?.count ?? 0 }}
+                          </button>
+                          <button class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -826,6 +949,21 @@ function formatDate(value?: string) {
   padding: 10px 12px;
   border-radius: 12px;
   background: var(--chip-bg);
+  border: 1px solid var(--border);
+}
+
+.child-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-left: 16px;
+  border-left: 2px solid var(--border);
+}
+
+.comment-child {
+  background: var(--pill-bg);
+  border-radius: 12px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
 }
 

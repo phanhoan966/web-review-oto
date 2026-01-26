@@ -278,6 +278,13 @@ public class ReviewService {
             comment.setReview(review);
             comment.setAnonymous(request.isAnonymous());
             comment.setCreatedAt(Instant.now());
+            if (request.getParentId() != null) {
+                Comment parent = commentRepository.findById(request.getParentId()).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Parent comment not found"));
+                if (!parent.getReview().getId().equals(reviewId)) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Parent comment không thuộc bài viết này");
+                }
+                comment.setParent(parent);
+            }
             Comment saved = commentRepository.save(comment);
             review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);
             reviewRepository.save(review);
@@ -296,16 +303,34 @@ public class ReviewService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        List<CommentDto> dtos = commentRepository.findByReviewOrderByCreatedAtDesc(review, pageable).map(DtoMapper::toCommentDto).getContent();
-        applyCommentAuthorReviewCounts(dtos);
-        return dtos;
+        var roots = commentRepository.findByReviewAndParentIsNullOrderByCreatedAtDesc(review, pageable).getContent();
+        List<Comment> children = roots.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(roots);
+        List<CommentDto> result = roots.stream().map(DtoMapper::toCommentDto).collect(java.util.stream.Collectors.toList());
+        result.addAll(children.stream().map(DtoMapper::toCommentDto).toList());
+        applyCommentAuthorReviewCounts(result);
+        return result;
+    }
+
+    @Transactional
+    public void likeComment(Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Comment not found"));
+        comment.setLikes((comment.getLikes() == null ? 0 : comment.getLikes()) + 1);
+        commentRepository.save(comment);
+    }
+
+    @Transactional
+    public void unlikeComment(Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Comment not found"));
+        int current = comment.getLikes() == null ? 0 : comment.getLikes();
+        comment.setLikes(Math.max(0, current - 1));
+        commentRepository.save(comment);
     }
 
     @Transactional
     public void deleteComment(Long commentId, String email) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Comment not found"));
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
-        boolean canDelete = hasAdminRole(user) || comment.getAuthor().getEmail().equals(email);
+        boolean canDelete = hasAdminRole(user) || (comment.getAuthor() != null && comment.getAuthor().getEmail().equals(email));
         if (!canDelete) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Not authorized");
         }

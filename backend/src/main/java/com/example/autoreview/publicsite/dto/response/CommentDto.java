@@ -14,6 +14,8 @@ public class CommentDto {
     private String authorBio;
     private boolean anonymous;
     private Instant createdAt;
+    private Long parentId;
+    private Integer likes;
 
     public Long getId() {
         return id;
@@ -101,5 +103,21 @@ public class CommentDto {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
     }
 }
