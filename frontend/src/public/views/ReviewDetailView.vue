@@ -437,6 +437,19 @@ function formatDate(value?: string) {
   return new Date(value).toLocaleString('vi-VN')
 }
 
+function displayContent(body?: string, parentLabel?: string) {
+  if (!body) return ''
+  if (!parentLabel) return body
+  const trimmed = body.trimStart()
+  const lowerLabel = parentLabel.toLowerCase()
+  const prefixed = trimmed.toLowerCase()
+  if (prefixed.startsWith(`@${lowerLabel}`)) {
+    const sliced = trimmed.slice(parentLabel.length + 1).replace(/^[:\s]+/, '')
+    return sliced.trimStart()
+  }
+  return body
+}
+
 </script>
 
 <template>
@@ -526,7 +539,7 @@ function formatDate(value?: string) {
           <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
           <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
           <div v-else-if="commentsVisible">
-            <div class="inline-form" v-if="rootComposerVisible">
+            <div class="inline-form">
               <form class="comment-form" @submit.prevent>
                 <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
                 <div v-if="formError" class="form-error">{{ formError }}</div>
@@ -682,7 +695,7 @@ function formatDate(value?: string) {
                             <RouterLink v-if="comment.authorUsername" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">@{{ comment.authorName || comment.authorUsername }}</RouterLink>
                             <span v-else>@{{ comment.authorName }}</span>
                           </span>
-                          <span class="comment-text">{{ child.content }}</span>
+                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
                         </p>
                       </div>
                       <div class="comment-actions-row">
@@ -726,7 +739,7 @@ function formatDate(value?: string) {
                             <RouterLink v-if="comment.authorUsername" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">@{{ comment.authorName || comment.authorUsername }}</RouterLink>
                             <span v-else>@{{ comment.authorName }}</span>
                           </span>
-                          <span class="comment-text">{{ child.content }}</span>
+                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
                         </p>
                       </div>
                       <div class="comment-actions-row">
