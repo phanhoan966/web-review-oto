@@ -98,7 +98,7 @@ const commentTab = ref<'top' | 'newest'>('top')
 const replyTarget = ref<CommentDetail | null>(null)
 const rootComposerVisible = ref(true)
 const rootInput = ref<HTMLTextAreaElement | null>(null)
-const replyInputs = ref<Record<number, HTMLTextAreaElement | null>>({})
+const replyInputs: Record<number, HTMLTextAreaElement | null> = {}
 const depthMap = ref<Record<number, number>>({})
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
@@ -375,13 +375,11 @@ async function toggleLike(id: number) {
 }
 
 function setReplyInputRef(id: number, el: HTMLTextAreaElement | null) {
-  const next = { ...replyInputs.value }
   if (el) {
-    next[id] = el
+    replyInputs[id] = el
   } else {
-    delete next[id]
+    delete replyInputs[id]
   }
-  replyInputs.value = next
 }
 
 function startRoot() {
@@ -404,7 +402,7 @@ function startReply(comment: CommentDetail) {
   const prefix = comment.authorUsername || comment.authorName || 'người dùng'
   newComment.value = `@${prefix} `
   nextTick(() => {
-    const input = replyInputs.value[comment.id]
+    const input = replyInputs[comment.id]
     input?.focus()
     input?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
