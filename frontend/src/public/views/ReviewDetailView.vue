@@ -82,7 +82,8 @@ const commentsVisible = ref(false)
 const commentsLoading = ref(false)
 const commentsError = ref('')
 const formError = ref('')
-const newComment = ref('')
+const rootComment = ref('')
+const replyDrafts = ref<Record<number, string>>({})
 const submitting = ref(false)
 
 const page = ref(0)
@@ -270,7 +271,8 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
 }
 
 async function submitComment() {
-  const content = newComment.value.trim()
+  const target = replyTarget.value
+  const content = target ? (replyDrafts.value[target.id] || '').trim() : rootComment.value.trim()
   if (!content) {
     formError.value = 'Vui lòng nhập nội dung bình luận'
     return
@@ -284,7 +286,6 @@ async function submitComment() {
   commentsError.value = ''
   modalVisible.value = false
   try {
-    const target = replyTarget.value
     let parentId: number | null = null
     if (target?.id) {
       parentId = target.id
@@ -301,7 +302,13 @@ async function submitComment() {
     }
     comments.value = mergeComments([data], false)
     initLikes([data])
-    newComment.value = ''
+    if (target?.id) {
+      const nextDrafts = { ...replyDrafts.value }
+      delete nextDrafts[target.id]
+      replyDrafts.value = nextDrafts
+    } else {
+      rootComment.value = ''
+    }
     replyTarget.value = null
     rootComposerVisible.value = true
     commentsVisible.value = true
@@ -375,7 +382,7 @@ function startReply(comment: CommentDetail) {
   replyTarget.value = comment
   rootComposerVisible.value = false
   const prefix = comment.authorUsername || comment.authorName || 'người dùng'
-  newComment.value = `@${prefix} `
+  replyDrafts.value = { ...replyDrafts.value, [comment.id]: `@${prefix} ` }
   nextTick(() => {
     const input = replyInputs[comment.id]
     input?.focus()
@@ -419,9 +426,13 @@ function markSlide(items: CommentDetail[]) {
 }
 
 function cancelReply() {
+  if (replyTarget.value?.id) {
+    const draft = { ...replyDrafts.value }
+    delete draft[replyTarget.value.id]
+    replyDrafts.value = draft
+  }
   replyTarget.value = null
   rootComposerVisible.value = true
-  newComment.value = ''
   formError.value = ''
 }
 
@@ -551,7 +562,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
           <div v-else-if="commentsVisible">
             <div class="inline-form">
               <form class="comment-form" @submit.prevent>
-                <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+                <textarea v-model="rootComment" rows="3" placeholder="Viết bình luận của bạn..." />
                 <div v-if="formError" class="form-error">{{ formError }}</div>
                 <div class="comment-actions">
                   <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">Tải lại bình luận</button>
@@ -612,7 +623,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                       <form class="comment-form" @submit.prevent>
                         <textarea
                           :ref="(el) => setReplyInputRef(comment.id, el as HTMLTextAreaElement | null)"
-                          v-model="newComment"
+                          v-model="replyDrafts[comment.id]"
                           rows="3"
                           placeholder="Phản hồi bình luận này..."
                         />
@@ -652,7 +663,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                       <form class="comment-form" @submit.prevent>
                         <textarea
                           :ref="(el) => setReplyInputRef(comment.id, el as HTMLTextAreaElement | null)"
-                          v-model="newComment"
+                          v-model="replyDrafts[comment.id]"
                           rows="3"
                           placeholder="Phản hồi bình luận này..."
                         />
@@ -726,7 +737,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                         <form class="comment-form" @submit.prevent>
                           <textarea
                             :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
-                            v-model="newComment"
+                            v-model="replyDrafts[child.id]"
                             rows="3"
                             placeholder="Phản hồi bình luận này..."
                           />
@@ -775,7 +786,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                         <form class="comment-form" @submit.prevent>
                           <textarea
                             :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
-                            v-model="newComment"
+                            v-model="replyDrafts[child.id]"
                             rows="3"
                             placeholder="Phản hồi bình luận này..."
                           />
