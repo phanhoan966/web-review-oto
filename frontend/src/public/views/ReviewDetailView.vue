@@ -1205,6 +1205,13 @@ function formatDate(value?: string) {
   width: 100%;
 }
 
+.comment-line > :first-child {
+  display: inline-flex;
+  align-items: flex-start;
+  width: auto;
+  flex-shrink: 0;
+}
+
 .comment-avatar {
   flex-shrink: 0;
 }
