@@ -453,13 +453,13 @@ function formatDate(value?: string) {
                 class="comment-item"
                 :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
               >
-                <HoverPopover v-if="!comment.anonymous && (comment.authorUsername || comment.authorName)">
-                  <template #trigger>
-                    <div class="comment-trigger">
-                      <div class="comment-avatar">
-                        <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
-                      </div>
-                      <div class="comment-content">
+                <div v-if="!comment.anonymous && (comment.authorUsername || comment.authorName)" class="comment-row">
+                  <HoverPopover>
+                    <template #trigger>
+                      <div class="comment-trigger">
+                        <div class="comment-avatar">
+                          <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
+                        </div>
                         <div class="comment-meta">
                           <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
                             {{ comment.authorName || comment.authorUsername }}
@@ -467,35 +467,39 @@ function formatDate(value?: string) {
                           <strong v-else class="comment-name">{{ comment.authorName }}</strong>
                           <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                         </div>
-                        <p>{{ comment.content }}</p>
-                        <div class="comment-actions-row">
-                          <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
-                            ❤ {{ likesState[comment.id]?.count ?? 0 }}
-                          </button>
-                          <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
-                        </div>
                       </div>
-                    </div>
-                  </template>
-                  <ReviewerPopoverCard
-                    :name="comment.authorName || comment.authorUsername || 'Reviewer'"
-                    :username="comment.authorUsername"
-                    :avatar-url="comment.authorAvatar"
-                    :bio="comment.authorBio"
-                    :followers="comment.authorFollowers"
-                    :review-count="comment.authorReviewCount"
-                    :rating="comment.authorRating"
-                  />
-                </HoverPopover>
-                <div v-else class="comment-trigger">
-                  <div class="comment-avatar">
-                    <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
-                  </div>
+                    </template>
+                    <ReviewerPopoverCard
+                      :name="comment.authorName || comment.authorUsername || 'Reviewer'"
+                      :username="comment.authorUsername"
+                      :avatar-url="comment.authorAvatar"
+                      :bio="comment.authorBio"
+                      :followers="comment.authorFollowers"
+                      :review-count="comment.authorReviewCount"
+                      :rating="comment.authorRating"
+                    />
+                  </HoverPopover>
                   <div class="comment-content">
+                    <p>{{ comment.content }}</p>
+                    <div class="comment-actions-row">
+                      <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                        ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                      </button>
+                      <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="comment-row">
+                  <div class="comment-trigger">
+                    <div class="comment-avatar">
+                      <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
+                    </div>
                     <div class="comment-meta">
                       <strong>{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
                       <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                     </div>
+                  </div>
+                  <div class="comment-content">
                     <p>{{ comment.content }}</p>
                     <div class="comment-actions-row">
                       <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
