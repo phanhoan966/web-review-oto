@@ -650,33 +650,30 @@ function displayContent(body?: string, parentLabel?: string) {
                     :class="{ flash: highlightedIds.has(child.id), 'slide-in': slideIds.has(child.id) }"
                   >
                     <div v-if="!child.anonymous && (child.authorUsername || child.authorName)" class="comment-row child-row">
-                      <HoverPopover>
-                        <template #trigger>
-                          <div class="comment-trigger">
+                      <div class="comment-line">
+                        <HoverPopover>
+                          <template #trigger>
                             <div class="comment-avatar">
                               <img :src="child.authorAvatar || defaultAvatar" alt="avatar" />
                             </div>
-                            <div class="comment-meta">
-                              <RouterLink v-if="child.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
-                                {{ child.authorName || child.authorUsername }}
-                              </RouterLink>
-                              <strong v-else class="comment-name">{{ child.authorName }}</strong>
-                              <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
-                            </div>
-                          </div>
-                        </template>
-                        <ReviewerPopoverCard
-                          :name="child.authorName || child.authorUsername || 'Reviewer'"
-                          :username="child.authorUsername"
-                          :avatar-url="child.authorAvatar"
-                          :bio="child.authorBio"
-                          :followers="child.authorFollowers"
-                          :review-count="child.authorReviewCount"
-                          :rating="child.authorRating"
-                        />
-                      </HoverPopover>
-                      <div class="comment-content">
-                        <p>
+                          </template>
+                          <ReviewerPopoverCard
+                            :name="child.authorName || child.authorUsername || 'Reviewer'"
+                            :username="child.authorUsername"
+                            :avatar-url="child.authorAvatar"
+                            :bio="child.authorBio"
+                            :followers="child.authorFollowers"
+                            :review-count="child.authorReviewCount"
+                            :rating="child.authorRating"
+                          />
+                        </HoverPopover>
+                        <p class="comment-line-text">
+                          <strong class="comment-name-inline">
+                            <RouterLink v-if="child.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
+                              {{ child.authorName || child.authorUsername }}
+                            </RouterLink>
+                            <span v-else>{{ child.authorName }}</span>
+                          </strong>
                           <template v-if="comment.authorUsername || comment.authorName">
                             <HoverPopover v-if="comment.authorUsername">
                               <template #trigger>
@@ -697,50 +694,47 @@ function displayContent(body?: string, parentLabel?: string) {
                             <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
                               @{{ comment.authorName }}
                             </RouterLink>
-                            <span>&nbsp;</span>
                           </template>
-                          {{ displayContent(child.content, comment.authorName || comment.authorUsername) }}
+                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
                         </p>
-                        <div class="comment-actions-row">
+                      </div>
+                      <div class="comment-actions-row">
+                        <div class="actions-left">
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
                             ❤ {{ likesState[child.id]?.count ?? 0 }}
                           </button>
                           <button v-if="canReply(child.id)" class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
                         </div>
-                        <div v-if="replyTarget?.id === child.id" class="inline-form nested">
-                          <form class="comment-form" @submit.prevent>
-                            <textarea
-                              :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
-                              v-model="newComment"
-                              rows="3"
-                              placeholder="Phản hồi bình luận này..."
-                            />
-                            <div class="replying">Đang trả lời {{ child.authorName || child.authorUsername || 'bình luận' }}</div>
-                            <div v-if="formError" class="form-error">{{ formError }}</div>
-                            <div class="comment-actions">
-                              <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
-                              <div class="action-group">
-                                <button class="primary" type="button" @click="submitComment" :disabled="submitting">
-                                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
-                                </button>
-                              </div>
+                        <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
+                      </div>
+                      <div v-if="replyTarget?.id === child.id" class="inline-form nested">
+                        <form class="comment-form" @submit.prevent>
+                          <textarea
+                            :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                            v-model="newComment"
+                            rows="3"
+                            placeholder="Phản hồi bình luận này..."
+                          />
+                          <div class="replying">Đang trả lời {{ child.authorName || child.authorUsername || 'bình luận' }}</div>
+                          <div v-if="formError" class="form-error">{{ formError }}</div>
+                          <div class="comment-actions">
+                            <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                            <div class="action-group">
+                              <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                                {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                              </button>
                             </div>
-                          </form>
-                        </div>
+                          </div>
+                        </form>
                       </div>
                     </div>
                     <div v-else class="comment-row child-row">
-                      <div class="comment-trigger">
+                      <div class="comment-line">
                         <div class="comment-avatar">
                           <img :src="child.anonymous ? anonAvatar : child.authorAvatar || defaultAvatar" alt="avatar" />
                         </div>
-                        <div class="comment-meta">
-                          <strong>{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
-                          <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
-                        </div>
-                      </div>
-                      <div class="comment-content">
-                        <p>
+                        <p class="comment-line-text">
+                          <strong class="comment-name-inline">{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
                           <template v-if="comment.authorUsername || comment.authorName">
                             <HoverPopover v-if="comment.authorUsername">
                               <template #trigger>
@@ -761,36 +755,38 @@ function displayContent(body?: string, parentLabel?: string) {
                             <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
                               @{{ comment.authorName }}
                             </RouterLink>
-                            <span>&nbsp;</span>
                           </template>
-                          {{ displayContent(child.content, comment.authorName || comment.authorUsername) }}
+                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
                         </p>
-                        <div class="comment-actions-row">
+                      </div>
+                      <div class="comment-actions-row">
+                        <div class="actions-left">
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
                             ❤ {{ likesState[child.id]?.count ?? 0 }}
                           </button>
                           <button v-if="canReply(child.id)" class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
                         </div>
-                        <div v-if="replyTarget?.id === child.id" class="inline-form nested">
-                          <form class="comment-form" @submit.prevent>
-                            <textarea
-                              :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
-                              v-model="newComment"
-                              rows="3"
-                              placeholder="Phản hồi bình luận này..."
-                            />
-                            <div class="replying">Đang trả lời bình luận</div>
-                            <div v-if="formError" class="form-error">{{ formError }}</div>
-                            <div class="comment-actions">
-                              <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
-                              <div class="action-group">
-                                <button class="primary" type="button" @click="submitComment" :disabled="submitting">
-                                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
-                                </button>
-                              </div>
+                        <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
+                      </div>
+                      <div v-if="replyTarget?.id === child.id" class="inline-form nested">
+                        <form class="comment-form" @submit.prevent>
+                          <textarea
+                            :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                            v-model="newComment"
+                            rows="3"
+                            placeholder="Phản hồi bình luận này..."
+                          />
+                          <div class="replying">Đang trả lời bình luận</div>
+                          <div v-if="formError" class="form-error">{{ formError }}</div>
+                          <div class="comment-actions">
+                            <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                            <div class="action-group">
+                              <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                                {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                              </button>
                             </div>
-                          </form>
-                        </div>
+                          </div>
+                        </form>
                       </div>
                     </div>
 
@@ -802,17 +798,12 @@ function displayContent(body?: string, parentLabel?: string) {
                         :class="{ flash: highlightedIds.has(grand.id), 'slide-in': slideIds.has(grand.id) }"
                       >
                         <div class="comment-row grand-row">
-                          <div class="comment-trigger">
+                          <div class="comment-line">
                             <div class="comment-avatar">
                               <img :src="grand.anonymous ? anonAvatar : grand.authorAvatar || defaultAvatar" alt="avatar" />
                             </div>
-                            <div class="comment-meta">
-                              <strong>{{ grand.anonymous ? 'Ẩn danh' : grand.authorName || grand.authorUsername || 'Ẩn danh' }}</strong>
-                              <span class="date-time-comment muted">{{ formatDate(grand.createdAt) }}</span>
-                            </div>
-                          </div>
-                          <div class="comment-content">
-                            <p>
+                            <p class="comment-line-text">
+                              <strong class="comment-name-inline">{{ grand.anonymous ? 'Ẩn danh' : grand.authorName || grand.authorUsername || 'Ẩn danh' }}</strong>
                               <template v-if="child.authorUsername || child.authorName">
                                 <HoverPopover v-if="child.authorUsername">
                                   <template #trigger>
@@ -833,36 +824,38 @@ function displayContent(body?: string, parentLabel?: string) {
                                 <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(child.authorName || '')}`">
                                   @{{ child.authorName }}
                                 </RouterLink>
-                                <span>&nbsp;</span>
                               </template>
-                              {{ displayContent(grand.content, child.authorName || child.authorUsername) }}
+                              <span class="comment-text">{{ displayContent(grand.content, child.authorName || child.authorUsername) }}</span>
                             </p>
-                            <div class="comment-actions-row">
+                          </div>
+                          <div class="comment-actions-row">
+                            <div class="actions-left">
                               <button class="chip-btn" type="button" :class="{ liked: likesState[grand.id]?.liked }" @click="toggleLike(grand.id)">
                                 ❤ {{ likesState[grand.id]?.count ?? 0 }}
                               </button>
                               <button v-if="canReply(grand.id)" class="chip-btn" type="button" @click="startReply(grand)">Trả lời</button>
                             </div>
-                            <div v-if="replyTarget?.id === grand.id" class="inline-form nested">
-                              <form class="comment-form" @submit.prevent>
-                                <textarea
-                                  :ref="(el) => setReplyInputRef(grand.id, el as HTMLTextAreaElement | null)"
-                                  v-model="newComment"
-                                  rows="3"
-                                  placeholder="Phản hồi bình luận này..."
-                                />
-                                <div class="replying">Đang trả lời bình luận</div>
-                                <div v-if="formError" class="form-error">{{ formError }}</div>
-                                <div class="comment-actions">
-                                  <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
-                                  <div class="action-group">
-                                    <button class="primary" type="button" @click="submitComment" :disabled="submitting">
-                                      {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
-                                    </button>
-                                  </div>
+                            <span class="date-time-comment muted">{{ formatDate(grand.createdAt) }}</span>
+                          </div>
+                          <div v-if="replyTarget?.id === grand.id" class="inline-form nested">
+                            <form class="comment-form" @submit.prevent>
+                              <textarea
+                                :ref="(el) => setReplyInputRef(grand.id, el as HTMLTextAreaElement | null)"
+                                v-model="newComment"
+                                rows="3"
+                                placeholder="Phản hồi bình luận này..."
+                              />
+                              <div class="replying">Đang trả lời bình luận</div>
+                              <div v-if="formError" class="form-error">{{ formError }}</div>
+                              <div class="comment-actions">
+                                <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                                <div class="action-group">
+                                  <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                                    {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                                  </button>
                                 </div>
-                              </form>
-                            </div>
+                              </div>
+                            </form>
                           </div>
                         </div>
                       </div>
