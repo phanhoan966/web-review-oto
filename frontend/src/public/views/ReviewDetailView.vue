@@ -155,6 +155,7 @@ function mergeComments(items: CommentDetail[], reset = false) {
     }
   }
   depthMap.value = nextDepth
+  totalComments.value = map.size
   return roots
 }
 
@@ -164,7 +165,7 @@ const modalVisible = ref(false)
 const modalEmail = ref('')
 const modalError = ref('')
 
-const totalComments = computed(() => flattenComments(comments.value).length)
+const totalComments = ref(0)
 
 onMounted(() => {
   load()
@@ -237,12 +238,14 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
     }
     if (autoScroll) {
       await nextTick()
-      const target = commentList.value?.lastElementChild as HTMLElement | null
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'end' })
-      } else {
-        commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
+      requestAnimationFrame(() => {
+        const target = commentList.value?.lastElementChild as HTMLElement | null
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        } else {
+          commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      })
     }
     if (highlightNew) {
       markHighlighted(data)
@@ -340,6 +343,7 @@ async function submitComment() {
 }
 
 function markHighlighted(items: CommentDetail[]) {
+  if (!items.length) return
   highlightedIds.value = new Set(items.map((c) => c.id))
   if (highlightTimer) {
     clearTimeout(highlightTimer)
@@ -430,6 +434,7 @@ const visibleRoots = computed(() => {
 })
 
 function markSlide(items: CommentDetail[]) {
+  if (!items.length) return
   slideIds.value = new Set(items.map((c) => c.id))
   if (slideTimer) {
     clearTimeout(slideTimer)
