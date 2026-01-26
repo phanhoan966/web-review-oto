@@ -1282,12 +1282,6 @@ function formatDate(value?: string) {
   gap: 6px;
 }
 
-.mention-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .mention-link {
   color: #1d4ed8;
   font-weight: 700;
