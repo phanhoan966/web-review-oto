@@ -170,17 +170,6 @@ function childRows(root: CommentDetail) {
   return list.flatMap((child) => [child, ...(child.children || [])])
 }
 
-function findRootId(comment?: CommentDetail | null) {
-  if (!comment) return null
-  let current: CommentDetail | undefined = comment
-  const seen = new Set<number>()
-  while (current?.parentId && !seen.has(current.parentId)) {
-    seen.add(current.parentId)
-    current = commentMap.value[current.parentId]
-  }
-  return current?.id ?? null
-}
-
 onMounted(() => {
   load()
   loadComments(true, false)
@@ -293,7 +282,7 @@ async function submitComment() {
     const target = replyTarget.value
     let parentId: number | null = null
     if (target?.id) {
-      parentId = findRootId(target)
+      parentId = target.id
     }
     const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, {
       content,
@@ -464,7 +453,8 @@ function mentionLabel(comment?: CommentDetail | null) {
 function shouldShowMention(comment?: CommentDetail | null) {
   const parent = getParent(comment)
   if (!parent) return false
-  return Boolean(parent.parentId)
+  const depth = depthMap.value[comment?.id || 0] || 0
+  return depth > 2
 }
 
 </script>
