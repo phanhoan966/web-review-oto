@@ -554,15 +554,6 @@ function formatDate(value?: string) {
                       <template #trigger>
                         <div class="comment-avatar">
                           <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
-                          <p class="comment-line-text">
-                            <strong class="comment-name-inline">
-                              <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
-                                {{ comment.authorName || comment.authorUsername }}
-                              </RouterLink>
-                              <span v-else>{{ comment.authorName }}</span>
-                            </strong>
-                            <span class="comment-text">{{ comment.content }}</span>
-                          </p>
                         </div>
                       </template>
                       <ReviewerPopoverCard
@@ -575,6 +566,15 @@ function formatDate(value?: string) {
                         :rating="comment.authorRating"
                       />
                     </HoverPopover>
+                    <p class="comment-line-text">
+                      <strong class="comment-name-inline">
+                        <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                          {{ comment.authorName || comment.authorUsername }}
+                        </RouterLink>
+                        <span v-else>{{ comment.authorName }}</span>
+                      </strong>
+                      <span class="comment-text">{{ comment.content }}</span>
+                    </p>
                   </div>
                   <div class="comment-actions-row">
                     <div class="actions-left">
@@ -678,6 +678,10 @@ function formatDate(value?: string) {
                             </RouterLink>
                             <span v-else>{{ child.authorName }}</span>
                           </strong>
+                          <span v-if="comment.authorUsername || comment.authorName" class="mention-inline">
+                            <RouterLink v-if="comment.authorUsername" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">@{{ comment.authorName || comment.authorUsername }}</RouterLink>
+                            <span v-else>@{{ comment.authorName }}</span>
+                          </span>
                           <span class="comment-text">{{ child.content }}</span>
                         </p>
                       </div>
@@ -718,6 +722,10 @@ function formatDate(value?: string) {
                         </div>
                         <p class="comment-line-text">
                           <strong class="comment-name-inline">{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
+                          <span v-if="comment.authorUsername || comment.authorName" class="mention-inline">
+                            <RouterLink v-if="comment.authorUsername" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">@{{ comment.authorName || comment.authorUsername }}</RouterLink>
+                            <span v-else>@{{ comment.authorName }}</span>
+                          </span>
                           <span class="comment-text">{{ child.content }}</span>
                         </p>
                       </div>
@@ -1230,6 +1238,16 @@ function formatDate(value?: string) {
   text-decoration: underline;
 }
 
+.mention-inline {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.mention-inline::after {
+  content: ':';
+  margin-left: 4px;
+}
+
 .comment-content p {
   display: inline-flex;
   gap: 6px;
@@ -1304,6 +1322,7 @@ function formatDate(value?: string) {
 
 .date-time-comment {
   font-size: smaller;
+  color: #9ca3af;
 }
 
 </style>
