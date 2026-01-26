@@ -303,15 +303,21 @@ public class ReviewService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
         PageRequest pageable = PageRequest.of(page, size);
-        var roots = "latest".equalsIgnoreCase(sort)
-                ? commentRepository.findByReviewAndParentIsNullOrderByCreatedAtDesc(review, pageable).getContent()
-                : commentRepository.findByReviewAndParentIsNullOrderByLikesDescCreatedAtDesc(review, pageable).getContent();
-        List<Comment> children = roots.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(roots);
-        List<Comment> grandchildren = children.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(children);
-        List<CommentDto> result = new java.util.ArrayList<>();
-        result.addAll(roots.stream().map(DtoMapper::toCommentDto).toList());
-        result.addAll(children.stream().map(DtoMapper::toCommentDto).toList());
-        result.addAll(grandchildren.stream().map(DtoMapper::toCommentDto).toList());
+        if (!"latest".equalsIgnoreCase(sort) && !"top".equalsIgnoreCase(sort)) {
+            sort = "top";
+        }
+        List<Comment> all = commentRepository.findByReviewOrderByCreatedAtAsc(review);
+        if ("top".equalsIgnoreCase(sort)) {
+            all = all.stream()
+                    .sorted(java.util.Comparator.comparing(Comment::getLikes, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
+                            .thenComparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())))
+                    .toList();
+        }
+        List<Comment> paged = all.stream()
+                .skip((long) page * size)
+                .limit(size)
+                .toList();
+        List<CommentDto> result = paged.stream().map(DtoMapper::toCommentDto).toList();
         applyCommentAuthorReviewCounts(result);
         return result;
     }
