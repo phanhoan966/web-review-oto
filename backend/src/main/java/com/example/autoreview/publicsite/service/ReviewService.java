@@ -283,18 +283,6 @@ public class ReviewService {
                 if (!parent.getReview().getId().equals(reviewId)) {
                     throw new ApiException(HttpStatus.BAD_REQUEST, "Parent comment không thuộc bài viết này");
                 }
-                int depth = 1;
-                Comment cursor = parent;
-                while (cursor.getParent() != null) {
-                    depth++;
-                    cursor = cursor.getParent();
-                    if (depth >= 3) {
-                        break;
-                    }
-                }
-                if (depth >= 3) {
-                    throw new ApiException(HttpStatus.BAD_REQUEST, "Chỉ hỗ trợ tối đa 3 cấp bình luận");
-                }
                 comment.setParent(parent);
             }
             Comment saved = commentRepository.save(comment);
