@@ -291,7 +291,6 @@ async function submitComment() {
       parentId
     })
     data.anonymous = false
-    data.parentId = parentId
     if (auth.user) {
       data.authorName = auth.user.username
       data.authorAvatar = auth.user.avatarUrl
