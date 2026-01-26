@@ -65,7 +65,7 @@ Implement the task according to the technical specification and general engineer
    - How the solution was tested
    - The biggest issues or challenges encountered
 
-### [ ] Step: Step ReviewDetail
+### [x] Step: Step ReviewDetail
 <!-- chat-id: dd5cb378-43f8-4370-82db-8601c25c78bf -->
 
 Sửa lại comment nếu là trả lời comment to nhất thì không cần @adminUser, chỉ khi cấp con trả lời cho nhau thì mới cần hiễn thị @adminUser

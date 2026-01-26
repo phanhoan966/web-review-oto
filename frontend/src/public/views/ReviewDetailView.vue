@@ -450,6 +450,23 @@ function displayContent(body?: string, parentLabel?: string) {
   return body
 }
 
+function getParent(comment?: CommentDetail | null) {
+  if (!comment?.parentId) return null
+  return commentMap.value[comment.parentId] || null
+}
+
+function mentionLabel(comment?: CommentDetail | null) {
+  const parent = getParent(comment)
+  if (!parent) return ''
+  return parent.authorName || parent.authorUsername || ''
+}
+
+function shouldShowMention(comment?: CommentDetail | null) {
+  const parent = getParent(comment)
+  if (!parent) return false
+  return Boolean(parent.parentId)
+}
+
 </script>
 
 <template>
@@ -691,11 +708,15 @@ function displayContent(body?: string, parentLabel?: string) {
                             </RouterLink>
                             <span v-else>{{ child.authorName }}</span>
                           </strong>
-                          <span v-if="comment.authorUsername || comment.authorName" class="mention-inline">
-                            <RouterLink v-if="comment.authorUsername" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">@{{ comment.authorName || comment.authorUsername }}</RouterLink>
-                            <span v-else>@{{ comment.authorName }}</span>
+                          <span v-if="shouldShowMention(child)" class="mention-inline">
+                            <RouterLink
+                              v-if="getParent(child)?.authorUsername"
+                              :to="`/user/${encodeURIComponent(getParent(child)?.authorUsername || '')}`"
+                              >@{{ getParent(child)?.authorName || getParent(child)?.authorUsername }}</RouterLink
+                            >
+                            <span v-else>@{{ getParent(child)?.authorName }}</span>
                           </span>
-                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
+                          <span class="comment-text">{{ displayContent(child.content, mentionLabel(child)) }}</span>
                         </p>
                       </div>
                       <div class="comment-actions-row">
@@ -735,11 +756,15 @@ function displayContent(body?: string, parentLabel?: string) {
                         </div>
                         <p class="comment-line-text">
                           <strong class="comment-name-inline">{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
-                          <span v-if="comment.authorUsername || comment.authorName" class="mention-inline">
-                            <RouterLink v-if="comment.authorUsername" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">@{{ comment.authorName || comment.authorUsername }}</RouterLink>
-                            <span v-else>@{{ comment.authorName }}</span>
+                          <span v-if="shouldShowMention(child)" class="mention-inline">
+                            <RouterLink
+                              v-if="getParent(child)?.authorUsername"
+                              :to="`/user/${encodeURIComponent(getParent(child)?.authorUsername || '')}`"
+                              >@{{ getParent(child)?.authorName || getParent(child)?.authorUsername }}</RouterLink
+                            >
+                            <span v-else>@{{ getParent(child)?.authorName }}</span>
                           </span>
-                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
+                          <span class="comment-text">{{ displayContent(child.content, mentionLabel(child)) }}</span>
                         </p>
                       </div>
                       <div class="comment-actions-row">
