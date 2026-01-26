@@ -109,26 +109,17 @@ function flattenComments(list: CommentDetail[]): CommentDetail[] {
 
 function mergeComments(items: CommentDetail[], reset = false) {
   const map = new Map<number, CommentDetail>()
+  const sources = reset ? [] : flattenComments(comments.value)
   const upsert = (entry: CommentDetail) => {
-    const current = map.get(entry.id)
-    if (current) {
-      map.set(entry.id, { ...current, ...entry, children: current.children })
-      return
-    }
-    map.set(entry.id, { ...entry, children: entry.children ? [...entry.children] : [] })
+    const existing = map.get(entry.id) || {}
+    map.set(entry.id, { ...existing, ...entry, children: [] })
   }
-  if (!reset) {
-    flattenComments(comments.value).forEach(upsert)
-  }
+  sources.forEach(upsert)
   items.forEach(upsert)
-  map.forEach((node) => {
-    node.children = []
-  })
   map.forEach((node) => {
     if (!node.parentId) return
     const parent = map.get(node.parentId)
-    if (parent) {
-      parent.children = parent.children || []
+    if (parent && !parent.children.some((child) => child.id === node.id)) {
       parent.children.push(node)
     }
   })
