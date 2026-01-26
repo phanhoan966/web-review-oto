@@ -453,7 +453,7 @@ function mentionLabel(comment?: CommentDetail | null) {
 function shouldShowMention(comment?: CommentDetail | null) {
   const parent = getParent(comment)
   if (!parent) return false
-  return Boolean(comment?.parentId)
+  return Boolean(parent.parentId)
 }
 
 </script>
