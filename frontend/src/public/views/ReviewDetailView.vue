@@ -453,8 +453,7 @@ function mentionLabel(comment?: CommentDetail | null) {
 function shouldShowMention(comment?: CommentDetail | null) {
   const parent = getParent(comment)
   if (!parent) return false
-  const depth = depthMap.value[comment?.id || 0] || 0
-  return depth > 2
+  return Boolean(comment?.parentId)
 }
 
 </script>
