@@ -168,7 +168,11 @@ const commentMap = computed(() => {
 function childRows(root: CommentDetail) {
   const list = root.children || []
   const sortByDate = (a: CommentDetail, b: CommentDetail) => (a.createdAt || '').localeCompare(b.createdAt || '')
-  return [...list].sort(sortByDate).flatMap((child) => [child, ...((child.children || []).sort(sortByDate))])
+  const walk = (node: CommentDetail): CommentDetail[] => {
+    const children = (node.children || []).sort(sortByDate)
+    return [node, ...children.flatMap(walk)]
+  }
+  return [...list].sort(sortByDate).flatMap(walk)
 }
 
 onMounted(() => {
