@@ -418,6 +418,19 @@ function formatDate(value?: string) {
   if (!value) return ''
   return new Date(value).toLocaleString('vi-VN')
 }
+
+function displayContent(body?: string, parentLabel?: string) {
+  if (!body) return ''
+  if (!parentLabel) return body
+  const trimmed = body.trimStart()
+  const lowerLabel = parentLabel.toLowerCase()
+  const prefixed = trimmed.toLowerCase()
+  if (prefixed.startsWith(`@${lowerLabel}`)) {
+    const sliced = trimmed.slice(parentLabel.length + 1).replace(/^[:\s]+/, '')
+    return sliced.trimStart()
+  }
+  return body
+}
 </script>
 
 <template>
@@ -682,7 +695,7 @@ function formatDate(value?: string) {
                             </RouterLink>
                             <span>&nbsp;</span>
                           </template>
-                          {{ child.content }}
+                          {{ displayContent(child.content, comment.authorName || comment.authorUsername) }}
                         </p>
                         <div class="comment-actions-row">
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
@@ -746,7 +759,7 @@ function formatDate(value?: string) {
                             </RouterLink>
                             <span>&nbsp;</span>
                           </template>
-                          {{ child.content }}
+                          {{ displayContent(child.content, comment.authorName || comment.authorUsername) }}
                         </p>
                         <div class="comment-actions-row">
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
@@ -818,7 +831,7 @@ function formatDate(value?: string) {
                                 </RouterLink>
                                 <span>&nbsp;</span>
                               </template>
-                              {{ grand.content }}
+                              {{ displayContent(grand.content, child.authorName || child.authorUsername) }}
                             </p>
                             <div class="comment-actions-row">
                               <button class="chip-btn" type="button" :class="{ liked: likesState[grand.id]?.liked }" @click="toggleLike(grand.id)">
@@ -1293,6 +1306,12 @@ function formatDate(value?: string) {
 
 .mention-link:hover {
   text-decoration: underline;
+}
+
+.comment-content p {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
 }
 
 .comment-meta {
