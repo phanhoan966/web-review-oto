@@ -662,7 +662,7 @@ function displayContent(body?: string, parentLabel?: string) {
                             </RouterLink>
                             <span v-else>{{ child.authorName }}</span>
                           </strong>
-                          <template v-if="comment.authorUsername || comment.authorName">
+                          <template v-if="comment.authorUsername || comment.authorName || comment.anonymous">
                             <HoverPopover v-if="comment.authorUsername">
                               <template #trigger>
                                 <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
@@ -679,11 +679,12 @@ function displayContent(body?: string, parentLabel?: string) {
                                 :rating="comment.authorRating"
                               />
                             </HoverPopover>
-                            <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
+                            <RouterLink v-else-if="comment.authorName" class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
                               @{{ comment.authorName }}
                             </RouterLink>
+                            <span v-else class="mention-link">@{{ comment.anonymous ? 'Ẩn danh' : '' }}</span>
                           </template>
-                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
+                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername || (comment.anonymous ? 'Ẩn danh' : undefined)) }}</span>
                         </p>
                       </div>
                       <div class="comment-actions-row">
@@ -723,7 +724,7 @@ function displayContent(body?: string, parentLabel?: string) {
                         </div>
                         <p class="comment-line-text">
                           <strong class="comment-name-inline">{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
-                          <template v-if="comment.authorUsername || comment.authorName">
+                          <template v-if="comment.authorUsername || comment.authorName || comment.anonymous">
                             <HoverPopover v-if="comment.authorUsername">
                               <template #trigger>
                                 <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
@@ -740,11 +741,12 @@ function displayContent(body?: string, parentLabel?: string) {
                                 :rating="comment.authorRating"
                               />
                             </HoverPopover>
-                            <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
+                            <RouterLink v-else-if="comment.authorName" class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
                               @{{ comment.authorName }}
                             </RouterLink>
+                            <span v-else class="mention-link">@{{ comment.anonymous ? 'Ẩn danh' : '' }}</span>
                           </template>
-                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername) }}</span>
+                          <span class="comment-text">{{ displayContent(child.content, comment.authorName || comment.authorUsername || (comment.anonymous ? 'Ẩn danh' : undefined)) }}</span>
                         </p>
                       </div>
                       <div class="comment-actions-row">
@@ -792,7 +794,7 @@ function displayContent(body?: string, parentLabel?: string) {
                             </div>
                             <p class="comment-line-text">
                               <strong class="comment-name-inline">{{ grand.anonymous ? 'Ẩn danh' : grand.authorName || grand.authorUsername || 'Ẩn danh' }}</strong>
-                              <template v-if="child.authorUsername || child.authorName">
+                              <template v-if="child.authorUsername || child.authorName || child.anonymous">
                                 <HoverPopover v-if="child.authorUsername">
                                   <template #trigger>
                                     <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
@@ -809,11 +811,12 @@ function displayContent(body?: string, parentLabel?: string) {
                                     :rating="child.authorRating"
                                   />
                                 </HoverPopover>
-                                <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(child.authorName || '')}`">
+                                <RouterLink v-else-if="child.authorName" class="mention-link" :to="`/user/${encodeURIComponent(child.authorName || '')}`">
                                   @{{ child.authorName }}
                                 </RouterLink>
+                                <span v-else class="mention-link">@{{ child.anonymous ? 'Ẩn danh' : '' }}</span>
                               </template>
-                              <span class="comment-text">{{ displayContent(grand.content, child.authorName || child.authorUsername) }}</span>
+                              <span class="comment-text">{{ displayContent(grand.content, child.authorName || child.authorUsername || (child.anonymous ? 'Ẩn danh' : undefined)) }}</span>
                             </p>
                           </div>
                           <div class="comment-actions-row">
