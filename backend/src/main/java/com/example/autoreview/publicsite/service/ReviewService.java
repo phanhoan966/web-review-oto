@@ -309,13 +309,15 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentDto> listComments(Long reviewId, int page, int size) {
+    public List<CommentDto> listComments(Long reviewId, int page, int size, String sort) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         if (review.getStatus() != ReviewStatus.APPROVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
         PageRequest pageable = PageRequest.of(page, size);
-        var roots = commentRepository.findByReviewAndParentIsNullOrderByLikesDescCreatedAtDesc(review, pageable).getContent();
+        var roots = "latest".equalsIgnoreCase(sort)
+                ? commentRepository.findByReviewAndParentIsNullOrderByCreatedAtDesc(review, pageable).getContent()
+                : commentRepository.findByReviewAndParentIsNullOrderByLikesDescCreatedAtDesc(review, pageable).getContent();
         List<Comment> children = roots.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(roots);
         List<Comment> grandchildren = children.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(children);
         List<CommentDto> result = new java.util.ArrayList<>();

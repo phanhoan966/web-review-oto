@@ -104,8 +104,8 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reviewService.listComments(id, page, size));
+    public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "top") String sort) {
+        return ResponseEntity.ok(reviewService.listComments(id, page, size, sort));
     }
 
 }

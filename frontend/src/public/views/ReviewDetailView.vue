@@ -230,7 +230,7 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
   commentsError.value = ''
   try {
     const { data } = await client.get<CommentDetail[]>(`/reviews/${route.params.id}/comments`, {
-      params: { page: page.value, size: pageSize }
+      params: { page: page.value, size: pageSize, sort: commentTab.value === 'newest' ? 'latest' : 'top' }
     })
     const rootCount = Array.isArray(data) ? data.filter((item) => !item.parentId).length : 0
     comments.value = mergeComments(data, reset)
