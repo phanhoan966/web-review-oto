@@ -323,6 +323,7 @@ async function submitComment() {
     initLikes([data])
     newComment.value = ''
     replyTarget.value = null
+    rootComposerVisible.value = true
     commentsVisible.value = true
     markHighlighted([data])
     markSlide([data])
