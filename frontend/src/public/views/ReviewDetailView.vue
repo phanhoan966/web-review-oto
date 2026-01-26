@@ -1295,6 +1295,21 @@ function displayContent(body?: string, parentLabel?: string) {
   }
 }
 
+.comment-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.comment-line-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  color: var(--text);
+  flex-wrap: wrap;
+}
+
 .comment-avatar img {
   width: 40px;
   height: 40px;
