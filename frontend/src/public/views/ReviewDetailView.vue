@@ -97,7 +97,6 @@ const likesState = ref<Record<number, { count: number; liked: boolean }>>({})
 const commentTab = ref<'top' | 'newest'>('top')
 const replyTarget = ref<CommentDetail | null>(null)
 const rootComposerVisible = ref(true)
-const rootInput = ref<HTMLTextAreaElement | null>(null)
 const replyInputs: Record<number, HTMLTextAreaElement | null> = {}
 const depthMap = ref<Record<number, number>>({})
 let highlightTimer: number | undefined
@@ -346,15 +345,6 @@ function setReplyInputRef(id: number, el: HTMLTextAreaElement | null) {
   }
 }
 
-function startRoot() {
-  replyTarget.value = null
-  rootComposerVisible.value = true
-  newComment.value = ''
-  nextTick(() => {
-    rootInput.value?.focus()
-  })
-}
-
 function canReply(id: number) {
   return (depthMap.value[id] || 1) < 3
 }
@@ -522,7 +512,7 @@ function displayContent(body?: string, parentLabel?: string) {
           <div v-else-if="commentsVisible">
             <div class="inline-form" v-if="rootComposerVisible">
               <form class="comment-form" @submit.prevent>
-                <textarea ref="rootInput" v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+                <textarea v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
                 <div v-if="formError" class="form-error">{{ formError }}</div>
                 <div class="comment-actions">
                   <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">Tải lại bình luận</button>
@@ -600,7 +590,6 @@ function displayContent(body?: string, parentLabel?: string) {
                       </form>
                     </div>
                   </div>
-                </div>
                 <div v-else class="comment-row">
                   <div class="comment-line">
                     <div class="comment-avatar">
@@ -641,7 +630,6 @@ function displayContent(body?: string, parentLabel?: string) {
                       </form>
                     </div>
                   </div>
-                </div>
                 <div v-if="comment.children?.length" class="child-list">
                   <div
                     v-for="child in comment.children"
