@@ -283,7 +283,11 @@ public class ReviewService {
                 if (!parent.getReview().getId().equals(reviewId)) {
                     throw new ApiException(HttpStatus.BAD_REQUEST, "Parent comment không thuộc bài viết này");
                 }
-                comment.setParent(parent);
+                Comment rootParent = parent;
+                while (rootParent.getParent() != null) {
+                    rootParent = rootParent.getParent();
+                }
+                comment.setParent(rootParent);
             }
             Comment saved = commentRepository.save(comment);
             review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);
