@@ -1131,7 +1131,8 @@ function formatDate(value?: string) {
   gap: 10px;
   font-size: 13px;
   color: #6b7280;
-  margin-top: 4px;
+  margin-top: 2px;
+  padding-left: 50px;
 }
 
 .actions-left {
