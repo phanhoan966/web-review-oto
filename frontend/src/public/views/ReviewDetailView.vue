@@ -90,6 +90,7 @@ const hasMore = ref(true)
 const commentsSection = ref<HTMLElement | null>(null)
 const commentList = ref<HTMLElement | null>(null)
 const commentInput = ref<HTMLTextAreaElement | null>(null)
+const replyBox = ref<HTMLElement | null>(null)
 const highlightedIds = ref<Set<number>>(new Set())
 const slideIds = ref<Set<number>>(new Set())
 const likesState = ref<Record<number, { count: number; liked: boolean }>>({})
@@ -303,6 +304,7 @@ function startReply(comment: CommentDetail) {
   const prefix = comment.authorUsername || comment.authorName || 'người dùng'
   newComment.value = `@${prefix} `
   nextTick(() => {
+    replyBox.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     commentInput.value?.focus()
   })
 }
@@ -414,26 +416,6 @@ function formatDate(value?: string) {
           </div>
         </article>
 
-        <section class="card reply">
-          <div class="reply-head">Cho review của bạn về xe</div>
-          <form class="comment-form" @submit.prevent>
-            <textarea ref="commentInput" v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
-            <div v-if="replyTarget" class="replying">Trả lời {{ replyTarget.authorName || replyTarget.authorUsername || 'bình luận' }}</div>
-            <div v-if="formError" class="form-error">{{ formError }}</div>
-            <div class="comment-actions">
-              <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
-                {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
-              </button>
-              <div class="action-group">
-                <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
-                <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
-                  {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
-                </button>
-              </div>
-            </div>
-          </form>
-        </section>
-
         <section class="card comments" ref="commentsSection">
           <div class="comments-head">
             <div class="tabs">
@@ -512,6 +494,25 @@ function formatDate(value?: string) {
               </div>
               <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false, true)">Xem thêm bình luận</button>
             </div>
+          </div>
+          <div ref="replyBox" class="reply-box">
+            <div class="reply-head">Cho review của bạn về xe</div>
+            <form class="comment-form" @submit.prevent>
+              <textarea ref="commentInput" v-model="newComment" rows="3" placeholder="Viết bình luận của bạn..." />
+              <div v-if="replyTarget" class="replying">Trả lời {{ replyTarget.authorName || replyTarget.authorUsername || 'bình luận' }}</div>
+              <div v-if="formError" class="form-error">{{ formError }}</div>
+              <div class="comment-actions">
+                <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">
+                  {{ commentsVisible ? 'Tải lại bình luận' : 'Hiển thị bình luận' }}
+                </button>
+                <div class="action-group">
+                  <button class="ghost" type="button" @click="openModal('anon')" :disabled="submitting">Trả lời ẩn danh</button>
+                  <button class="primary" type="button" @click="openModal('auth')" :disabled="submitting">
+                    {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </section>
       </div>
@@ -806,6 +807,11 @@ function formatDate(value?: string) {
   background: var(--primary);
   color: #fff;
   border-color: var(--primary);
+}
+
+.reply-box {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
 }
 
 .comment-list {
