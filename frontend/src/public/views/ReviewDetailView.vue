@@ -549,13 +549,6 @@ function displayContent(body?: string, parentLabel?: string) {
                         <div class="comment-avatar">
                           <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
                         </div>
-                        <div class="comment-meta">
-                          <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
-                            {{ comment.authorName || comment.authorUsername }}
-                          </RouterLink>
-                          <strong v-else class="comment-name">{{ comment.authorName }}</strong>
-                          <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
-                        </div>
                       </div>
                     </template>
                     <ReviewerPopoverCard
@@ -569,12 +562,23 @@ function displayContent(body?: string, parentLabel?: string) {
                     />
                   </HoverPopover>
                   <div class="comment-content">
-                    <p>{{ comment.content }}</p>
+                    <p>
+                      <strong class="comment-name-inline">
+                        <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                          {{ comment.authorName || comment.authorUsername }}
+                        </RouterLink>
+                        <span v-else>{{ comment.authorName }}</span>
+                      </strong>
+                      <span class="comment-text">{{ comment.content }}</span>
+                    </p>
                     <div class="comment-actions-row">
-                      <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
-                        ❤ {{ likesState[comment.id]?.count ?? 0 }}
-                      </button>
-                      <button v-if="canReply(comment.id)" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <div class="actions-left">
+                        <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                          ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                        </button>
+                        <button v-if="canReply(comment.id)" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      </div>
+                      <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                     </div>
                     <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
                       <form class="comment-form" @submit.prevent>
@@ -603,18 +607,20 @@ function displayContent(body?: string, parentLabel?: string) {
                     <div class="comment-avatar">
                       <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
                     </div>
-                    <div class="comment-meta">
-                      <strong>{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
-                      <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
-                    </div>
                   </div>
                   <div class="comment-content">
-                    <p>{{ comment.content }}</p>
+                    <p>
+                      <strong class="comment-name-inline">{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
+                      <span class="comment-text">{{ comment.content }}</span>
+                    </p>
                     <div class="comment-actions-row">
-                      <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
-                        ❤ {{ likesState[comment.id]?.count ?? 0 }}
-                      </button>
-                      <button v-if="canReply(comment.id)" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <div class="actions-left">
+                        <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                          ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                        </button>
+                        <button v-if="canReply(comment.id)" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      </div>
+                      <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                     </div>
                     <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
                       <form class="comment-form" @submit.prevent>
@@ -1238,6 +1244,27 @@ function displayContent(body?: string, parentLabel?: string) {
   border: 1px solid var(--border);
   background: #f7f9fc;
   font-weight: 700;
+}
+
+.comment-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-name-inline {
+  margin-right: 6px;
+}
+
+.comment-text {
+  white-space: pre-line;
 }
 
 .chip-btn.liked {
