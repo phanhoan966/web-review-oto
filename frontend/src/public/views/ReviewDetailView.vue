@@ -108,51 +108,53 @@ function flattenComments(list: CommentDetail[]): CommentDetail[] {
 }
 
 function mergeComments(items: CommentDetail[], reset = false) {
-  const existing = new Map<number, CommentDetail>()
-  if (!reset) {
-    flattenComments(comments.value).forEach((c) => {
-      existing.set(c.id, { ...c, children: [...(c.children || [])] })
-    })
+  const map = new Map<number, CommentDetail>()
+  const upsert = (entry: CommentDetail) => {
+    const current = map.get(entry.id)
+    if (current) {
+      map.set(entry.id, { ...current, ...entry, children: current.children })
+      return
+    }
+    map.set(entry.id, { ...entry, children: entry.children ? [...entry.children] : [] })
   }
-  items.forEach((raw) => {
-    const current = existing.get(raw.id)
-    const merged = { ...(current || {}), ...raw, children: current?.children ? [...current.children] : [] }
-    existing.set(raw.id, merged)
+  if (!reset) {
+    flattenComments(comments.value).forEach(upsert)
+  }
+  items.forEach(upsert)
+  map.forEach((node) => {
+    node.children = []
   })
-  existing.forEach((node) => {
-    node.children = node.children || []
-  })
-  existing.forEach((node) => {
-    if (node.parentId) {
-      const parent = existing.get(node.parentId)
-      if (parent) {
-        parent.children = parent.children || []
-        if (!parent.children.some((child) => child.id === node.id)) {
-          parent.children.push(node)
-        }
-      }
+  map.forEach((node) => {
+    if (!node.parentId) return
+    const parent = map.get(node.parentId)
+    if (parent) {
+      parent.children = parent.children || []
+      parent.children.push(node)
     }
   })
-  const sortTree = (nodes: CommentDetail[]) => {
-    nodes.forEach((n) => {
-      if (n.children?.length) {
-        n.children = [...n.children].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
-        sortTree(n.children)
-      }
-    })
+  const sortByDate = (a: CommentDetail, b: CommentDetail) => (a.createdAt || '').localeCompare(b.createdAt || '')
+  map.forEach((node) => {
+    if (node.children?.length) {
+      node.children.sort(sortByDate)
+    }
+  })
+  const roots: CommentDetail[] = []
+  map.forEach((node) => {
+    if (!node.parentId) {
+      roots.push(node)
+    }
+  })
+  roots.sort(sortByDate)
+  const nextDepth: Record<number, number> = {}
+  const stack: { node: CommentDetail; depth: number }[] = roots.map((node) => ({ node, depth: 1 }))
+  while (stack.length) {
+    const { node, depth } = stack.pop() as { node: CommentDetail; depth: number }
+    nextDepth[node.id] = depth
+    if (node.children?.length) {
+      node.children.forEach((child) => stack.push({ node: child, depth: depth + 1 }))
+    }
   }
-  const assignDepth = (nodes: CommentDetail[], depth: number) => {
-    nodes.forEach((n) => {
-      depthMap.value = { ...depthMap.value, [n.id]: depth }
-      if (n.children?.length) {
-        assignDepth(n.children, depth + 1)
-      }
-    })
-  }
-  const roots = Array.from(existing.values()).filter((item) => !item.parentId)
-  sortTree(roots)
-  depthMap.value = {}
-  assignDepth(roots, 1)
+  depthMap.value = nextDepth
   return roots
 }
 
