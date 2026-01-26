@@ -157,6 +157,24 @@ const modalVisible = ref(false)
 
 const totalComments = ref(0)
 
+const commentMap = computed(() => {
+  const map: Record<number, CommentDetail> = {}
+  flattenComments(comments.value).forEach((c) => {
+    map[c.id] = c
+  })
+  return map
+})
+
+function getParent(id?: number | null) {
+  if (!id) return undefined
+  return commentMap.value[id]
+}
+
+function childRows(root: CommentDetail) {
+  const list = root.children || []
+  return list.flatMap((child) => [child, ...(child.children || [])])
+}
+
 onMounted(() => {
   load()
   loadComments(true, false)
@@ -266,7 +284,20 @@ async function submitComment() {
   commentsError.value = ''
   modalVisible.value = false
   try {
-    const parentId = replyTarget.value?.id ?? null
+    const target = replyTarget.value
+    let parentId: number | null = null
+    if (target?.id) {
+      let current: CommentDetail | undefined = target
+      const parentChain = new Set<number>()
+      while (current?.parentId && !parentChain.has(current.parentId)) {
+        parentChain.add(current.parentId)
+        current = commentMap.value[current.parentId]
+      }
+      parentId = current?.id || target.id
+      if (current?.parentId) {
+        parentId = current.parentId
+      }
+    }
     const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, {
       content,
       anonymous: false,
@@ -632,7 +663,7 @@ function displayContent(body?: string, parentLabel?: string) {
                   </div>
                 <div v-if="comment.children?.length" class="child-list">
                   <div
-                    v-for="child in comment.children"
+                    v-for="child in childRows(comment)"
                     :key="child.id"
                     class="comment-child"
                     :class="{ flash: highlightedIds.has(child.id), 'slide-in': slideIds.has(child.id) }"
