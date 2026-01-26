@@ -307,17 +307,51 @@ public class ReviewService {
             sort = "top";
         }
         List<Comment> all = commentRepository.findByReviewOrderByCreatedAtAsc(review);
-        if ("top".equalsIgnoreCase(sort)) {
-            all = all.stream()
-                    .sorted(java.util.Comparator.comparing(Comment::getLikes, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
-                            .thenComparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())))
-                    .toList();
+        java.util.Map<Long, Comment> byId = all.stream()
+                .collect(java.util.stream.Collectors.toMap(Comment::getId, c -> c));
+        java.util.function.Function<Comment, Comment> rootOf = c -> {
+            Comment current = c;
+            java.util.Set<Long> seen = new java.util.HashSet<>();
+            while (current.getParent() != null && !seen.contains(current.getParent().getId())) {
+                seen.add(current.getParent().getId());
+                current = byId.getOrDefault(current.getParent().getId(), current.getParent());
+                if (current == null) {
+                    break;
+                }
+            }
+            return current == null ? c : current;
+        };
+        java.util.List<Comment> roots = all.stream().filter(c -> c.getParent() == null).toList();
+        java.util.Comparator<Comment> rootComparator = "latest".equalsIgnoreCase(sort)
+                ? java.util.Comparator.<Comment, java.time.Instant>comparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
+                : java.util.Comparator.<Comment, Integer>comparing(Comment::getLikes, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
+                        .thenComparing(java.util.Comparator.comparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed());
+        roots = roots.stream().sorted(rootComparator).toList();
+        int from = Math.toIntExact((long) page * size);
+        if (from >= roots.size()) {
+            return java.util.List.of();
         }
-        List<Comment> paged = all.stream()
-                .skip((long) page * size)
-                .limit(size)
-                .toList();
-        List<CommentDto> result = paged.stream().map(DtoMapper::toCommentDto).toList();
+        int to = Math.min(roots.size(), from + size);
+        java.util.List<Comment> selectedRoots = roots.subList(from, to);
+        java.util.Set<Long> rootIds = selectedRoots.stream().map(Comment::getId).collect(java.util.stream.Collectors.toSet());
+        java.util.Map<Long, java.util.List<Comment>> byRoot = new java.util.HashMap<>();
+        all.forEach(c -> {
+            Comment root = rootOf.apply(c);
+            if (root != null && rootIds.contains(root.getId())) {
+                byRoot.computeIfAbsent(root.getId(), k -> new java.util.ArrayList<>()).add(c);
+            }
+        });
+        java.util.List<CommentDto> result = new java.util.ArrayList<>();
+        for (Comment root : selectedRoots) {
+            java.util.List<Comment> branch = byRoot.getOrDefault(root.getId(), java.util.List.of());
+            branch = branch.stream()
+                    .sorted(java.util.Comparator.comparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())))
+                    .toList();
+            java.util.List<Comment> ordered = new java.util.ArrayList<>();
+            ordered.add(root);
+            branch.stream().filter(c -> !c.getId().equals(root.getId())).forEach(ordered::add);
+            result.addAll(ordered.stream().map(DtoMapper::toCommentDto).toList());
+        }
         applyCommentAuthorReviewCounts(result);
         return result;
     }
