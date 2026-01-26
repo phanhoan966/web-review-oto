@@ -1075,15 +1075,15 @@ function formatDate(value?: string) {
 .comment-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   padding: 0;
 }
 
 .comment-item {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 0 0 14px 0;
+  gap: 6px;
+  padding: 0 0 12px 0;
   border-bottom: 1px solid #f1f1f1;
   background: transparent;
   border-radius: 0;
@@ -1092,9 +1092,9 @@ function formatDate(value?: string) {
 .child-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-top: 10px;
-  padding-left: 32px;
+  padding-left: 20px;
   border-left: 1px solid #e5e7eb;
 }
 
@@ -1202,6 +1202,11 @@ function formatDate(value?: string) {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  width: 100%;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
 }
 
 .comment-line-text {
@@ -1210,6 +1215,7 @@ function formatDate(value?: string) {
   gap: 6px;
   margin: 0;
   color: #111827;
+  flex: 1;
   flex-wrap: wrap;
   font-size: 15px;
   line-height: 1.5;
