@@ -711,6 +711,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                           <span v-if="shouldShowMention(child)" class="mention-inline">
                             <RouterLink
                               v-if="getParent(child)?.authorUsername"
+                              class="mention-link"
                               :to="`/user/${encodeURIComponent(getParent(child)?.authorUsername || '')}`"
                               >@{{ getParent(child)?.authorName || getParent(child)?.authorUsername }}</RouterLink
                             >
@@ -759,6 +760,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                           <span v-if="shouldShowMention(child)" class="mention-inline">
                             <RouterLink
                               v-if="getParent(child)?.authorUsername"
+                              class="mention-link"
                               :to="`/user/${encodeURIComponent(getParent(child)?.authorUsername || '')}`"
                               >@{{ getParent(child)?.authorName || getParent(child)?.authorUsername }}</RouterLink
                             >
@@ -1288,7 +1290,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
 }
 
 .mention-link {
-  color: #1d4ed8;
+  color: #16a34a;
   font-weight: 700;
   text-decoration: none;
 }
@@ -1298,7 +1300,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
 }
 
 .mention-inline {
-  color: #1d4ed8;
+  color: #16a34a;
   font-weight: 700;
 }
 
