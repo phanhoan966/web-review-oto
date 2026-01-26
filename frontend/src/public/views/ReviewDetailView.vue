@@ -99,6 +99,7 @@ const replyTarget = ref<CommentDetail | null>(null)
 const rootComposerVisible = ref(true)
 const rootInput = ref<HTMLTextAreaElement | null>(null)
 const replyInputs = ref<Record<number, HTMLTextAreaElement | null>>({})
+const depthMap = ref<Record<number, number>>({})
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
@@ -132,12 +133,26 @@ function mergeComments(items: CommentDetail[], reset = false) {
       }
     }
   })
+  const sortTree = (nodes: CommentDetail[]) => {
+    nodes.forEach((n) => {
+      if (n.children?.length) {
+        n.children = [...n.children].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
+        sortTree(n.children)
+      }
+    })
+  }
+  const assignDepth = (nodes: CommentDetail[], depth: number) => {
+    nodes.forEach((n) => {
+      depthMap.value = { ...depthMap.value, [n.id]: depth }
+      if (n.children?.length) {
+        assignDepth(n.children, depth + 1)
+      }
+    })
+  }
   const roots = Array.from(existing.values()).filter((item) => !item.parentId)
-  roots.forEach((root) => {
-    if (root.children?.length) {
-      root.children = [...root.children].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
-    }
-  })
+  sortTree(roots)
+  depthMap.value = {}
+  assignDepth(roots, 1)
   return roots
 }
 
@@ -380,7 +395,12 @@ function startRoot() {
   })
 }
 
+function canReply(id: number) {
+  return (depthMap.value[id] || 1) < 3
+}
+
 function startReply(comment: CommentDetail) {
+  if (!canReply(comment.id)) return
   replyTarget.value = comment
   rootComposerVisible.value = false
   const prefix = comment.authorUsername || comment.authorName || 'người dùng'
@@ -571,7 +591,7 @@ function formatDate(value?: string) {
                       <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
                         ❤ {{ likesState[comment.id]?.count ?? 0 }}
                       </button>
-                      <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <button v-if="canReply(comment.id)" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
                     </div>
                     <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
                       <form class="comment-form" @submit.prevent>
@@ -612,7 +632,7 @@ function formatDate(value?: string) {
                       <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
                         ❤ {{ likesState[comment.id]?.count ?? 0 }}
                       </button>
-                      <button class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <button v-if="canReply(comment.id)" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
                     </div>
                     <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
                       <form class="comment-form" @submit.prevent>

@@ -283,6 +283,18 @@ public class ReviewService {
                 if (!parent.getReview().getId().equals(reviewId)) {
                     throw new ApiException(HttpStatus.BAD_REQUEST, "Parent comment không thuộc bài viết này");
                 }
+                int depth = 1;
+                Comment cursor = parent;
+                while (cursor.getParent() != null) {
+                    depth++;
+                    cursor = cursor.getParent();
+                    if (depth >= 3) {
+                        break;
+                    }
+                }
+                if (depth >= 3) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Chỉ hỗ trợ tối đa 3 cấp bình luận");
+                }
                 comment.setParent(parent);
             }
             Comment saved = commentRepository.save(comment);
@@ -305,8 +317,11 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         var roots = commentRepository.findByReviewAndParentIsNullOrderByCreatedAtDesc(review, pageable).getContent();
         List<Comment> children = roots.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(roots);
-        List<CommentDto> result = roots.stream().map(DtoMapper::toCommentDto).collect(java.util.stream.Collectors.toList());
+        List<Comment> grandchildren = children.isEmpty() ? List.of() : commentRepository.findByParentInOrderByCreatedAtAsc(children);
+        List<CommentDto> result = new java.util.ArrayList<>();
+        result.addAll(roots.stream().map(DtoMapper::toCommentDto).toList());
         result.addAll(children.stream().map(DtoMapper::toCommentDto).toList());
+        result.addAll(grandchildren.stream().map(DtoMapper::toCommentDto).toList());
         applyCommentAuthorReviewCounts(result);
         return result;
     }
