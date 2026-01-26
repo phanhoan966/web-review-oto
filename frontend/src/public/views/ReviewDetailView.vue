@@ -232,9 +232,9 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
       requestAnimationFrame(() => {
         const target = commentList.value?.lastElementChild as HTMLElement | null
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'end' })
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
         } else {
-          commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
         }
       })
     }
@@ -404,7 +404,7 @@ function startReply(comment: CommentDetail) {
   nextTick(() => {
     const input = replyInputs[comment.id]
     input?.focus()
-    input?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    input?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
   })
 }
 
