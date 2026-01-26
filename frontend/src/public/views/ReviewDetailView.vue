@@ -656,26 +656,31 @@ function formatDate(value?: string) {
                         />
                       </HoverPopover>
                       <div class="comment-content">
-                        <div v-if="comment.authorUsername || comment.authorName" class="mention-row">
-                          <HoverPopover v-if="comment.authorUsername">
-                            <template #trigger>
-                              <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
-                                @{{ comment.authorName || comment.authorUsername }}
-                              </RouterLink>
-                            </template>
-                            <ReviewerPopoverCard
-                              :name="comment.authorName || comment.authorUsername || 'Reviewer'"
-                              :username="comment.authorUsername"
-                              :avatar-url="comment.authorAvatar"
-                              :bio="comment.authorBio"
-                              :followers="comment.authorFollowers"
-                              :review-count="comment.authorReviewCount"
-                              :rating="comment.authorRating"
-                            />
-                          </HoverPopover>
-                          <span v-else class="mention-link">@{{ comment.authorName }}</span>
-                        </div>
-                        <p>{{ child.content }}</p>
+                        <p>
+                          <template v-if="comment.authorUsername || comment.authorName">
+                            <HoverPopover v-if="comment.authorUsername">
+                              <template #trigger>
+                                <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                                  @{{ comment.authorName || comment.authorUsername }}
+                                </RouterLink>
+                              </template>
+                              <ReviewerPopoverCard
+                                :name="comment.authorName || comment.authorUsername || 'Reviewer'"
+                                :username="comment.authorUsername"
+                                :avatar-url="comment.authorAvatar"
+                                :bio="comment.authorBio"
+                                :followers="comment.authorFollowers"
+                                :review-count="comment.authorReviewCount"
+                                :rating="comment.authorRating"
+                              />
+                            </HoverPopover>
+                            <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
+                              @{{ comment.authorName }}
+                            </RouterLink>
+                            <span>&nbsp;</span>
+                          </template>
+                          {{ child.content }}
+                        </p>
                         <div class="comment-actions-row">
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
                             ❤ {{ likesState[child.id]?.count ?? 0 }}
@@ -715,26 +720,31 @@ function formatDate(value?: string) {
                         </div>
                       </div>
                       <div class="comment-content">
-                        <div v-if="comment.authorUsername || comment.authorName" class="mention-row">
-                          <HoverPopover v-if="comment.authorUsername">
-                            <template #trigger>
-                              <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
-                                @{{ comment.authorName || comment.authorUsername }}
-                              </RouterLink>
-                            </template>
-                            <ReviewerPopoverCard
-                              :name="comment.authorName || comment.authorUsername || 'Reviewer'"
-                              :username="comment.authorUsername"
-                              :avatar-url="comment.authorAvatar"
-                              :bio="comment.authorBio"
-                              :followers="comment.authorFollowers"
-                              :review-count="comment.authorReviewCount"
-                              :rating="comment.authorRating"
-                            />
-                          </HoverPopover>
-                          <span v-else class="mention-link">@{{ comment.authorName }}</span>
-                        </div>
-                        <p>{{ child.content }}</p>
+                        <p>
+                          <template v-if="comment.authorUsername || comment.authorName">
+                            <HoverPopover v-if="comment.authorUsername">
+                              <template #trigger>
+                                <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                                  @{{ comment.authorName || comment.authorUsername }}
+                                </RouterLink>
+                              </template>
+                              <ReviewerPopoverCard
+                                :name="comment.authorName || comment.authorUsername || 'Reviewer'"
+                                :username="comment.authorUsername"
+                                :avatar-url="comment.authorAvatar"
+                                :bio="comment.authorBio"
+                                :followers="comment.authorFollowers"
+                                :review-count="comment.authorReviewCount"
+                                :rating="comment.authorRating"
+                              />
+                            </HoverPopover>
+                            <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(comment.authorName || '')}`">
+                              @{{ comment.authorName }}
+                            </RouterLink>
+                            <span>&nbsp;</span>
+                          </template>
+                          {{ child.content }}
+                        </p>
                         <div class="comment-actions-row">
                           <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
                             ❤ {{ likesState[child.id]?.count ?? 0 }}
@@ -782,26 +792,31 @@ function formatDate(value?: string) {
                             </div>
                           </div>
                           <div class="comment-content">
-                            <div v-if="child.authorUsername || child.authorName" class="mention-row">
-                              <HoverPopover v-if="child.authorUsername">
-                                <template #trigger>
-                                  <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
-                                    @{{ child.authorName || child.authorUsername }}
-                                  </RouterLink>
-                                </template>
-                                <ReviewerPopoverCard
-                                  :name="child.authorName || child.authorUsername || 'Reviewer'"
-                                  :username="child.authorUsername"
-                                  :avatar-url="child.authorAvatar"
-                                  :bio="child.authorBio"
-                                  :followers="child.authorFollowers"
-                                  :review-count="child.authorReviewCount"
-                                  :rating="child.authorRating"
-                                />
-                              </HoverPopover>
-                              <span v-else class="mention-link">@{{ child.authorName }}</span>
-                            </div>
-                            <p>{{ grand.content }}</p>
+                            <p>
+                              <template v-if="child.authorUsername || child.authorName">
+                                <HoverPopover v-if="child.authorUsername">
+                                  <template #trigger>
+                                    <RouterLink class="mention-link" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
+                                      @{{ child.authorName || child.authorUsername }}
+                                    </RouterLink>
+                                  </template>
+                                  <ReviewerPopoverCard
+                                    :name="child.authorName || child.authorUsername || 'Reviewer'"
+                                    :username="child.authorUsername"
+                                    :avatar-url="child.authorAvatar"
+                                    :bio="child.authorBio"
+                                    :followers="child.authorFollowers"
+                                    :review-count="child.authorReviewCount"
+                                    :rating="child.authorRating"
+                                  />
+                                </HoverPopover>
+                                <RouterLink v-else class="mention-link" :to="`/user/${encodeURIComponent(child.authorName || '')}`">
+                                  @{{ child.authorName }}
+                                </RouterLink>
+                                <span>&nbsp;</span>
+                              </template>
+                              {{ grand.content }}
+                            </p>
                             <div class="comment-actions-row">
                               <button class="chip-btn" type="button" :class="{ liked: likesState[grand.id]?.liked }" @click="toggleLike(grand.id)">
                                 ❤ {{ likesState[grand.id]?.count ?? 0 }}
