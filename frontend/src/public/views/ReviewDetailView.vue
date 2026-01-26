@@ -1075,18 +1075,18 @@ function formatDate(value?: string) {
 .comment-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   padding: 0;
 }
 
 .comment-item {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 6px;
-  padding: 0 0 12px 0;
-  border-bottom: 1px solid #f1f1f1;
-  background: transparent;
-  border-radius: 0;
+  gap: 8px;
+  padding: 12px 12px 10px;
+  border: 1px solid #d9d9d9;
+  background: #fafafa;
+  border-radius: 6px;
 }
 
 .child-list {
@@ -1094,8 +1094,8 @@ function formatDate(value?: string) {
   flex-direction: column;
   gap: 10px;
   margin-top: 10px;
-  padding-left: 20px;
-  border-left: 1px solid #e5e7eb;
+  padding-left: 18px;
+  border-left: 1px solid #e0e0e0;
 }
 
 .comment-child {
@@ -1112,8 +1112,8 @@ function formatDate(value?: string) {
 }
 
 .chip-btn {
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 2px 6px;
+  border-radius: 6px;
   border: none;
   background: transparent;
   color: #6b7280;
@@ -1121,6 +1121,7 @@ function formatDate(value?: string) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-size: 13px;
 }
 
 .comment-actions-row {
@@ -1130,27 +1131,28 @@ function formatDate(value?: string) {
   gap: 10px;
   font-size: 13px;
   color: #6b7280;
+  margin-top: 4px;
 }
 
 .actions-left {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .comment-name-inline {
   margin-right: 6px;
-  color: #111827;
+  color: #0f172a;
   font-weight: 700;
 }
 
 .comment-text {
   white-space: pre-line;
-  color: #3f3f3f;
+  color: #3f3f46;
 }
 
 .chip-btn.liked {
-  color: #e11d48;
+  color: #d81b60;
 }
 
 .comment-name {
@@ -1173,6 +1175,11 @@ function formatDate(value?: string) {
 
 .comment-item:last-of-type {
   border-bottom: none;
+}
+
+.comment-actions-row .chip-btn svg,
+.comment-actions-row .chip-btn i {
+  color: #6b7280;
 }
 
 @keyframes flash {
@@ -1258,7 +1265,8 @@ function formatDate(value?: string) {
 
 .mention-inline::after {
   content: ':';
-  margin-left: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
 .comment-content p {
