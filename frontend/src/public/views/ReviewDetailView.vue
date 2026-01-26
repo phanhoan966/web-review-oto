@@ -554,6 +554,15 @@ function formatDate(value?: string) {
                       <template #trigger>
                         <div class="comment-avatar">
                           <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
+                          <p class="comment-line-text">
+                            <strong class="comment-name-inline">
+                              <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                                {{ comment.authorName || comment.authorUsername }}
+                              </RouterLink>
+                              <span v-else>{{ comment.authorName }}</span>
+                            </strong>
+                            <span class="comment-text">{{ comment.content }}</span>
+                          </p>
                         </div>
                       </template>
                       <ReviewerPopoverCard
@@ -566,15 +575,6 @@ function formatDate(value?: string) {
                         :rating="comment.authorRating"
                       />
                     </HoverPopover>
-                    <p class="comment-line-text">
-                      <strong class="comment-name-inline">
-                        <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
-                          {{ comment.authorName || comment.authorUsername }}
-                        </RouterLink>
-                        <span v-else>{{ comment.authorName }}</span>
-                      </strong>
-                      <span class="comment-text">{{ comment.content }}</span>
-                    </p>
                   </div>
                   <div class="comment-actions-row">
                     <div class="actions-left">
