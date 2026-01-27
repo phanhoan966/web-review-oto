@@ -234,10 +234,7 @@ async function submit() {
         <div class="row">
           <div>
             <label>Hãng xe<span class="required">*</span></label>
-            <select v-model="form.brandId" required>
-              <option value="" disabled>Chọn hãng</option>
-              <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
-            </select>
+            <input v-model="form.brandId" list="brandOptions" required placeholder="Chọn hoặc tìm hãng" />
           </div>
           <div>
             <label>Mẫu xe</label>
@@ -259,6 +256,10 @@ async function submit() {
             <input v-model="form.priceSegment" />
           </div>
         </div>
+
+        <datalist id="brandOptions">
+          <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+        </datalist>
 
         <datalist id="yearOptions">
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
