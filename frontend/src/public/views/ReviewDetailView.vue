@@ -23,6 +23,7 @@ interface ReviewDetail {
   fuelType?: string
   priceSegment?: string
   likes?: number
+  liked?: boolean
   commentsCount?: number
   views?: number
   publishedAt?: string
@@ -48,6 +49,7 @@ interface CommentDetail {
   anonymous?: boolean
   createdAt?: string
   likes?: number
+  liked?: boolean
   parentId?: number | null
   children?: CommentDetail[]
 }
@@ -58,6 +60,7 @@ const anonAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_N
 const route = useRoute()
 const router = useRouter()
 const review = ref<ReviewDetail | null>(null)
+const reviewLike = ref<{ count: number; liked: boolean }>({ count: 0, liked: false })
 const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
 const profilePath = computed(() =>
   review.value?.authorUsername ? `/user/${encodeURIComponent(review.value.authorUsername)}` : ''
@@ -188,6 +191,7 @@ watch(
     review.value = null
     comments.value = []
     likesState.value = {}
+    reviewLike.value = { count: 0, liked: false }
     highlightedIds.value = new Set()
     slideIds.value = new Set()
     page.value = 0
@@ -211,6 +215,7 @@ async function load() {
       route.params.slug = slugify(data.title)
     }
     review.value = data
+    reviewLike.value = { count: data?.likes ?? 0, liked: Boolean(data?.liked) }
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tìm thấy bài viết'
   } finally {
@@ -359,16 +364,18 @@ function initLikes(items: CommentDetail[]) {
   const next = { ...likesState.value }
   items.forEach((c) => {
     const existing = next[c.id]
-    if (!existing) {
-      next[c.id] = { count: c.likes ?? 0, liked: false }
-    } else {
-      next[c.id] = { ...existing, count: c.likes ?? existing.count }
-    }
+    const liked = c.liked ?? existing?.liked ?? false
+    const count = c.likes ?? existing?.count ?? 0
+    next[c.id] = { count, liked }
   })
   likesState.value = next
 }
 
 async function toggleLike(id: number) {
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
   const current = likesState.value[id] || { count: 0, liked: false }
   const liked = !current.liked
   const count = Math.max(0, current.count + (liked ? 1 : -1))
@@ -395,6 +402,34 @@ function setReplyInputRef(id: number, el: HTMLTextAreaElement | null) {
 
 function canReply() {
   return true
+}
+
+async function toggleReviewLike() {
+  if (!review.value) return
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
+  const current = reviewLike.value
+  const liked = !current.liked
+  const count = Math.max(0, current.count + (liked ? 1 : -1))
+  reviewLike.value = { count, liked }
+  if (review.value) {
+    review.value.likes = count
+  }
+  try {
+    if (liked) {
+      await client.post(`/reviews/${review.value.id}/like`)
+    } else {
+      await client.post(`/reviews/${review.value.id}/unlike`)
+    }
+  } catch (error: any) {
+    reviewLike.value = current
+    if (review.value) {
+      review.value.likes = current.count
+    }
+    errorMsg.value = error.response?.data?.message || 'Không thể cập nhật lượt thích'
+  }
 }
 
 function startReply(comment: CommentDetail) {
@@ -564,7 +599,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
           <div class="actions">
             <button class="pill">💬 {{ review.commentsCount ?? 0 }}</button>
             <button class="pill">🔁 Chia sẻ</button>
-            <button class="pill">❤ {{ review.likes ?? 0 }}</button>
+            <button class="pill" :class="{ liked: reviewLike.liked }" type="button" @click="toggleReviewLike">❤ {{ reviewLike.count ?? review.likes ?? 0 }}</button>
             <button class="pill">🔖 Lưu</button>
           </div>
         </article>
@@ -1023,6 +1058,11 @@ function shouldShowMention(comment?: CommentDetail | null) {
   padding: 8px 12px;
   font-weight: 700;
   color: var(--text);
+}
+
+.pill.liked {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .reply-head {
