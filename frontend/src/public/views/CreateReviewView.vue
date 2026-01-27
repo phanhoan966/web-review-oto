@@ -27,7 +27,7 @@ const form = ref({
 })
 const heroPreview = ref('')
 const currentYear = new Date().getFullYear()
-const years = Array.from({ length: currentYear - 1989 }, (_, idx) => currentYear - idx)
+const years = Array.from({ length: currentYear - 1899 }, (_, idx) => currentYear - idx)
 const uploadError = ref('')
 const uploading = ref(false)
 const errorMsg = ref('')
@@ -255,7 +255,7 @@ async function submit() {
         <div class="row">
           <div class="field">
             <label>Năm</label>
-            <input v-model="form.vehicleYear" type="number" :min="1990" :max="currentYear" list="yearOptions" />
+            <input v-model="form.vehicleYear" type="number" :min="1900" :max="currentYear" list="yearOptions" />
           </div>
           <div class="field">
             <label>Nhiên liệu</label>
@@ -553,6 +553,7 @@ select {
   background-repeat: no-repeat;
   background-size: 14px;
   background-position: calc(100% - 12px) center;
+  max-height: 260px;
   overflow-y: auto;
 }
 
@@ -563,10 +564,11 @@ select::-ms-expand {
 select option {
   color: var(--text);
   background: var(--surface);
+  padding: 8px 10px;
 }
 
 select::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 select::-webkit-scrollbar-thumb {
