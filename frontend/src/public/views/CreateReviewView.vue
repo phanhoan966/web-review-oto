@@ -282,8 +282,8 @@ async function submit() {
   margin: 0 auto;
   padding: 32px;
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(17, 24, 39, 0.12);
-  background: #fff;
+  box-shadow: var(--shadow);
+  background: var(--surface);
   display: grid;
   gap: 18px;
   border: 1px solid var(--border);
@@ -443,7 +443,7 @@ form {
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
-  background: linear-gradient(135deg, #f8fbff, #eef4ff);
+  background: var(--chip-bg);
   color: var(--text);
   display: inline-flex;
   align-items: center;
@@ -469,7 +469,7 @@ form {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 12px;
-  background: #f8fbff;
+  background: var(--chip-bg);
 }
 
 .hero-preview img {
