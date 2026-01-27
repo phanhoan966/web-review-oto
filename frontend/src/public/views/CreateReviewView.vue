@@ -510,9 +510,25 @@ label {
   margin-bottom: 8px;
 }
 
+.field label {
+  margin-bottom: 0;
+}
+
 .field {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field label {
+  margin: 0;
+  min-width: 120px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  flex: 1;
 }
 
 input,
