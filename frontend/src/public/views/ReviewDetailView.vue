@@ -198,9 +198,13 @@ function childRows(root: CommentDetail) {
   return [...list].sort(sortByDate).flatMap(walk)
 }
 
+async function reloadWithComments() {
+  await load()
+  await loadComments(true, false)
+}
+
 onMounted(() => {
-  load()
-  loadComments(true, false)
+  reloadWithComments()
   loadSidebar()
 })
 
@@ -222,8 +226,7 @@ watch(
     replyTarget.value = null
     rootComposerVisible.value = true
     errorMsg.value = ''
-    load()
-    loadComments(true, false)
+    reloadWithComments()
   }
 )
 
@@ -257,7 +260,7 @@ async function load() {
       const canonicalSlug = data.slug || slugify(data.title || '')
       const currentSlug = route.params.slug as string | undefined
       if (canonicalSlug && (route.name !== 'review-detail' || currentSlug !== canonicalSlug)) {
-        router.replace({ name: 'review-detail', params: { slug: canonicalSlug, id: data.id } })
+        router.replace({ name: 'review-detail', params: { slug: canonicalSlug } })
       }
     }
     review.value = data

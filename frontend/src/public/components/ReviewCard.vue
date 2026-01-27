@@ -57,7 +57,7 @@ const meta = computed(() => {
 
 const detailPath = computed(() => {
   const slug = props.review.slug || slugify(props.review.title)
-  return `/post/${slug || 'bai-viet'}/${props.review.id}`
+  return `/post/${slug || 'bai-viet'}`
 })
 
 const profilePath = computed(() =>
