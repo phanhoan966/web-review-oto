@@ -73,10 +73,7 @@ async function logout() {
           <img class="brand-logo" :src="brandLogo" alt="AutoReview" />
         </RouterLink>
         <nav class="nav">
-          <RouterLink to="/">Trang chủ</RouterLink>
-          <RouterLink v-if="auth.isAuthenticated" to="/reviews/new">Tạo bài</RouterLink>
-          <RouterLink v-if="auth.isAuthenticated" to="/profile">Hồ sơ</RouterLink>
-          <RouterLink v-else to="/admin/login">Admin</RouterLink>
+          <RouterLink v-if="!auth.isAuthenticated" to="/admin/login">Admin</RouterLink>
         </nav>
         <form class="search-bar" @submit.prevent="submitSearch">
           <input v-model="searchTerm" type="search" placeholder="Tìm bài, hãng, mẫu xe" />
@@ -99,7 +96,7 @@ async function logout() {
             <div v-if="menuOpen" class="dropdown surface">
               <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">👤 </span>Hồ sơ</RouterLink>
               <RouterLink class="item" to="/profile" @click="menuOpen = false"><span class="ico">📧 </span>Tài khoản</RouterLink>
-              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false"><span class="ico">📋 </span>Nhiệm vụ</RouterLink>
+              <RouterLink class="item" to="/reviews/new" @click="menuOpen = false"><span class="ico">📋 </span>Tạo bài</RouterLink>
               <button class="logout" @click="logout">Đăng xuất</button>
             </div>
           </div>
