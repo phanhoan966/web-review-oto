@@ -165,7 +165,7 @@ async function logout() {
   gap: 12px;
   padding: 10px 12px 10px 14px;
   border: 1px solid var(--border);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(37, 99, 235, 0.08)), var(--surface);
+  // background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(37, 99, 235, 0.08)), var(--surface);
   border-radius: 16px;
   box-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
   min-width: 320px;
@@ -187,7 +187,7 @@ async function logout() {
 
 .search-bar button {
   border: none;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(37, 99, 235, 0.08)), var(--surface);
+  // background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(37, 99, 235, 0.08)), var(--surface);
   color: #fff;
   border-radius: 12px;
   padding: 10px 14px;

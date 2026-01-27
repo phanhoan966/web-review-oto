@@ -39,6 +39,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("""
             select r from Review r
             left join r.brand b
+            left join r.author a
             where r.status = com.example.autoreview.domain.ReviewStatus.APPROVED
               and (
                 lower(r.title) like lower(concat('%', :query, '%')) or
@@ -47,12 +48,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
                 lower(r.priceSegment) like lower(concat('%', :query, '%')) or
                 lower(r.fuelType) like lower(concat('%', :query, '%')) or
                 (b is not null and lower(b.name) like lower(concat('%', :query, '%'))) or
-                (r.vehicleYear is not null and concat(r.vehicleYear, '') like concat('%', :query, '%'))
+                (r.vehicleYear is not null and concat(r.vehicleYear, '') like concat('%', :query, '%')) or
+                (a is not null and lower(a.username) like lower(concat('%', :query, '%')))
               )
             order by
               (
                 case when lower(r.title) like lower(concat('%', :query, '%')) then 6 else 0 end +
                 case when b is not null and lower(b.name) like lower(concat('%', :query, '%')) then 5 else 0 end +
+                case when a is not null and lower(a.username) like lower(concat('%', :query, '%')) then 5 else 0 end +
                 case when lower(r.excerpt) like lower(concat('%', :query, '%')) then 4 else 0 end +
                 case when lower(r.vehicleModel) like lower(concat('%', :query, '%')) then 3 else 0 end +
                 case when lower(r.priceSegment) like lower(concat('%', :query, '%')) then 2 else 0 end +
