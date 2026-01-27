@@ -190,10 +190,11 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReviewDto> mostViewed(int limit) {
+    public List<ReviewDto> mostViewed(int limit, String email) {
         PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "views"));
         List<ReviewDto> dtos = reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();
         applyAuthorReviewCounts(dtos);
+        applyReviewLiked(dtos, findUser(email));
         return dtos;
     }
 

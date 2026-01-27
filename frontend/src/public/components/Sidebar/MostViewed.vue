@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useAuthStore } from '../../../stores/auth'
+import client from '../../../api/client'
 import { slugify } from '../../utils/slugify'
 import { buildAssetUrl } from '../../utils/assetUrl'
 
@@ -8,6 +11,7 @@ export interface ViewedItem {
   title: string
   heroImageUrl: string
   likes?: number
+  liked?: boolean
   commentsCount?: number
   views?: number
   rating?: number
@@ -15,8 +19,44 @@ export interface ViewedItem {
 
 const props = defineProps<{ items: ViewedItem[] }>()
 
+const auth = useAuthStore()
+const router = useRouter()
+const likeState = ref<Record<number, { count: number; liked: boolean }>>({})
+
+watch(
+  () => props.items,
+  (list) => {
+    const next: Record<number, { count: number; liked: boolean }> = {}
+    list.forEach((item) => {
+      next[item.id] = { count: item.likes ?? 0, liked: Boolean(item.liked) }
+    })
+    likeState.value = next
+  },
+  { immediate: true }
+)
+
 function heroSrc(item: ViewedItem) {
   return buildAssetUrl(item.heroImageUrl)
+}
+
+async function toggleLike(id: number) {
+  if (!auth.user) {
+    router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+    return
+  }
+  const current = likeState.value[id] || { count: 0, liked: false }
+  const liked = !current.liked
+  const count = Math.max(0, current.count + (liked ? 1 : -1))
+  likeState.value = { ...likeState.value, [id]: { count, liked } }
+  try {
+    if (liked) {
+      await client.post(`/reviews/${id}/like`)
+    } else {
+      await client.post(`/reviews/${id}/unlike`)
+    }
+  } catch (error) {
+    likeState.value = { ...likeState.value, [id]: current }
+  }
 }
 </script>
 
@@ -24,16 +64,19 @@ function heroSrc(item: ViewedItem) {
   <section class="widget surface">
     <header class="widget-header">Xem nhiều nhất</header>
     <div class="items">
-      <RouterLink v-for="item in props.items" :key="item.id" class="row" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
-        <img v-if="heroSrc(item)" class="thumb" :src="heroSrc(item)" :alt="item.title" />
-        <div v-else class="thumb placeholder" aria-hidden="true"></div>
+      <div v-for="item in props.items" :key="item.id" class="row">
+        <RouterLink class="thumb-link" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
+          <img v-if="heroSrc(item)" class="thumb" :src="heroSrc(item)" :alt="item.title" />
+          <div v-else class="thumb placeholder" aria-hidden="true"></div>
+        </RouterLink>
         <div class="info">
-          <div class="title">{{ item.title }}</div>
+          <RouterLink class="title" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">{{ item.title }}</RouterLink>
           <div class="meta">
-            ❤ {{ item.likes || 0 }} • 💬 {{ item.commentsCount || 0 }} • ⭐ {{ item.rating || '4.6' }}
+            <button class="pill like-btn" :class="{ liked: likeState[item.id]?.liked }" type="button" @click.stop="toggleLike(item.id)">❤ {{ likeState[item.id]?.count ?? item.likes ?? 0 }}</button>
+            <span>• 💬 {{ item.commentsCount || 0 }} • ⭐ {{ item.rating || '4.6' }}</span>
           </div>
         </div>
-      </RouterLink>
+      </div>
     </div>
   </section>
 </template>
@@ -79,11 +122,29 @@ function heroSrc(item: ViewedItem) {
 .title {
   font-weight: 600;
   margin-bottom: 4px;
+  display: inline-block;
 }
 
 .meta {
   color: var(--muted);
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.like-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--chip-bg);
+  cursor: pointer;
+  color: inherit;
+}
+
+.like-btn.liked {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .row {

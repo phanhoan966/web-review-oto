@@ -59,8 +59,9 @@ public class ReviewController {
     }
 
     @GetMapping("/most-viewed")
-    public ResponseEntity<List<ReviewDto>> mostViewed(@RequestParam(defaultValue = "5") int limit) {
-        return ResponseEntity.ok(reviewService.mostViewed(limit));
+    public ResponseEntity<List<ReviewDto>> mostViewed(@RequestParam(defaultValue = "5") int limit, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.mostViewed(limit, email));
     }
 
     @GetMapping("/{id}")

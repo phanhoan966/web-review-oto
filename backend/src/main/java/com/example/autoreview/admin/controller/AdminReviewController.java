@@ -47,7 +47,7 @@ public class AdminReviewController {
 
     @GetMapping("/most-viewed")
     public ResponseEntity<List<ReviewDto>> mostViewed(@RequestParam(defaultValue = "5") @Min(1) int limit) {
-        return ResponseEntity.ok(reviewService.mostViewed(limit));
+        return ResponseEntity.ok(reviewService.mostViewed(limit, null));
     }
 
     @PostMapping("/{id}/approve")
