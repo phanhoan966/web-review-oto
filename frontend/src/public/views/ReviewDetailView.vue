@@ -66,6 +66,7 @@ const reviewLike = ref<{ count: number; liked: boolean }>({ count: 0, liked: fal
 const authorFollow = ref<{ following: boolean; followers: number }>({ following: false, followers: 0 })
 const followHover = ref(false)
 const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
+const reviewId = computed(() => review.value?.id ?? (route.params.id ? Number(route.params.id) : null))
 const profilePath = computed(() =>
   review.value?.authorUsername ? `/user/${encodeURIComponent(review.value.authorUsername)}` : ''
 )
@@ -204,7 +205,7 @@ onMounted(() => {
 })
 
 watch(
-  () => route.params.id,
+  () => [route.params.id, route.params.slug],
   () => {
     review.value = null
     comments.value = []
@@ -229,10 +230,35 @@ watch(
 async function load() {
   loading.value = true
   errorMsg.value = ''
+  const slugParam = (route.params.slug as string) || ''
+  const idParam = route.params.id as string
+  const idNumber = idParam ? Number(idParam) : null
   try {
-    const { data } = await client.get(`/reviews/${route.params.id}`)
-    if (data?.title) {
-      route.params.slug = slugify(data.title)
+    let data
+    if (slugParam) {
+      try {
+        const res = await client.get(`/reviews/slug/${encodeURIComponent(slugParam)}`)
+        data = res.data
+      } catch (error) {
+        if (!idNumber) {
+          throw error
+        }
+        const fallback = await client.get(`/reviews/${idNumber}`)
+        data = fallback.data
+      }
+    } else {
+      if (!idNumber) {
+        throw new Error('Missing review id')
+      }
+      const res = await client.get(`/reviews/${idNumber}`)
+      data = res.data
+    }
+    if (data?.id) {
+      const canonicalSlug = data.slug || slugify(data.title || '')
+      const currentSlug = route.params.slug as string | undefined
+      if (canonicalSlug && (route.name !== 'review-detail' || currentSlug !== canonicalSlug)) {
+        router.replace({ name: 'review-detail', params: { slug: canonicalSlug, id: data.id } })
+      }
     }
     review.value = data
     reviewLike.value = { count: data?.likes ?? 0, liked: Boolean(data?.liked) }
@@ -280,7 +306,11 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
   commentsLoading.value = true
   commentsError.value = ''
   try {
-    const { data } = await client.get<CommentDetail[]>(`/reviews/${route.params.id}/comments`, {
+    const id = reviewId.value
+    if (!id) {
+      throw new Error('Missing review id')
+    }
+    const { data } = await client.get<CommentDetail[]>(`/reviews/${id}/comments`, {
       params: { page: page.value, size: pageSize, sort: commentTab.value === 'newest' ? 'latest' : 'top' }
     })
     const rootCount = Array.isArray(data) ? data.filter((item) => !item.parentId).length : 0
@@ -336,7 +366,11 @@ async function submitComment() {
     if (target?.id) {
       parentId = target.id
     }
-    const { data } = await client.post<CommentDetail>(`/reviews/${route.params.id}/comments`, {
+    const id = reviewId.value
+    if (!id) {
+      throw new Error('Missing review id')
+    }
+    const { data } = await client.post<CommentDetail>(`/reviews/${id}/comments`, {
       content,
       anonymous: false,
       parentId

@@ -26,6 +26,9 @@ public class Review {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 200, unique = true)
+    private String slug;
+
     @Column(length = 256)
     private String excerpt;
 
@@ -83,6 +86,14 @@ public class Review {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
     }
 
     public String getExcerpt() {

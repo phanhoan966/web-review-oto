@@ -34,6 +34,7 @@ public class DtoMapper {
         dto.setExcerpt(review.getExcerpt());
         dto.setContent(review.getContent());
         dto.setHeroImageUrl(review.getHeroImageUrl());
+        dto.setSlug(review.getSlug());
         dto.setBrand(review.getBrand() != null ? review.getBrand().getName() : null);
         dto.setVehicleModel(review.getVehicleModel());
         dto.setVehicleYear(review.getVehicleYear());

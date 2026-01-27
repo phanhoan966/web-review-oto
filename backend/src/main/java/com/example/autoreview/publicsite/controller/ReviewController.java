@@ -81,6 +81,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getPublic(id, email));
     }
 
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<ReviewDto> detailBySlug(@PathVariable String slug, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.getPublicBySlug(slug, email));
+    }
+
     @PostMapping("/{id}/like")
     public ResponseEntity<Void> likeReview(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
         String email = currentUserResolver.resolveEmail(principal, request);

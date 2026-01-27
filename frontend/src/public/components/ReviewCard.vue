@@ -10,6 +10,7 @@ import ReviewerPopoverCard from './common/ReviewerPopoverCard.vue'
 
 export interface ReviewCardData {
   id: number
+  slug?: string
   title: string
   excerpt: string
   heroImageUrl: string
@@ -54,7 +55,10 @@ const meta = computed(() => {
   return [brand, modelYear].filter(Boolean).join(' • ')
 })
 
-const detailPath = computed(() => `/post/${slugify(props.review.title) || 'bai-viet'}/${props.review.id}`)
+const detailPath = computed(() => {
+  const slug = props.review.slug || slugify(props.review.title)
+  return `/post/${slug || 'bai-viet'}/${props.review.id}`
+})
 
 const profilePath = computed(() =>
   props.review.authorUsername ? `/user/${encodeURIComponent(props.review.authorUsername)}` : ''

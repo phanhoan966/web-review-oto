@@ -264,11 +264,26 @@ public class ReviewService {
     }
 
     @Transactional
+    public ReviewDto getPublicBySlug(String slug, String email) {
+        Review review = reviewRepository.findBySlugAndStatus(slug, ReviewStatus.APPROVED)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
+        reviewRepository.save(review);
+        ReviewDto dto = DtoMapper.toReviewDto(review);
+        applyAuthorReviewCounts(List.of(dto));
+        User user = findUser(email);
+        applyReviewLiked(List.of(dto), user);
+        applyAuthorFollowing(List.of(dto), user);
+        return dto;
+    }
+
+    @Transactional
     public ReviewDto create(String authorEmail, CreateReviewRequest request) {
         User author = userRepository.findByEmail(authorEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         VehicleBrand brand = vehicleBrandRepository.findById(request.getBrandId()).orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Brand not found"));
         Review review = new Review();
         review.setTitle(request.getTitle());
+        review.setSlug(request.getSlug());
         review.setExcerpt(request.getExcerpt());
         review.setContent(request.getContent());
         review.setHeroImageUrl(sanitizeHeroImageUrl(request.getHeroImageUrl()));
@@ -300,6 +315,7 @@ public class ReviewService {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Only pending review can be edited");
         }
         review.setTitle(request.getTitle());
+        review.setSlug(request.getSlug());
         review.setExcerpt(request.getExcerpt());
         review.setContent(request.getContent());
         review.setHeroImageUrl(sanitizeHeroImageUrl(request.getHeroImageUrl()));

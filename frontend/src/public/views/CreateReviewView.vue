@@ -189,6 +189,7 @@ async function submit() {
   try {
     await client.post('/reviews', {
       title: form.value.title,
+      slug: form.value.slug,
       excerpt: form.value.excerpt,
       content: form.value.content,
       heroImageUrl: heroUrl || null,
@@ -217,7 +218,7 @@ async function submit() {
         <input v-model="form.title" required maxlength="200" />
 
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
-        <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}</p>
+        <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}/:id</p>
 
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
         <div class="hero-row">

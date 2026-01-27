@@ -8,6 +8,7 @@ import { buildAssetUrl } from '../../utils/assetUrl'
 
 export interface ViewedItem {
   id: number
+  slug?: string
   title: string
   heroImageUrl: string
   likes?: number
@@ -65,12 +66,12 @@ async function toggleLike(id: number) {
     <header class="widget-header">Xem nhiều nhất</header>
     <div class="items">
       <div v-for="item in props.items" :key="item.id" class="row">
-        <RouterLink class="thumb-link" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">
+        <RouterLink class="thumb-link" :to="`/post/${item.slug || slugify(item.title) || 'bai-viet'}/${item.id}`">
           <img v-if="heroSrc(item)" class="thumb" :src="heroSrc(item)" :alt="item.title" />
           <div v-else class="thumb placeholder" aria-hidden="true"></div>
         </RouterLink>
         <div class="info">
-          <RouterLink class="title" :to="`/post/${slugify(item.title) || 'bai-viet'}/${item.id}`">{{ item.title }}</RouterLink>
+          <RouterLink class="title" :to="`/post/${item.slug || slugify(item.title) || 'bai-viet'}/${item.id}`">{{ item.title }}</RouterLink>
           <div class="meta">
             <button class="pill like-btn" :class="{ liked: likeState[item.id]?.liked }" type="button" @click.stop="toggleLike(item.id)">❤ {{ likeState[item.id]?.count ?? item.likes ?? 0 }}</button>
             <span>• 💬 {{ item.commentsCount || 0 }} • ⭐ {{ item.rating || '4.6' }}</span>

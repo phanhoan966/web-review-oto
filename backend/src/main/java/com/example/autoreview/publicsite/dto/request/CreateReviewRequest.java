@@ -11,6 +11,10 @@ public class CreateReviewRequest {
     private String title;
 
     @NotBlank
+    @Size(max = 200)
+    private String slug;
+
+    @NotBlank
     @Size(max = 256)
     private String excerpt;
 
@@ -45,6 +49,14 @@ public class CreateReviewRequest {
 
     public void setExcerpt(String excerpt) {
         this.excerpt = excerpt;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
     }
 
     public String getContent() {

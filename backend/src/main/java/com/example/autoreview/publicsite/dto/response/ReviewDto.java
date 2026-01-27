@@ -9,6 +9,7 @@ public class ReviewDto {
     private String excerpt;
     private String content;
     private String heroImageUrl;
+    private String slug;
     private String authorName;
     private String authorAvatar;
     private String authorUsername;
@@ -68,6 +69,14 @@ public class ReviewDto {
 
     public void setHeroImageUrl(String heroImageUrl) {
         this.heroImageUrl = heroImageUrl;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
     }
 
     public String getAuthorName() {
