@@ -156,6 +156,15 @@ function createUploadAdapter(loader: any) {
   }
 }
 
+function resolveBrandId() {
+  const typed = (form.value.brandId || '').trim()
+  if (!typed) return null
+  const byId = brands.value.find((b) => String(b.id) === typed)
+  if (byId) return byId.id
+  const byName = brands.value.find((b) => b.name.toLowerCase() === typed.toLowerCase())
+  return byName ? byName.id : null
+}
+
 async function submit() {
   const heroUrl = form.value.heroImageUrl?.trim() || ''
   if (uploading.value) {
@@ -174,6 +183,7 @@ async function submit() {
     errorMsg.value = 'Nội dung không được để trống'
     return
   }
+  const brandId = resolveBrandId()
   loading.value = true
   errorMsg.value = ''
   try {
@@ -186,7 +196,7 @@ async function submit() {
       vehicleYear: form.value.vehicleYear ? Number(form.value.vehicleYear) : null,
       fuelType: form.value.fuelType,
       priceSegment: form.value.priceSegment,
-      brandId: form.value.brandId ? Number(form.value.brandId) : null
+      brandId
     })
     router.push({ name: 'feed' })
   } catch (error: any) {
@@ -258,7 +268,7 @@ async function submit() {
         </div>
 
         <datalist id="brandOptions">
-          <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+          <option v-for="b in brands" :key="b.id" :value="b.name">{{ b.name }}</option>
         </datalist>
 
         <datalist id="yearOptions">
