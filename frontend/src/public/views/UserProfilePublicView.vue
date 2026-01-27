@@ -22,7 +22,7 @@ const followHover = ref(false)
 const followState = ref<{ following: boolean; followers: number }>({ following: false, followers: 0 })
 
 const username = computed(() => String(route.params.username || ''))
-const isSelf = computed(() => auth.user?.id && profile.value?.id ? auth.user.id === profile.value.id : false)
+const isSelf = computed(() => (auth.user?.id && profile.value?.id ? auth.user.id === profile.value.id : false))
 const followLabel = computed(() =>
   followState.value.following ? (followHover.value ? 'Unfollow' : 'Following') : 'Follow'
 )
@@ -30,6 +30,7 @@ const followClass = computed(() => {
   if (!followState.value.following) return 'primary'
   return followHover.value ? 'danger' : 'following'
 })
+const displayedFollowers = computed(() => followState.value.followers ?? profile.value?.followers ?? 0)
 
 onMounted(() => {
   loadProfile()
@@ -111,6 +112,36 @@ function handleScroll() {
     loadReviews()
   }
 }
+
+async function toggleFollow() {
+  if (!profile.value?.id) return
+  if (isSelf.value) return
+  if (!auth.user) {
+    router.push({ name: 'login', query: { redirect: route.fullPath } })
+    return
+  }
+  const current = { ...followState.value }
+  const following = !current.following
+  const followers = Math.max(0, current.followers + (following ? 1 : -1))
+  followState.value = { following, followers }
+  if (profile.value) {
+    profile.value.followers = followers
+    profile.value.following = following
+  }
+  try {
+    if (following) {
+      await client.post(`/users/${profile.value.id}/follow`)
+    } else {
+      await client.post(`/users/${profile.value.id}/unfollow`)
+    }
+  } catch (error: any) {
+    followState.value = current
+    if (profile.value) {
+      profile.value.followers = current.followers
+      profile.value.following = current.following
+    }
+  }
+}
 </script>
 
 <template>
@@ -120,17 +151,28 @@ function handleScroll() {
         <div class="avatar" :style="profile?.avatarUrl ? `background-image:url(${profile.avatarUrl})` : ''">
           {{ profile?.avatarUrl ? '' : profile?.displayName?.[0]?.toUpperCase() || '' }}
         </div>
-        <div>
+        <div class="intro">
           <p class="eyebrow">Hồ sơ reviewer</p>
           <h1>{{ profile?.displayName || 'Đang tải...' }}</h1>
           <p class="muted">Khám phá các bài review từ thành viên này.</p>
         </div>
+        <button
+          v-if="profile && !isSelf"
+          class="follow-btn"
+          :class="followClass"
+          type="button"
+          @click="toggleFollow"
+          @mouseenter="followHover = true"
+          @mouseleave="followHover = false"
+        >
+          {{ followLabel }}
+        </button>
       </div>
       <div v-if="profileLoading" class="status">Đang tải hồ sơ...</div>
       <div v-else-if="profileError" class="status error">{{ profileError }}</div>
       <div v-else class="stats">
         <div>
-          <div class="value">{{ profile?.followers ?? 0 }}</div>
+          <div class="value">{{ displayedFollowers }}</div>
           <div class="label">Người theo dõi</div>
         </div>
         <div>
@@ -185,6 +227,11 @@ function handleScroll() {
   display: flex;
   gap: 14px;
   align-items: center;
+  justify-content: space-between;
+}
+
+.intro {
+  flex: 1;
 }
 
 .avatar {
@@ -279,9 +326,36 @@ h3 {
   font-weight: 700;
 }
 
+.follow-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: var(--pill-bg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.follow-btn.primary {
+  color: var(--text);
+}
+
+.follow-btn.following {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.follow-btn.danger {
+  border-color: #d72638;
+  color: #d72638;
+  background: #ffecec;
+}
+
 @media (max-width: 720px) {
   .heading {
     align-items: flex-start;
+    flex-direction: column;
   }
 
   .avatar {

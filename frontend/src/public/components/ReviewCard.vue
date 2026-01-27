@@ -21,6 +21,7 @@ export interface ReviewCardData {
   authorReviewCount?: number
   authorRating?: number
   authorBio?: string
+  authorFollowing?: boolean
   brand?: string
   vehicleModel?: string
   vehicleYear?: number
@@ -36,11 +37,14 @@ const props = defineProps<{ review: ReviewCardData }>()
 const auth = useAuthStore()
 const router = useRouter()
 const likeState = ref({ count: props.review.likes ?? 0, liked: Boolean(props.review.liked) })
+const followState = ref({ following: Boolean(props.review.authorFollowing), followers: props.review.authorFollowers ?? 0 })
+const followHover = ref(false)
 
 watch(
   () => props.review,
   (val) => {
     likeState.value = { count: val.likes ?? 0, liked: Boolean(val.liked) }
+    followState.value = { following: Boolean(val.authorFollowing), followers: val.authorFollowers ?? 0 }
   }
 )
 
@@ -56,11 +60,25 @@ const profilePath = computed(() =>
   props.review.authorUsername ? `/user/${encodeURIComponent(props.review.authorUsername)}` : ''
 )
 
+const isAuthorSelf = computed(() => {
+  if (!auth.user || !props.review.authorId) return false
+  return auth.user.id === props.review.authorId
+})
+
+const followLabel = computed(() =>
+  followState.value.following ? (followHover.value ? 'Unfollow' : 'Following') : 'Follow'
+)
+
+const followClass = computed(() => {
+  if (!followState.value.following) return 'primary'
+  return followHover.value ? 'danger' : 'following'
+})
+
 const authorTooltip = computed(() => {
   const username = props.review.authorUsername
   const name = props.review.authorName
   const handle = username ? `@${username}` : ''
-  const followers = props.review.authorFollowers ?? 0
+  const followers = followState.value.followers ?? props.review.authorFollowers ?? 0
   const posts = props.review.authorReviewCount ?? 0
   const rating = props.review.authorRating ?? 0
   const summary = `${followers} follower${followers === 1 ? '' : 's'} • ${posts} bài • ⭐ ${rating ? rating.toFixed(1) : '5.0'}`
@@ -103,6 +121,28 @@ async function toggleLike() {
     likeState.value = current
   }
 }
+
+async function toggleFollow() {
+  if (!props.review.authorId) return
+  if (isAuthorSelf.value) return
+  if (!auth.user) {
+    router.push({ name: 'login', query: { redirect: detailPath.value } })
+    return
+  }
+  const current = { ...followState.value }
+  const following = !current.following
+  const followers = Math.max(0, current.followers + (following ? 1 : -1))
+  followState.value = { following, followers }
+  try {
+    if (following) {
+      await client.post(`/users/${props.review.authorId}/follow`)
+    } else {
+      await client.post(`/users/${props.review.authorId}/unfollow`)
+    }
+  } catch (error) {
+    followState.value = current
+  }
+}
 </script>
 
 <template>
@@ -126,7 +166,7 @@ async function toggleLike() {
             :username="review.authorUsername"
             :avatar-url="review.authorAvatar"
             :bio="review.authorBio"
-            :followers="review.authorFollowers"
+            :followers="followState.followers ?? review.authorFollowers"
             :review-count="review.authorReviewCount"
             :rating="review.authorRating"
           />
@@ -140,6 +180,17 @@ async function toggleLike() {
             <div class="sub">{{ meta }} {{ relativeTime ? `• ${relativeTime}` : '' }}</div>
           </div>
         </div>
+        <button
+          v-if="review.authorId && !isAuthorSelf"
+          class="follow-btn"
+          :class="followClass"
+          type="button"
+          @click.stop="toggleFollow"
+          @mouseenter="followHover = true"
+          @mouseleave="followHover = false"
+        >
+          {{ followLabel }}
+        </button>
       </div>
       <RouterLink class="title-link" :to="detailPath">
         <h2>{{ review.title }}</h2>
@@ -206,6 +257,10 @@ async function toggleLike() {
 
 .author {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .author-trigger {
@@ -221,8 +276,8 @@ async function toggleLike() {
 }
 
 .avatar {
-  // width: 46px;
-  // height: 46px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #eef2f7;
@@ -278,5 +333,31 @@ async function toggleLike() {
 .like-btn.liked {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+.follow-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--pill-bg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.follow-btn.primary {
+  color: var(--text);
+}
+
+.follow-btn.following {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.follow-btn.danger {
+  border-color: #d72638;
+  color: #d72638;
+  background: #ffecec;
 }
 </style>
