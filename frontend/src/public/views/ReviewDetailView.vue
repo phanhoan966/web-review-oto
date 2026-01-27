@@ -182,6 +182,26 @@ onMounted(() => {
   loadSidebar()
 })
 
+watch(
+  () => route.params.id,
+  () => {
+    review.value = null
+    comments.value = []
+    likesState.value = {}
+    highlightedIds.value = new Set()
+    slideIds.value = new Set()
+    page.value = 0
+    hasMore.value = true
+    rootComment.value = ''
+    replyDrafts.value = {}
+    replyTarget.value = null
+    rootComposerVisible.value = true
+    errorMsg.value = ''
+    load()
+    loadComments(true, false)
+  }
+)
+
 async function load() {
   loading.value = true
   errorMsg.value = ''
