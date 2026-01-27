@@ -31,14 +31,16 @@ public class CommentController {
     }
 
     @PostMapping("/{id}/like")
-    public ResponseEntity<Void> like(@PathVariable Long id) {
-        reviewService.likeComment(id);
+    public ResponseEntity<Void> like(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.likeComment(id, email);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/unlike")
-    public ResponseEntity<Void> unlike(@PathVariable Long id) {
-        reviewService.unlikeComment(id);
+    public ResponseEntity<Void> unlike(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.unlikeComment(id, email);
         return ResponseEntity.noContent().build();
     }
 }

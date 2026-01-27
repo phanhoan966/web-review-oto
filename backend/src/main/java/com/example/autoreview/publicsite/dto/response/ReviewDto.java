@@ -20,6 +20,7 @@ public class ReviewDto {
     private String vehicleModel;
     private Integer vehicleYear;
     private Integer likes;
+    private Boolean liked;
     private Integer commentsCount;
     private Integer views;
     private String fuelType;
@@ -154,6 +155,14 @@ public class ReviewDto {
 
     public void setLikes(Integer likes) {
         this.likes = likes;
+    }
+
+    public Boolean getLiked() {
+        return liked;
+    }
+
+    public void setLiked(Boolean liked) {
+        this.liked = liked;
     }
 
     public Integer getCommentsCount() {

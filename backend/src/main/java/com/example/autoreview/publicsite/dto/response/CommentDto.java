@@ -16,6 +16,7 @@ public class CommentDto {
     private Instant createdAt;
     private Long parentId;
     private Integer likes;
+    private Boolean liked;
 
     public Long getId() {
         return id;
@@ -119,5 +120,13 @@ public class CommentDto {
 
     public void setLikes(Integer likes) {
         this.likes = likes;
+    }
+
+    public Boolean getLiked() {
+        return liked;
+    }
+
+    public void setLiked(Boolean liked) {
+        this.liked = liked;
     }
 }

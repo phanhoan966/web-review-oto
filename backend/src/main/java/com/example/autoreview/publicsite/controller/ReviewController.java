@@ -61,8 +61,23 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReviewDto> detail(@PathVariable Long id) {
-        return ResponseEntity.ok(reviewService.getPublic(id));
+    public ResponseEntity<ReviewDto> detail(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.getPublic(id, email));
+    }
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Void> likeReview(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.likeReview(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/unlike")
+    public ResponseEntity<Void> unlikeReview(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.unlikeReview(id, email);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping
@@ -104,8 +119,9 @@ public class ReviewController {
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "top") String sort) {
-        return ResponseEntity.ok(reviewService.listComments(id, page, size, sort));
+    public ResponseEntity<List<CommentDto>> listComments(@PathVariable Long id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "top") String sort, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.listComments(id, page, size, sort, email));
     }
 
 }

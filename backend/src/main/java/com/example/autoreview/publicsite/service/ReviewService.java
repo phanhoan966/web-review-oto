@@ -7,13 +7,17 @@ import com.example.autoreview.publicsite.dto.response.ReviewDto;
 import com.example.autoreview.publicsite.dto.response.ReviewListResponse;
 import com.example.autoreview.publicsite.dto.request.UpdateReviewRequest;
 import com.example.autoreview.domain.Comment;
+import com.example.autoreview.domain.CommentLike;
 import com.example.autoreview.domain.Review;
+import com.example.autoreview.domain.ReviewLike;
 import com.example.autoreview.domain.ReviewStatus;
 import com.example.autoreview.domain.User;
 import com.example.autoreview.domain.VehicleBrand;
 import com.example.autoreview.exception.ApiException;
 import com.example.autoreview.mapper.DtoMapper;
+import com.example.autoreview.repository.CommentLikeRepository;
 import com.example.autoreview.repository.CommentRepository;
+import com.example.autoreview.repository.ReviewLikeRepository;
 import com.example.autoreview.repository.ReviewRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.repository.VehicleBrandRepository;
@@ -39,12 +43,16 @@ public class ReviewService {
     private final VehicleBrandRepository vehicleBrandRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
+    private final ReviewLikeRepository reviewLikeRepository;
 
-    public ReviewService(ReviewRepository reviewRepository, VehicleBrandRepository vehicleBrandRepository, UserRepository userRepository, CommentRepository commentRepository) {
+    public ReviewService(ReviewRepository reviewRepository, VehicleBrandRepository vehicleBrandRepository, UserRepository userRepository, CommentRepository commentRepository, CommentLikeRepository commentLikeRepository, ReviewLikeRepository reviewLikeRepository) {
         this.reviewRepository = reviewRepository;
         this.vehicleBrandRepository = vehicleBrandRepository;
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
+        this.commentLikeRepository = commentLikeRepository;
+        this.reviewLikeRepository = reviewLikeRepository;
     }
 
     private void applyAuthorReviewCounts(List<ReviewDto> dtos) {
@@ -85,6 +93,43 @@ public class ReviewService {
                 dto.setAuthorReviewCount(counts.getOrDefault(authorId, 0L).intValue());
             }
         });
+    }
+
+    private User findUser(String email) {
+        if (!StringUtils.hasText(email)) {
+            return null;
+        }
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
+    private void applyReviewLiked(List<ReviewDto> dtos, User user) {
+        if (user == null) {
+            return;
+        }
+        Set<Long> ids = dtos.stream()
+                .map(ReviewDto::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (ids.isEmpty()) {
+            return;
+        }
+        Set<Long> likedIds = reviewLikeRepository.findLikedReviewIds(user, ids);
+        dtos.forEach(dto -> dto.setLiked(likedIds.contains(dto.getId())));
+    }
+
+    private void applyCommentLiked(List<CommentDto> dtos, User user) {
+        if (user == null) {
+            return;
+        }
+        Set<Long> ids = dtos.stream()
+                .map(CommentDto::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (ids.isEmpty()) {
+            return;
+        }
+        Set<Long> likedIds = commentLikeRepository.findLikedCommentIds(user, ids);
+        dtos.forEach(dto -> dto.setLiked(likedIds.contains(dto.getId())));
     }
 
     @Transactional(readOnly = true)
@@ -160,13 +205,14 @@ public class ReviewService {
     }
 
     @Transactional
-    public ReviewDto getPublic(Long id) {
+    public ReviewDto getPublic(Long id, String email) {
         Review review = reviewRepository.findByIdAndStatus(id, ReviewStatus.APPROVED)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
         reviewRepository.save(review);
         ReviewDto dto = DtoMapper.toReviewDto(review);
         applyAuthorReviewCounts(List.of(dto));
+        applyReviewLiked(List.of(dto), findUser(email));
         return dto;
     }
 
@@ -297,7 +343,7 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentDto> listComments(Long reviewId, int page, int size, String sort) {
+    public List<CommentDto> listComments(Long reviewId, int page, int size, String sort, String email) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         if (review.getStatus() != ReviewStatus.APPROVED) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
@@ -353,22 +399,70 @@ public class ReviewService {
             result.addAll(ordered.stream().map(DtoMapper::toCommentDto).toList());
         }
         applyCommentAuthorReviewCounts(result);
+        applyCommentLiked(result, findUser(email));
         return result;
     }
 
     @Transactional
-    public void likeComment(Long commentId) {
+    public void likeComment(Long commentId, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập"));
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Comment not found"));
+        if (commentLikeRepository.existsByCommentAndUser(comment, user)) {
+            return;
+        }
+        CommentLike like = new CommentLike();
+        like.setComment(comment);
+        like.setUser(user);
+        like.setCreatedAt(Instant.now());
+        commentLikeRepository.save(like);
         comment.setLikes((comment.getLikes() == null ? 0 : comment.getLikes()) + 1);
         commentRepository.save(comment);
     }
 
     @Transactional
-    public void unlikeComment(Long commentId) {
+    public void unlikeComment(Long commentId, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập"));
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Comment not found"));
+        CommentLike like = commentLikeRepository.findByCommentAndUser(comment, user).orElse(null);
+        if (like == null) {
+            return;
+        }
+        commentLikeRepository.delete(like);
         int current = comment.getLikes() == null ? 0 : comment.getLikes();
         comment.setLikes(Math.max(0, current - 1));
         commentRepository.save(comment);
+    }
+
+    @Transactional
+    public void likeReview(Long reviewId, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập"));
+        Review review = reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.APPROVED)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        if (reviewLikeRepository.existsByReviewAndUser(review, user)) {
+            return;
+        }
+        ReviewLike like = new ReviewLike();
+        like.setReview(review);
+        like.setUser(user);
+        like.setCreatedAt(Instant.now());
+        reviewLikeRepository.save(like);
+        review.setLikes((review.getLikes() == null ? 0 : review.getLikes()) + 1);
+        reviewRepository.save(review);
+    }
+
+    @Transactional
+    public void unlikeReview(Long reviewId, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Bạn cần đăng nhập"));
+        Review review = reviewRepository.findByIdAndStatus(reviewId, ReviewStatus.APPROVED)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        ReviewLike like = reviewLikeRepository.findByReviewAndUser(review, user).orElse(null);
+        if (like == null) {
+            return;
+        }
+        reviewLikeRepository.delete(like);
+        int current = review.getLikes() == null ? 0 : review.getLikes();
+        review.setLikes(Math.max(0, current - 1));
+        reviewRepository.save(review);
     }
 
     @Transactional
