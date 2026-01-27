@@ -16,6 +16,7 @@ public class ReviewDto {
     private Integer authorReviewCount;
     private Double authorRating;
     private String authorBio;
+    private Boolean authorFollowing;
     private String brand;
     private String vehicleModel;
     private Integer vehicleYear;
@@ -123,6 +124,14 @@ public class ReviewDto {
 
     public void setAuthorBio(String authorBio) {
         this.authorBio = authorBio;
+    }
+
+    public Boolean getAuthorFollowing() {
+        return authorFollowing;
+    }
+
+    public void setAuthorFollowing(Boolean authorFollowing) {
+        this.authorFollowing = authorFollowing;
     }
 
     public String getBrand() {

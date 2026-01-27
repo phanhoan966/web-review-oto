@@ -27,6 +27,7 @@ interface ReviewDetail {
   commentsCount?: number
   views?: number
   publishedAt?: string
+  authorId?: number
   authorName?: string
   authorAvatar?: string
   authorUsername?: string
@@ -34,6 +35,7 @@ interface ReviewDetail {
   authorReviewCount?: number
   authorRating?: number
   authorBio?: string
+  authorFollowing?: boolean
 }
 
 interface CommentDetail {
@@ -61,6 +63,8 @@ const route = useRoute()
 const router = useRouter()
 const review = ref<ReviewDetail | null>(null)
 const reviewLike = ref<{ count: number; liked: boolean }>({ count: 0, liked: false })
+const authorFollow = ref<{ following: boolean; followers: number }>({ following: false, followers: 0 })
+const followHover = ref(false)
 const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
 const profilePath = computed(() =>
   review.value?.authorUsername ? `/user/${encodeURIComponent(review.value.authorUsername)}` : ''
@@ -159,6 +163,20 @@ function mergeComments(items: CommentDetail[], reset = false) {
 const auth = useAuthStore()
 const modalVisible = ref(false)
 
+const isAuthorSelf = computed(() => {
+  if (!auth.user || !review.value?.authorId) return false
+  return auth.user.id === review.value.authorId
+})
+
+const followLabel = computed(() =>
+  authorFollow.value.following ? (followHover.value ? 'Unfollow' : 'Following') : 'Follow'
+)
+
+const followButtonClass = computed(() => {
+  if (!authorFollow.value.following) return 'primary'
+  return followHover.value ? 'danger' : 'following'
+})
+
 const totalComments = ref(0)
 
 const commentMap = computed(() => {
@@ -192,6 +210,8 @@ watch(
     comments.value = []
     likesState.value = {}
     reviewLike.value = { count: 0, liked: false }
+    authorFollow.value = { following: false, followers: 0 }
+    followHover.value = false
     highlightedIds.value = new Set()
     slideIds.value = new Set()
     page.value = 0
@@ -216,6 +236,7 @@ async function load() {
     }
     review.value = data
     reviewLike.value = { count: data?.likes ?? 0, liked: Boolean(data?.liked) }
+    authorFollow.value = { following: Boolean(data?.authorFollowing), followers: data?.authorFollowers ?? 0 }
   } catch (error: any) {
     errorMsg.value = error.response?.data?.message || 'Không tìm thấy bài viết'
   } finally {
@@ -432,6 +453,37 @@ async function toggleReviewLike() {
   }
 }
 
+async function toggleFollowAuthor() {
+  if (!review.value?.authorId) return
+  if (isAuthorSelf.value) return
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
+  const current = { ...authorFollow.value }
+  const following = !current.following
+  const followers = Math.max(0, current.followers + (following ? 1 : -1))
+  authorFollow.value = { following, followers }
+  if (review.value) {
+    review.value.authorFollowers = followers
+    review.value.authorFollowing = following
+  }
+  try {
+    if (following) {
+      await client.post(`/users/${review.value.authorId}/follow`)
+    } else {
+      await client.post(`/users/${review.value.authorId}/unfollow`)
+    }
+  } catch (error: any) {
+    authorFollow.value = current
+    if (review.value) {
+      review.value.authorFollowers = current.followers
+      review.value.authorFollowing = current.following
+    }
+    errorMsg.value = error.response?.data?.message || 'Không thể cập nhật theo dõi'
+  }
+}
+
 function startReply(comment: CommentDetail) {
   if (!canReply()) return
   replyTarget.value = comment
@@ -574,7 +626,17 @@ function shouldShowMention(comment?: CommentDetail | null) {
               </div>
             </div>
             <div class="head-actions">
-              <button class="ghost">Đăng ký</button>
+              <button
+                v-if="!isAuthorSelf"
+                class="follow-btn"
+                :class="followButtonClass"
+                type="button"
+                @click="toggleFollowAuthor"
+                @mouseenter="followHover = true"
+                @mouseleave="followHover = false"
+              >
+                {{ followLabel }}
+              </button>
               <div class="dots">⋯</div>
             </div>
           </header>
@@ -982,6 +1044,31 @@ function shouldShowMention(comment?: CommentDetail | null) {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.follow-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: var(--pill-bg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.follow-btn.primary {
+  color: var(--text);
+}
+
+.follow-btn.following {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.follow-btn.danger {
+  border-color: #d72638;
+  color: #d72638;
+  background: #ffecec;
 }
 
 .dots {

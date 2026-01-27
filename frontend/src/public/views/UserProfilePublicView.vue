@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 import client from '../../api/client'
 import ReviewCard, { type ReviewCardData } from '../components/ReviewCard.vue'
 import type { ReviewerItem } from '../components/Sidebar/TopReviewers.vue'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 const profile = ref<ReviewerItem | null>(null)
 const profileLoading = ref(false)
 const profileError = ref('')
@@ -15,8 +18,18 @@ const listError = ref('')
 const page = ref(0)
 const size = 6
 const hasMore = ref(true)
+const followHover = ref(false)
+const followState = ref<{ following: boolean; followers: number }>({ following: false, followers: 0 })
 
 const username = computed(() => String(route.params.username || ''))
+const isSelf = computed(() => auth.user?.id && profile.value?.id ? auth.user.id === profile.value.id : false)
+const followLabel = computed(() =>
+  followState.value.following ? (followHover.value ? 'Unfollow' : 'Following') : 'Follow'
+)
+const followClass = computed(() => {
+  if (!followState.value.following) return 'primary'
+  return followHover.value ? 'danger' : 'following'
+})
 
 onMounted(() => {
   loadProfile()
@@ -44,6 +57,8 @@ function resetState() {
   listError.value = ''
   page.value = 0
   hasMore.value = true
+  followHover.value = false
+  followState.value = { following: false, followers: 0 }
 }
 
 async function loadProfile() {
@@ -52,6 +67,7 @@ async function loadProfile() {
   try {
     const { data } = await client.get<ReviewerItem>(`/users/username/${username.value}`)
     profile.value = data
+    followState.value = { following: Boolean(data.following), followers: data.followers ?? 0 }
   } catch (error: any) {
     profileError.value = error.response?.data?.message || 'Không tải được hồ sơ'
   } finally {

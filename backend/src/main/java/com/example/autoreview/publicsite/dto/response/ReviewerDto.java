@@ -9,6 +9,7 @@ public class ReviewerDto {
     private Double rating;
     private Integer reviewCount;
     private String bio;
+    private Boolean following;
 
     public Long getId() {
         return id;
@@ -72,5 +73,13 @@ public class ReviewerDto {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public Boolean getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Boolean following) {
+        this.following = following;
     }
 }

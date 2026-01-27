@@ -19,6 +19,7 @@ import com.example.autoreview.repository.CommentLikeRepository;
 import com.example.autoreview.repository.CommentRepository;
 import com.example.autoreview.repository.ReviewLikeRepository;
 import com.example.autoreview.repository.ReviewRepository;
+import com.example.autoreview.repository.UserFollowRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.repository.VehicleBrandRepository;
 import com.example.autoreview.security.Roles;
@@ -45,14 +46,16 @@ public class ReviewService {
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final ReviewLikeRepository reviewLikeRepository;
+    private final UserFollowRepository userFollowRepository;
 
-    public ReviewService(ReviewRepository reviewRepository, VehicleBrandRepository vehicleBrandRepository, UserRepository userRepository, CommentRepository commentRepository, CommentLikeRepository commentLikeRepository, ReviewLikeRepository reviewLikeRepository) {
+    public ReviewService(ReviewRepository reviewRepository, VehicleBrandRepository vehicleBrandRepository, UserRepository userRepository, CommentRepository commentRepository, CommentLikeRepository commentLikeRepository, ReviewLikeRepository reviewLikeRepository, UserFollowRepository userFollowRepository) {
         this.reviewRepository = reviewRepository;
         this.vehicleBrandRepository = vehicleBrandRepository;
         this.userRepository = userRepository;
         this.commentRepository = commentRepository;
         this.commentLikeRepository = commentLikeRepository;
         this.reviewLikeRepository = reviewLikeRepository;
+        this.userFollowRepository = userFollowRepository;
     }
 
     private void applyAuthorReviewCounts(List<ReviewDto> dtos) {
@@ -117,6 +120,21 @@ public class ReviewService {
         dtos.forEach(dto -> dto.setLiked(likedIds.contains(dto.getId())));
     }
 
+    private void applyAuthorFollowing(List<ReviewDto> dtos, User user) {
+        if (user == null) {
+            return;
+        }
+        Set<Long> authorIds = dtos.stream()
+                .map(ReviewDto::getAuthorId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (authorIds.isEmpty()) {
+            return;
+        }
+        Set<Long> followingIds = userFollowRepository.findFollowingIds(user, authorIds);
+        dtos.forEach(dto -> dto.setAuthorFollowing(followingIds.contains(dto.getAuthorId())));
+    }
+
     private void applyCommentLiked(List<CommentDto> dtos, User user) {
         if (user == null) {
             return;
@@ -138,7 +156,9 @@ public class ReviewService {
         Page<Review> reviews = reviewRepository.findByFilters(ReviewStatus.APPROVED, brand, fuelType, priceSegment, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
         applyAuthorReviewCounts(dtos);
-        applyReviewLiked(dtos, findUser(email));
+        User user = findUser(email);
+        applyReviewLiked(dtos, user);
+        applyAuthorFollowing(dtos, user);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -152,22 +172,28 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public ReviewListResponse listPublicByAuthor(Long authorId, int page, int size) {
+    public ReviewListResponse listPublicByAuthor(Long authorId, int page, int size, String email) {
+        User viewer = findUser(email);
         userRepository.findById(authorId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(authorId, ReviewStatus.APPROVED, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
         applyAuthorReviewCounts(dtos);
+        applyReviewLiked(dtos, viewer);
+        applyAuthorFollowing(dtos, viewer);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
     @Transactional(readOnly = true)
-    public ReviewListResponse listPublicByAuthorUsername(String username, int page, int size) {
+    public ReviewListResponse listPublicByAuthorUsername(String username, int page, int size, String email) {
+        User viewer = findUser(email);
         userRepository.findByUsername(username).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByAuthorUsernameAndStatusOrderByCreatedAtDesc(username, ReviewStatus.APPROVED, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
         applyAuthorReviewCounts(dtos);
+        applyReviewLiked(dtos, viewer);
+        applyAuthorFollowing(dtos, viewer);
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 
@@ -194,7 +220,9 @@ public class ReviewService {
         PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "views"));
         List<ReviewDto> dtos = reviewRepository.findMostViewed(pageable).getContent().stream().map(DtoMapper::toReviewDto).toList();
         applyAuthorReviewCounts(dtos);
-        applyReviewLiked(dtos, findUser(email));
+        User user = findUser(email);
+        applyReviewLiked(dtos, user);
+        applyAuthorFollowing(dtos, user);
         return dtos;
     }
 
@@ -214,7 +242,9 @@ public class ReviewService {
         reviewRepository.save(review);
         ReviewDto dto = DtoMapper.toReviewDto(review);
         applyAuthorReviewCounts(List.of(dto));
-        applyReviewLiked(List.of(dto), findUser(email));
+        User user = findUser(email);
+        applyReviewLiked(List.of(dto), user);
+        applyAuthorFollowing(List.of(dto), user);
         return dto;
     }
 
