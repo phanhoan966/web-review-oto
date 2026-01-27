@@ -1054,6 +1054,11 @@ function shouldShowMention(comment?: CommentDetail | null) {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 108px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .follow-btn.primary {

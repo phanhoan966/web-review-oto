@@ -338,12 +338,16 @@ async function toggleFollow() {
 .follow-btn {
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: var(--pill-bg);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  min-width: 108px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .follow-btn.primary {

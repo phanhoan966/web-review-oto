@@ -13,6 +13,7 @@ const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
 const menuOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const showSearchBar = computed(() => !isAdminRoute.value && (route.name === 'feed' || route.name === 'search'))
 const searchTerm = ref(route.query.q ? String(route.query.q) : '')
 
 if (typeof window !== 'undefined') {
@@ -72,10 +73,7 @@ async function logout() {
         <RouterLink class="brand" to="/">
           <img class="brand-logo" :src="brandLogo" alt="AutoReview" />
         </RouterLink>
-        <nav class="nav">
-          <RouterLink v-if="!auth.isAuthenticated" to="/admin/login">Admin</RouterLink>
-        </nav>
-        <form class="search-bar" @submit.prevent="submitSearch">
+        <form v-if="showSearchBar" class="search-bar" @submit.prevent="submitSearch">
           <input v-model="searchTerm" type="search" placeholder="Tìm bài, hãng, mẫu xe" />
           <button type="submit">Tìm</button>
         </form>
@@ -160,15 +158,17 @@ async function logout() {
 }
 
 .search-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px 8px 14px;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
   border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
-  min-width: 280px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(37, 99, 235, 0.08)), var(--surface);
+  border-radius: 16px;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
+  min-width: 320px;
+  max-width: 520px;
 }
 
 .search-bar input {
@@ -177,6 +177,12 @@ async function logout() {
   background: transparent;
   color: var(--text);
   width: 100%;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.search-bar input::placeholder {
+  color: var(--muted);
 }
 
 .search-bar button {
@@ -184,10 +190,20 @@ async function logout() {
   background: linear-gradient(135deg, var(--accent), var(--primary));
   color: #fff;
   border-radius: 12px;
-  padding: 8px 12px;
-  font-weight: 700;
+  padding: 10px 14px;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-bar button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.3);
+}
+
+.search-bar button:active {
+  transform: translateY(0);
 }
 
 @media (max-width: 920px) {
