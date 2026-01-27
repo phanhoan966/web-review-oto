@@ -552,7 +552,6 @@ select {
   font-size: 15px;
   color: var(--text);
   transition: all 0.2s ease;
-  margin-bottom: 10px;
 }
 
 select {
