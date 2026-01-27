@@ -261,10 +261,13 @@ async function submit() {
             <label>Nhiên liệu</label>
             <input v-model="form.fuelType" />
           </div>
+        </div>
+        <div class="row">
           <div class="field">
             <label>Phân khúc giá</label>
             <input v-model="form.priceSegment" />
           </div>
+          <div class="field"></div>
         </div>
 
         <datalist id="brandOptions">
@@ -510,19 +513,16 @@ label {
   margin-bottom: 8px;
 }
 
-.field label {
-  margin-bottom: 0;
-}
-
 .field {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding-right: 45px;
 }
 
 .field label {
   margin: 0;
-  min-width: 120px;
+  margin-bottom: 0;
 }
 
 .field input,
