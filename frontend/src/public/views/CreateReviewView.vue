@@ -268,28 +268,33 @@ async function submit() {
 <style scoped lang="scss">
 .page {
   min-height: 100vh;
+  padding: 32px 16px 48px;
+  background: radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.08), transparent 32%), radial-gradient(circle at 80% 0%, rgba(79, 70, 229, 0.08), transparent 30%), var(--bg);
   display: grid;
-  place-items: center;
-  padding-top: 25px;
-  background: var(--bg);
+  align-items: start;
 }
 
 .form-card {
   width: 100%;
-  padding: 28px;
-  border-radius: 20px;
-  box-shadow: var(--shadow);
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(17, 24, 39, 0.12);
+  background: #fff;
   display: grid;
-  gap: 16px;
+  gap: 18px;
+  border: 1px solid var(--border);
 }
 
 h1 {
   margin: 0;
-  font-size: 26px;
+  font-size: 28px;
+  letter-spacing: -0.01em;
 }
 
 .sub {
-  margin: 6px 0 12px;
+  margin: 6px 0 14px;
   color: var(--muted);
 }
 
@@ -300,7 +305,7 @@ h1 {
 
 form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .small {
@@ -309,13 +314,15 @@ form {
 
 .editor-shell {
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface);
-  padding: 8px;
+  padding: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .editor-shell.ready {
-  border-color: var(--accent, var(--primary));
+  border-color: var(--primary);
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.12);
 }
 
 .editor-shell :deep(.ck) {
@@ -353,7 +360,7 @@ form {
   background: var(--surface);
   border: none;
   border-bottom: 1px solid var(--border);
-  border-radius: 10px 10px 0 0;
+  border-radius: 12px 12px 0 0;
 }
 
 .editor-shell :deep(.ck-toolbar__separator) {
@@ -381,7 +388,7 @@ form {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 0 0 10px 10px;
+  border-radius: 0 0 12px 12px;
 }
 
 .editor-shell :deep(.ck-content) {
@@ -407,12 +414,12 @@ form {
 
 @media (max-width: 720px) {
   .page {
-    padding: 16px 12px;
+    padding: 18px 12px 28px;
   }
 
   .form-card {
-    padding: 18px;
-    border-radius: 16px;
+    padding: 22px;
+    border-radius: 18px;
   }
 
   .editor-shell :deep(.ck-editor__editable_inline),
@@ -424,23 +431,29 @@ form {
 .hero-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
 .upload-btn {
-  padding: 10px 14px;
+  padding: 11px 16px;
   border: 1px dashed var(--border);
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
-  background: var(--chip-bg);
+  background: linear-gradient(135deg, #f8fbff, #eef4ff);
   color: var(--text);
   display: inline-flex;
   align-items: center;
   gap: 8px;
   position: relative;
   overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.upload-btn:hover {
+  border-color: var(--primary);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
 }
 
 .upload-btn input {
@@ -452,38 +465,49 @@ form {
 
 .hero-preview {
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 10px;
-  background: var(--chip-bg);
+  border-radius: 16px;
+  padding: 12px;
+  background: #f8fbff;
 }
 
 .hero-preview img {
   width: 100%;
   border-radius: 12px;
   object-fit: cover;
-  max-height: 260px;
+  max-height: 280px;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
 }
 
 .row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
 }
 
 label {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
 }
 
 input,
 textarea,
 select {
-  padding: 12px;
-  border-radius: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: #f9fafb;
   font-size: 15px;
   color: var(--text);
+  transition: all 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+  background: #fff;
 }
 
 textarea {
@@ -496,19 +520,27 @@ button {
   border: none;
   border-radius: 14px;
   background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: white;
-  font-weight: 700;
+  color: #fff;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 16px 36px rgba(37, 99, 235, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover:enabled {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px rgba(37, 99, 235, 0.32);
 }
 
 button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18);
 }
 
 .error {
   color: #b91c1c;
-  font-weight: 600;
+  font-weight: 700;
 }
 </style>
