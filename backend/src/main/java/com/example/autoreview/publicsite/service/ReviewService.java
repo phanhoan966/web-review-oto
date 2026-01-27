@@ -163,6 +163,21 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public ReviewListResponse search(String query, int page, int size, String email) {
+        if (!StringUtils.hasText(query)) {
+            return new ReviewListResponse(List.of(), 0);
+        }
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<Review> reviews = reviewRepository.searchApproved(query.trim(), pageable);
+        List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
+        applyAuthorReviewCounts(dtos);
+        User user = findUser(email);
+        applyReviewLiked(dtos, user);
+        applyAuthorFollowing(dtos, user);
+        return new ReviewListResponse(dtos, reviews.getTotalElements());
+    }
+
+    @Transactional(readOnly = true)
     public ReviewListResponse listByAuthor(String email, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByAuthorEmailOrderByCreatedAtDesc(email, pageable);
@@ -401,8 +416,8 @@ public class ReviewService {
         };
         java.util.List<Comment> roots = all.stream().filter(c -> c.getParent() == null).toList();
         java.util.Comparator<Comment> rootComparator = "latest".equalsIgnoreCase(sort)
-                ? java.util.Comparator.<Comment, java.time.Instant>comparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
-                : java.util.Comparator.<Comment, Integer>comparing(Comment::getLikes, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
+                ? java.util.Comparator.comparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
+                : java.util.Comparator.comparing(Comment::getLikes, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed()
                         .thenComparing(java.util.Comparator.comparing(Comment::getCreatedAt, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())).reversed());
         roots = roots.stream().sorted(rootComparator).toList();
         int from = Math.toIntExact((long) page * size);

@@ -35,4 +35,31 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     java.util.List<Object[]> countApprovedByAuthorIds(@org.springframework.data.repository.query.Param("authorIds") java.util.Set<Long> authorIds);
 
     long countByAuthorIdAndStatus(Long authorId, ReviewStatus status);
+
+    @Query("""
+            select r from Review r
+            left join r.brand b
+            where r.status = com.example.autoreview.domain.ReviewStatus.APPROVED
+              and (
+                lower(r.title) like lower(concat('%', :query, '%')) or
+                lower(r.excerpt) like lower(concat('%', :query, '%')) or
+                lower(r.vehicleModel) like lower(concat('%', :query, '%')) or
+                lower(r.priceSegment) like lower(concat('%', :query, '%')) or
+                lower(r.fuelType) like lower(concat('%', :query, '%')) or
+                (b is not null and lower(b.name) like lower(concat('%', :query, '%'))) or
+                (r.vehicleYear is not null and concat(r.vehicleYear, '') like concat('%', :query, '%'))
+              )
+            order by
+              (
+                case when lower(r.title) like lower(concat('%', :query, '%')) then 6 else 0 end +
+                case when b is not null and lower(b.name) like lower(concat('%', :query, '%')) then 5 else 0 end +
+                case when lower(r.excerpt) like lower(concat('%', :query, '%')) then 4 else 0 end +
+                case when lower(r.vehicleModel) like lower(concat('%', :query, '%')) then 3 else 0 end +
+                case when lower(r.priceSegment) like lower(concat('%', :query, '%')) then 2 else 0 end +
+                case when lower(r.fuelType) like lower(concat('%', :query, '%')) then 2 else 0 end +
+                case when r.vehicleYear is not null and concat(r.vehicleYear, '') like concat('%', :query, '%') then 1 else 0 end
+              ) desc,
+              r.createdAt desc
+            """)
+    Page<Review> searchApproved(@org.springframework.data.repository.query.Param("query") String query, Pageable pageable);
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useUiStore } from './stores/ui'
@@ -13,6 +13,7 @@ const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
 const menuOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const searchTerm = ref(route.query.q ? String(route.query.q) : '')
 
 if (typeof window !== 'undefined') {
   ui.initTheme()
@@ -32,6 +33,13 @@ function handleClickOutside(event: MouseEvent) {
   }
 }
 
+watch(
+  () => route.query.q,
+  (val) => {
+    searchTerm.value = val ? String(val) : ''
+  }
+)
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
 })
@@ -39,6 +47,16 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+function submitSearch() {
+  const term = searchTerm.value.trim()
+  if (!term) {
+    router.push({ name: 'feed' })
+    return
+  }
+  router.push({ name: 'search', query: { q: term } })
+  menuOpen.value = false
+}
 
 async function logout() {
   await auth.logout()
@@ -60,6 +78,10 @@ async function logout() {
           <RouterLink v-if="auth.isAuthenticated" to="/profile">Hồ sơ</RouterLink>
           <RouterLink v-else to="/admin/login">Admin</RouterLink>
         </nav>
+        <form class="search-bar" @submit.prevent="submitSearch">
+          <input v-model="searchTerm" type="search" placeholder="Tìm bài, hãng, mẫu xe" />
+          <button type="submit">Tìm</button>
+        </form>
         <div class="actions">
           <button class="icon-btn" aria-label="Chuyển chế độ" @click="toggleTheme">{{ ui.theme === 'dark' ? '☀' : '☾' }}</button>
           <div class="notify">
@@ -110,6 +132,7 @@ async function logout() {
   gap: 16px;
   padding-top: 5px;
   padding-bottom: 2px;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -136,6 +159,48 @@ async function logout() {
   a.router-link-active {
     background: var(--chip-bg);
     color: var(--primary);
+  }
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  min-width: 280px;
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+}
+
+.search-bar button {
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+@media (max-width: 920px) {
+  .search-bar {
+    order: 3;
+    width: 100%;
+    min-width: 0;
+  }
+  .actions {
+    order: 2;
   }
 }
 

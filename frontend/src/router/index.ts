@@ -22,6 +22,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'feed', component: FeedView },
+    { path: '/search', name: 'search', component: FeedView },
     { path: '/brand/:brand', name: 'feed-brand', component: FeedView },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/register', name: 'register', component: RegisterView },

@@ -48,6 +48,17 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getFeed(brand, fuelType, priceSegment, page, size, email));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ReviewListResponse> search(
+            @AuthenticationPrincipal Object principal,
+            HttpServletRequest request,
+            @RequestParam(name = "q", required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.search(query, page, size, email));
+    }
+
     @GetMapping("/mine")
     public ResponseEntity<ReviewListResponse> mine(
             @AuthenticationPrincipal Object principal,
