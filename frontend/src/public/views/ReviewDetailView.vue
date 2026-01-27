@@ -1050,7 +1050,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 8px 14px;
-  background: var(--pill-bg);
+  background: #fff;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
