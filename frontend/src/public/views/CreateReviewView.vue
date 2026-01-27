@@ -553,7 +553,7 @@ select {
   background-repeat: no-repeat;
   background-size: 14px;
   background-position: calc(100% - 12px) center;
-  max-height: 260px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -568,7 +568,7 @@ select option {
 }
 
 select::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 select::-webkit-scrollbar-thumb {
