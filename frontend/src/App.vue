@@ -204,7 +204,7 @@ button.ghost:hover {
 
 .author {
   display: grid;
-  grid-template-columns: 46px 1fr;
+  grid-template-columns: 35px 1fr;
   align-items: center;
   border: none;
   background: transparent;
@@ -213,8 +213,14 @@ button.ghost:hover {
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  font-weight: bold;
+  justify-content: center;
+  border: 0.5px solid;
   border-radius: 50%;
   background-size: cover;
   background-position: center;

@@ -221,8 +221,8 @@ async function toggleLike() {
 }
 
 .avatar {
-  width: 46px;
-  height: 46px;
+  // width: 46px;
+  // height: 46px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #eef2f7;
