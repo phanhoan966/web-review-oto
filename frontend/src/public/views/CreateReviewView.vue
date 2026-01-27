@@ -242,26 +242,26 @@ async function submit() {
         </div>
 
         <div class="row">
-          <div>
+          <div class="field">
             <label>Hãng xe<span class="required">*</span></label>
             <input v-model="form.brandId" list="brandOptions" required placeholder="Chọn hoặc tìm hãng" />
           </div>
-          <div>
+          <div class="field">
             <label>Mẫu xe</label>
             <input v-model="form.vehicleModel" />
           </div>
         </div>
 
         <div class="row">
-          <div>
+          <div class="field">
             <label>Năm</label>
             <input v-model="form.vehicleYear" type="number" :min="1990" :max="currentYear" list="yearOptions" />
           </div>
-          <div>
+          <div class="field">
             <label>Nhiên liệu</label>
             <input v-model="form.fuelType" />
           </div>
-          <div>
+          <div class="field">
             <label>Phân khúc giá</label>
             <input v-model="form.priceSegment" />
           </div>
@@ -507,7 +507,12 @@ label {
   font-weight: 700;
   color: var(--text);
   display: inline-block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
 }
 
 input,
