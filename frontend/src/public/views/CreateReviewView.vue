@@ -26,6 +26,8 @@ const form = ref({
   brandId: ''
 })
 const heroPreview = ref('')
+const currentYear = new Date().getFullYear()
+const years = Array.from({ length: currentYear - 1989 }, (_, idx) => currentYear - idx)
 const uploadError = ref('')
 const uploading = ref(false)
 const errorMsg = ref('')
@@ -246,7 +248,7 @@ async function submit() {
         <div class="row">
           <div>
             <label>Năm</label>
-            <input v-model="form.vehicleYear" type="number" />
+            <input v-model="form.vehicleYear" type="number" :min="1990" :max="currentYear" list="yearOptions" />
           </div>
           <div>
             <label>Nhiên liệu</label>
@@ -257,6 +259,10 @@ async function submit() {
             <input v-model="form.priceSegment" />
           </div>
         </div>
+
+        <datalist id="yearOptions">
+          <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
+        </datalist>
 
         <button type="submit" :disabled="loading || uploading">{{ loading ? 'Đang gửi...' : uploading ? 'Đang upload ảnh...' : 'Gửi' }}</button>
         <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
@@ -489,6 +495,8 @@ form {
 label {
   font-weight: 700;
   color: var(--text);
+  display: inline-block;
+  margin-bottom: 6px;
 }
 
 input,
