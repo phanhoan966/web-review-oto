@@ -597,9 +597,9 @@ function shouldShowMention(comment?: CommentDetail | null) {
           </div>
 
           <div class="actions">
+            <button class="pill" :class="{ liked: reviewLike.liked }" type="button" @click="toggleReviewLike">❤ {{ reviewLike.count ?? review.likes ?? 0 }}</button>
             <button class="pill">💬 {{ review.commentsCount ?? 0 }}</button>
             <button class="pill">🔁 Chia sẻ</button>
-            <button class="pill" :class="{ liked: reviewLike.liked }" type="button" @click="toggleReviewLike">❤ {{ reviewLike.count ?? review.likes ?? 0 }}</button>
             <button class="pill">🔖 Lưu</button>
           </div>
         </article>
