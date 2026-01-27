@@ -269,11 +269,11 @@ async function submit() {
 .page {
   min-height: 100vh;
   padding: 32px 16px 48px;
-  background: #f8fafc;
+  background: var(--bg);
   background-image: radial-gradient(circle at 20% 20%, rgba(14, 165, 233, 0.08), transparent 32%), radial-gradient(circle at 80% 0%, rgba(79, 70, 229, 0.08), transparent 30%);
   display: grid;
   align-items: start;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .form-card {
