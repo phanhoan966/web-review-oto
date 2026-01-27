@@ -75,7 +75,7 @@ async function logout() {
         </RouterLink>
         <form v-if="showSearchBar" class="search-bar" @submit.prevent="submitSearch">
           <input v-model="searchTerm" type="search" placeholder="Tìm bài, hãng, mẫu xe" />
-          <button type="submit">Tìm</button>
+          <button type="submit" aria-label="Tìm kiếm">🔍</button>
         </form>
         <div class="actions">
           <button class="icon-btn" aria-label="Chuyển chế độ" @click="toggleTheme">{{ ui.theme === 'dark' ? '☀' : '☾' }}</button>
@@ -158,9 +158,10 @@ async function logout() {
 }
 
 .search-bar {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  height: 50px;
+  display: flex;
   align-items: center;
+  text-align: center;
   gap: 12px;
   padding: 10px 12px 10px 14px;
   border: 1px solid var(--border);
@@ -168,7 +169,7 @@ async function logout() {
   border-radius: 16px;
   box-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
   min-width: 320px;
-  max-width: 520px;
+  max-width: 720px;
 }
 
 .search-bar input {
@@ -177,7 +178,6 @@ async function logout() {
   background: transparent;
   color: var(--text);
   width: 100%;
-  font-weight: 600;
   letter-spacing: 0.01em;
 }
 
@@ -195,6 +195,10 @@ async function logout() {
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
 }
 
 .search-bar button:hover {
