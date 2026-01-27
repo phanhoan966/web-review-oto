@@ -497,7 +497,7 @@ select {
   padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: #f9fafb;
+  background: var(--surface);
   font-size: 15px;
   color: var(--text);
   transition: all 0.2s ease;
@@ -509,7 +509,7 @@ select:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
-  background: #fff;
+  background: var(--surface);
 }
 
 textarea {
