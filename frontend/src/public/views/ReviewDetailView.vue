@@ -173,7 +173,7 @@ const followLabel = computed(() =>
 )
 
 const followButtonClass = computed(() => {
-  if (!authorFollow.value.following) return 'primary'
+  if (!authorFollow.value.following) return ''
   return followHover.value ? 'danger' : 'following'
 })
 
