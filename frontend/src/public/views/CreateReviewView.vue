@@ -25,6 +25,7 @@ const form = ref({
   priceSegment: '',
   brandId: ''
 })
+const slugEdited = ref(false)
 const heroPreview = ref('')
 const currentYear = new Date().getFullYear()
 const years = Array.from({ length: currentYear - 1899 }, (_, idx) => currentYear - idx)
@@ -39,6 +40,7 @@ let editorInstance: any = null
 watch(
   () => form.value.title,
   (val) => {
+    if (slugEdited.value) return
     form.value.slug = slugify(val)
   }
 )
@@ -156,6 +158,14 @@ function createUploadAdapter(loader: any) {
   }
 }
 
+function handleSlugInput() {
+  slugEdited.value = true
+}
+
+function normalizeSlug() {
+  form.value.slug = slugify(form.value.slug || '')
+}
+
 function resolveBrandId() {
   const typed = (form.value.brandId || '').trim()
   if (!typed) return null
@@ -218,6 +228,7 @@ async function submit() {
         <input v-model="form.title" required maxlength="200" />
 
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
+        <input v-model="form.slug" required maxlength="200" @input="handleSlugInput" @blur="normalizeSlug" />
         <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}/:id</p>
 
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
