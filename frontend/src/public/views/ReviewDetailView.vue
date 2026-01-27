@@ -867,6 +867,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
 .main {
   display: grid;
   gap: 16px;
+  word-break: break-word;
 }
 
 .post-head {
