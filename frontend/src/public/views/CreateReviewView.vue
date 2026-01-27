@@ -511,6 +511,41 @@ select {
   transition: all 0.2s ease;
 }
 
+select {
+  height: 46px;
+  padding-right: 38px;
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7l5 5 5-5' stroke='%23a0aec0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 14px;
+  background-position: calc(100% - 12px) center;
+  overflow-y: auto;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+select option {
+  color: var(--text);
+  background: var(--surface);
+}
+
+select::-webkit-scrollbar {
+  width: 8px;
+}
+
+select::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+select::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 input:focus,
 textarea:focus,
 select:focus {
