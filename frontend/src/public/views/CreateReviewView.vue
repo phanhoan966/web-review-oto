@@ -225,10 +225,10 @@ async function submit() {
       <p class="sub">Bài viết sẽ ở trạng thái chờ duyệt.</p>
       <form @submit.prevent="submit">
         <label>Tiêu đề<span class="required">*</span></label>
-        <input v-model="form.title" required maxlength="200" />
+        <input v-model="form.title" required maxlength="200" placeholder="Nhập tiêu đề...."/>
 
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
-        <input v-model="form.slug" required maxlength="200" @input="handleSlugInput" @blur="normalizeSlug" />
+        <input v-model="form.slug" required maxlength="200" @input="handleSlugInput" @blur="normalizeSlug" placeholder="Slug SEO (tự sinh từ tiêu đề)" />
         <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}/:id</p>
 
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
@@ -239,6 +239,10 @@ async function submit() {
             <input type="file" accept="image/*" :disabled="uploading" @change="onHeroFile" />
           </label>
         </div>
+        <p v-if="uploadError" class="error">{{ uploadError }}</p>
+        <div v-if="form.heroImageUrl || heroPreview" class="hero-preview">
+          <img :src="heroPreview || form.heroImageUrl" alt="preview" />
+        </div>
 
         <label>Tóm tắt<span class="required">*</span></label>
         <textarea v-model="form.excerpt" required maxlength="256" rows="2" />
@@ -247,10 +251,6 @@ async function submit() {
         <div class="editor-shell" :class="{ ready: editorReady }">
           <div ref="editorHost"></div>
           <p v-if="editorError" class="error">{{ editorError }}</p>
-        </div>
-        <p v-if="uploadError" class="error">{{ uploadError }}</p>
-        <div v-if="form.heroImageUrl || heroPreview" class="hero-preview">
-          <img :src="heroPreview || form.heroImageUrl" alt="preview" />
         </div>
 
         <div class="row">
@@ -522,7 +522,6 @@ label {
   font-weight: 700;
   color: var(--text);
   display: inline-block;
-  margin-bottom: 8px;
 }
 
 .field {
@@ -546,13 +545,14 @@ label {
 input,
 textarea,
 select {
-  padding: 12px 14px;
+  padding: 8px 14px;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--surface);
   font-size: 15px;
   color: var(--text);
   transition: all 0.2s ease;
+  margin-bottom: 10px;
 }
 
 select {
