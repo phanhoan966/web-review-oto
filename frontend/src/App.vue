@@ -75,7 +75,7 @@ async function logout() {
         </RouterLink>
         <form v-if="showSearchBar" class="search-bar" @submit.prevent="submitSearch">
           <input v-model="searchTerm" type="search" placeholder="Tìm bài, hãng, mẫu xe" />
-          <button type="submit" aria-label="Tìm kiếm"><i class="far fa-search"></i></button>
+          <button type="submit" aria-label="Tìm kiếm">🔍</button>
         </form>
         <div class="actions">
           <button class="icon-btn" aria-label="Chuyển chế độ" @click="toggleTheme">{{ ui.theme === 'dark' ? '☀' : '☾' }}</button>
@@ -186,25 +186,18 @@ async function logout() {
 }
 
 .search-bar button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  border: none;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(37, 99, 235, 0.08)), var(--surface);
+  color: #fff;
   border-radius: 12px;
   padding: 10px 14px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 42px;
-}
-
-.search-bar button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
-  background: var(--chip-bg);
 }
 
 .search-bar button:active {
