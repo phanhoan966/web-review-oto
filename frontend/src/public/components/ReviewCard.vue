@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
+import client from '../../api/client'
 import { slugify } from '../utils/slugify'
 import { buildAssetUrl } from '../utils/assetUrl'
 import HoverPopover from './common/HoverPopover.vue'
@@ -23,12 +25,24 @@ export interface ReviewCardData {
   vehicleModel?: string
   vehicleYear?: number
   likes?: number
+  liked?: boolean
   commentsCount?: number
   views?: number
   publishedAt?: string
 }
 
 const props = defineProps<{ review: ReviewCardData }>()
+
+const auth = useAuthStore()
+const router = useRouter()
+const likeState = ref({ count: props.review.likes ?? 0, liked: Boolean(props.review.liked) })
+
+watch(
+  () => props.review,
+  (val) => {
+    likeState.value = { count: val.likes ?? 0, liked: Boolean(val.liked) }
+  }
+)
 
 const meta = computed(() => {
   const brand = props.review.brand
@@ -68,6 +82,26 @@ function formatRelativeTime(value?: string) {
   }
   const days = Math.floor(hours / 24)
   return `${days} ngày trước`
+}
+
+async function toggleLike() {
+  if (!auth.user) {
+    router.push({ name: 'login', query: { redirect: detailPath.value } })
+    return
+  }
+  const current = likeState.value
+  const liked = !current.liked
+  const count = Math.max(0, current.count + (liked ? 1 : -1))
+  likeState.value = { count, liked }
+  try {
+    if (liked) {
+      await client.post(`/reviews/${props.review.id}/like`)
+    } else {
+      await client.post(`/reviews/${props.review.id}/unlike`)
+    }
+  } catch (error) {
+    likeState.value = current
+  }
 }
 </script>
 
@@ -113,12 +147,12 @@ function formatRelativeTime(value?: string) {
           <img v-if="heroSrc" :src="heroSrc" :alt="review.title" />
         </RouterLink>
         <i><p class="excerpt">{{ review.excerpt }}</p></i>
-        <div class="metrics">
-          <div class="pill">❤ {{ review.likes ?? 0 }}</div>
-          <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
-          <div class="pill">👁 {{ review.views ?? 0 }} views</div>
-        </div>
       </RouterLink>
+      <div class="metrics">
+        <button class="pill like-btn" :class="{ liked: likeState.liked }" type="button" @click.stop="toggleLike">❤ {{ likeState.count }}</button>
+        <div class="pill">💬 {{ review.commentsCount ?? 0 }}</div>
+        <div class="pill">👁 {{ review.views ?? 0 }} views</div>
+      </div>
     </div>
   </article>
 </template>
@@ -234,5 +268,15 @@ function formatRelativeTime(value?: string) {
   padding: 6px 12px;
   font-size: 13px;
   color: #1f2a3d;
+}
+
+.like-btn {
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.like-btn.liked {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 </style>

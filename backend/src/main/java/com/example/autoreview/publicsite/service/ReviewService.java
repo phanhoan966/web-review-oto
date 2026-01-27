@@ -133,11 +133,12 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public ReviewListResponse getFeed(String brand, String fuelType, String priceSegment, int page, int size) {
+    public ReviewListResponse getFeed(String brand, String fuelType, String priceSegment, int page, int size, String email) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Review> reviews = reviewRepository.findByFilters(ReviewStatus.APPROVED, brand, fuelType, priceSegment, pageable);
         List<ReviewDto> dtos = reviews.getContent().stream().map(DtoMapper::toReviewDto).toList();
         applyAuthorReviewCounts(dtos);
+        applyReviewLiked(dtos, findUser(email));
         return new ReviewListResponse(dtos, reviews.getTotalElements());
     }
 

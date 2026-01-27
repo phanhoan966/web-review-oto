@@ -37,12 +37,15 @@ public class ReviewController {
 
     @GetMapping
     public ResponseEntity<ReviewListResponse> feed(
+            @AuthenticationPrincipal Object principal,
+            HttpServletRequest request,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String fuelType,
             @RequestParam(required = false) String priceSegment,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(reviewService.getFeed(brand, fuelType, priceSegment, page, size));
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.getFeed(brand, fuelType, priceSegment, page, size, email));
     }
 
     @GetMapping("/mine")
