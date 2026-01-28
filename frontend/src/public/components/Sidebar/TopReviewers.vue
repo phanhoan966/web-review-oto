@@ -200,7 +200,7 @@ async function toggleFollow(id: number) {
 }
 
 .count {
-  color: #f4b000;
+  color: var(--text);
   font-weight: 700;
 }
 

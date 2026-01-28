@@ -118,14 +118,14 @@ async function loadReviews() {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #e8f2ff;
+  background: var(--chip-bg);
   background-size: cover;
   background-position: center;
   display: grid;
   place-items: center;
   font-weight: 800;
   font-size: 24px;
-  color: #0d6efd;
+  color: var(--text);
 }
 
 h1 {
@@ -179,8 +179,8 @@ h1 {
 }
 
 .ghost {
-  background: #f7f9fc;
-  color: #1f2a3d;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .mine {
@@ -214,8 +214,8 @@ h1 {
   font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
-  background: #f4f4f5;
-  color: #111827;
+  background: var(--chip-bg);
+  color: var(--text);
 }
 
 .status-pill.approved {

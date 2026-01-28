@@ -326,7 +326,7 @@ async function toggleFollow() {
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 13px;
-  color: #1f2a3d;
+  color: var(--text);
 }
 
 .like-btn {
