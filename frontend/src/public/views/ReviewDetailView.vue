@@ -112,6 +112,10 @@ const expandedThreads = ref<Set<number>>(new Set())
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
+function replyCount(root: CommentDetail) {
+  return childRows(root).length
+}
+
 function flattenComments(list: CommentDetail[]): CommentDetail[] {
   return list.flatMap((item) => [item, ...(item.children ? flattenComments(item.children) : [])])
 }
