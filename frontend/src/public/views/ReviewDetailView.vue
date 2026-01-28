@@ -1360,9 +1360,9 @@ function shouldShowMention(comment?: CommentDetail | null) {
   grid-template-columns: 1fr;
   gap: 8px;
   padding: 12px 12px 10px;
-  border: 1px solid #d9d9d9;
-  background: #fafafa;
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 10px;
 }
 
 .child-list {
@@ -1371,7 +1371,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
   gap: 10px;
   margin-top: 10px;
   padding-left: 18px;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid var(--border);
 }
 
 .comment-child {
@@ -1399,6 +1399,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
   align-items: center;
   gap: 4px;
   font-size: 13px;
+  cursor: pointer;
 }
 
 .chip-btn.secondary {
@@ -1417,6 +1418,13 @@ function shouldShowMention(comment?: CommentDetail | null) {
   color: #6b7280;
   margin-top: 2px;
   padding-left: 50px;
+}
+
+.comment-list button,
+.comment-list a,
+.comment-list .comment-name,
+.comment-list .mention-link {
+  cursor: pointer;
 }
 
 .actions-left {
