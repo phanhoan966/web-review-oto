@@ -1415,7 +1415,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
   justify-content: space-between;
   gap: 10px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--muted);
   margin-top: 2px;
   padding-left: 50px;
 }
@@ -1435,13 +1435,13 @@ function shouldShowMention(comment?: CommentDetail | null) {
 
 .comment-name-inline {
   margin-right: 6px;
-  color: #0f172a;
+  color: var(--text);
   font-weight: 700;
 }
 
 .comment-text {
   white-space: pre-line;
-  color: #3f3f46;
+  color: var(--text);
 }
 
 .chip-btn.liked {
