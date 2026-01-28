@@ -108,6 +108,7 @@ const replyTarget = ref<CommentDetail | null>(null)
 const rootComposerVisible = ref(true)
 const replyInputs: Record<number, HTMLTextAreaElement | null> = {}
 const depthMap = ref<Record<number, number>>({})
+const expandedThreads = ref<Set<number>>(new Set())
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
@@ -226,6 +227,7 @@ watch(
     replyTarget.value = null
     rootComposerVisible.value = true
     errorMsg.value = ''
+    expandedThreads.value = new Set()
     reloadWithComments()
   }
 )
@@ -319,6 +321,9 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
     const rootCount = Array.isArray(data) ? data.filter((item) => !item.parentId).length : 0
     comments.value = mergeComments(data, reset)
     initLikes(data)
+    if (reset) {
+      expandedThreads.value = new Set()
+    }
     if (rootCount < pageSize) {
       hasMore.value = false
     } else {
@@ -523,6 +528,9 @@ async function toggleFollowAuthor() {
 
 function startReply(comment: CommentDetail) {
   if (!canReply()) return
+  if (!isThreadExpanded(comment.id) && comment.children?.length) {
+    toggleReplies(comment.id)
+  }
   replyTarget.value = comment
   rootComposerVisible.value = false
   const prefix = comment.authorUsername || comment.authorName || 'người dùng'
@@ -557,6 +565,20 @@ const visibleRoots = computed(() => {
     return sortByDate(a, b)
   })
 })
+
+function toggleReplies(id: number) {
+  const next = new Set(expandedThreads.value)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
+  expandedThreads.value = next
+}
+
+function isThreadExpanded(id: number) {
+  return expandedThreads.value.has(id)
+}
 
 function markSlide(items: CommentDetail[]) {
   if (!items.length) return
@@ -770,6 +792,14 @@ function shouldShowMention(comment?: CommentDetail | null) {
                         ❤ {{ likesState[comment.id]?.count ?? 0 }}
                       </button>
                       <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <button
+                        v-if="comment.children?.length"
+                        class="chip-btn secondary"
+                        type="button"
+                        @click="toggleReplies(comment.id)"
+                      >
+                        {{ comment.children.length }} trả lời
+                      </button>
                     </div>
                     <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                   </div>
@@ -810,6 +840,14 @@ function shouldShowMention(comment?: CommentDetail | null) {
                         ❤ {{ likesState[comment.id]?.count ?? 0 }}
                       </button>
                       <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <button
+                        v-if="comment.children?.length"
+                        class="chip-btn secondary"
+                        type="button"
+                        @click="toggleReplies(comment.id)"
+                      >
+                        {{ comment.children.length }} trả lời
+                      </button>
                     </div>
                     <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
                   </div>
@@ -834,7 +872,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                       </form>
                     </div>
                   </div>
-                <div v-if="comment.children?.length" class="child-list">
+                <div v-if="comment.children?.length && isThreadExpanded(comment.id)" class="child-list">
                   <div
                     v-for="child in childRows(comment)"
                     :key="child.id"
@@ -1356,6 +1394,13 @@ function shouldShowMention(comment?: CommentDetail | null) {
   align-items: center;
   gap: 4px;
   font-size: 13px;
+}
+
+.chip-btn.secondary {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--chip-bg);
 }
 
 .comment-actions-row {
