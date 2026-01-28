@@ -797,12 +797,12 @@ function shouldShowMention(comment?: CommentDetail | null) {
                       </button>
                       <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
                       <button
-                        v-if="comment.children?.length"
+                        v-if="replyCount(comment) > 0"
                         class="chip-btn secondary"
                         type="button"
                         @click="toggleReplies(comment.id)"
                       >
-                        {{ comment.children.length }} trả lời
+                        {{ replyCount(comment) }} trả lời
                       </button>
                     </div>
                     <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
@@ -876,7 +876,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
                       </form>
                     </div>
                   </div>
-                <div v-if="comment.children?.length && isThreadExpanded(comment.id)" class="child-list">
+                <div v-if="replyCount(comment) > 0 && isThreadExpanded(comment.id)" class="child-list">
                   <div
                     v-for="child in childRows(comment)"
                     :key="child.id"
@@ -1375,9 +1375,10 @@ function shouldShowMention(comment?: CommentDetail | null) {
 }
 
 .comment-child {
-  padding: 0;
-  background: transparent;
-  border: none;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
 .comment-trigger {
