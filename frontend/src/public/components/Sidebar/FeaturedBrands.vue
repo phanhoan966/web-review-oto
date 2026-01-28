@@ -49,6 +49,7 @@ defineProps<{ brands: BrandItem[] }>()
   font-weight: 700;
   font-size: 16px;
   margin-bottom: 14px;
+  color: var(--text);
 }
 
 .brands {
@@ -72,6 +73,13 @@ defineProps<{ brands: BrandItem[] }>()
   width: 100%;
   cursor: pointer;
   text-align: left;
+  color: var(--text);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.brand:hover {
+  background: var(--surface);
+  border-color: var(--primary);
 }
 
 .logo {
@@ -90,5 +98,6 @@ defineProps<{ brands: BrandItem[] }>()
 
 .name {
   font-weight: 600;
+  color: var(--text);
 }
 </style>
