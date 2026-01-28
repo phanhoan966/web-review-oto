@@ -617,6 +617,8 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  overflow-wrap: anywhere;
+  padding-right: 20px;
 }
 
 .link:hover {
