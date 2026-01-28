@@ -1155,6 +1155,10 @@ function shouldShowMention(comment?: CommentDetail | null) {
   background: #ffecec;
 }
 
+.follow-btn:hover {
+  background: var(--chip-bg);
+}
+
 .dots {
   font-size: 20px;
   line-height: 1;
@@ -1328,6 +1332,8 @@ function shouldShowMention(comment?: CommentDetail | null) {
   border: 1px solid var(--border);
   background: var(--chip-bg);
   font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
 }
 
 .tab.active {
