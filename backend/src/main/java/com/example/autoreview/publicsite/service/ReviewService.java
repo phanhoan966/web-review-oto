@@ -331,6 +331,31 @@ public class ReviewService {
     }
 
     @Transactional
+    public ReviewDto updateOwnBySlug(String slug, String email, UpdateReviewRequest request) {
+        Review review = reviewRepository.findBySlug(slug).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        if (!review.getAuthor().getEmail().equals(email)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not owner");
+        }
+        if (review.getStatus() != ReviewStatus.PENDING) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Only pending review can be edited");
+        }
+        review.setTitle(request.getTitle());
+        review.setSlug(request.getSlug());
+        review.setExcerpt(request.getExcerpt());
+        review.setContent(request.getContent());
+        review.setHeroImageUrl(sanitizeHeroImageUrl(request.getHeroImageUrl()));
+        review.setVehicleModel(request.getVehicleModel());
+        review.setVehicleYear(request.getVehicleYear());
+        review.setFuelType(request.getFuelType());
+        review.setPriceSegment(request.getPriceSegment());
+        review.setUpdatedAt(Instant.now());
+        reviewRepository.save(review);
+        ReviewDto dto = DtoMapper.toReviewDto(review);
+        applyAuthorReviewCounts(List.of(dto));
+        return dto;
+    }
+
+    @Transactional
     public void approve(Long id, String approverEmail, boolean approve) {
         setStatus(id, approverEmail, approve ? ReviewStatus.APPROVED : ReviewStatus.REJECTED);
     }

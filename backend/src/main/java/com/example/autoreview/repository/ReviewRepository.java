@@ -67,4 +67,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> searchApproved(@org.springframework.data.repository.query.Param("query") String query, Pageable pageable);
 
     java.util.Optional<Review> findBySlugAndStatus(String slug, ReviewStatus status);
+
+    java.util.Optional<Review> findBySlug(String slug);
 }

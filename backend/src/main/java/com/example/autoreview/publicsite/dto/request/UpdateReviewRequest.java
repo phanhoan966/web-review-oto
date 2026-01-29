@@ -18,7 +18,6 @@ public class UpdateReviewRequest {
     private String excerpt;
 
     @NotBlank
-    @Size(max = 2048)
     private String content;
 
     private String heroImageUrl;

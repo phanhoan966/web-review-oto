@@ -113,6 +113,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.updateOwn(id, email, requestBody));
     }
 
+    @PutMapping("/slug/{slug}")
+    public ResponseEntity<ReviewDto> updateBySlug(@PathVariable String slug, @AuthenticationPrincipal Object principal, HttpServletRequest request, @Valid @RequestBody UpdateReviewRequest requestBody) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        return ResponseEntity.ok(reviewService.updateOwnBySlug(slug, email, requestBody));
+    }
+
     @GetMapping("/pending")
     public ResponseEntity<ReviewListResponse> pending(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
         Page<ReviewDto> pending = reviewService.listPending(page, size);
