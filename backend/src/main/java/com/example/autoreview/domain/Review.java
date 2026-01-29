@@ -32,7 +32,7 @@ public class Review {
     @Column(length = 256)
     private String excerpt;
 
-    @Column(length = 2048)
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     @Column(columnDefinition = "TEXT")
