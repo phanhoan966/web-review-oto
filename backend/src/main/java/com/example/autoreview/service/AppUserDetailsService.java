@@ -1,4 +1,4 @@
-package com.example.autoreview.publicsite.service;
+package com.example.autoreview.service;
 
 import com.example.autoreview.domain.User;
 import com.example.autoreview.repository.UserRepository;
