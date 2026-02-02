@@ -109,6 +109,18 @@ const rootComposerVisible = ref(true)
 const replyInputs: Record<number, HTMLTextAreaElement | null> = {}
 const depthMap = ref<Record<number, number>>({})
 const expandedThreads = ref<Set<number>>(new Set())
+const showFullContent = ref(false)
+const contentPreview = computed(() => {
+  const raw = review.value?.content || ''
+  const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (text.length <= 400) return text
+  return `${text.slice(0, 400).trimEnd()}…`
+})
+const hasMoreContent = computed(() => {
+  const raw = review.value?.content || ''
+  const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  return text.length > 400
+})
 let highlightTimer: number | undefined
 let slideTimer: number | undefined
 
@@ -232,6 +244,7 @@ watch(
     rootComposerVisible.value = true
     errorMsg.value = ''
     expandedThreads.value = new Set()
+    showFullContent.value = false
     reloadWithComments()
   }
 )
@@ -358,7 +371,7 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
   }
 }
 
-async function rootIdOf(commentId: number | null) {
+function rootIdOf(commentId: number | null) {
   if (!commentId) return null
   let current = commentMap.value[commentId]
   let guard = 0
@@ -727,7 +740,11 @@ function shouldShowMention(comment?: CommentDetail | null) {
 
           <div class="title">{{ review.title }}</div>
           <i><p class="excerpt">{{ review.excerpt }}</p></i>
-          <div class="body" v-html="review.content" />
+          <div v-if="showFullContent || !hasMoreContent" class="body" v-html="review.content" />
+          <div v-else class="body truncated">{{ contentPreview }}</div>
+          <button v-if="hasMoreContent && !showFullContent" class="read-more" type="button" @click="showFullContent = true">
+            Xem thêm
+          </button>
 
           <div class="hero" v-if="review.heroImageUrl">
             <img :src="heroSrc" :alt="review.title" />
@@ -1205,6 +1222,20 @@ function shouldShowMention(comment?: CommentDetail | null) {
   color: var(--text);
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.body.truncated {
+  white-space: normal;
+}
+
+.read-more {
+  margin-top: 8px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .hero {
