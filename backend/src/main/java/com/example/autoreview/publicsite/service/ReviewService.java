@@ -251,13 +251,18 @@ public class ReviewService {
 
     @Transactional
     public ReviewDto getPublic(Long id, String email) {
-        Review review = reviewRepository.findByIdAndStatus(id, ReviewStatus.APPROVED)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
-        review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
-        reviewRepository.save(review);
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        User user = findUser(email);
+        boolean isOwner = user != null && review.getAuthor() != null && email != null && email.equals(review.getAuthor().getEmail());
+        if (review.getStatus() != ReviewStatus.APPROVED && !isOwner) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Review not found");
+        }
+        if (review.getStatus() == ReviewStatus.APPROVED) {
+            review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
+            reviewRepository.save(review);
+        }
         ReviewDto dto = DtoMapper.toReviewDto(review);
         applyAuthorReviewCounts(List.of(dto));
-        User user = findUser(email);
         applyReviewLiked(List.of(dto), user);
         applyAuthorFollowing(List.of(dto), user);
         return dto;
@@ -265,13 +270,18 @@ public class ReviewService {
 
     @Transactional
     public ReviewDto getPublicBySlug(String slug, String email) {
-        Review review = reviewRepository.findBySlugAndStatus(slug, ReviewStatus.APPROVED)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
-        review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
-        reviewRepository.save(review);
+        Review review = reviewRepository.findBySlug(slug).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        User user = findUser(email);
+        boolean isOwner = user != null && review.getAuthor() != null && email != null && email.equals(review.getAuthor().getEmail());
+        if (review.getStatus() != ReviewStatus.APPROVED && !isOwner) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "Review not found");
+        }
+        if (review.getStatus() == ReviewStatus.APPROVED) {
+            review.setViews((review.getViews() == null ? 0 : review.getViews()) + 1);
+            reviewRepository.save(review);
+        }
         ReviewDto dto = DtoMapper.toReviewDto(review);
         applyAuthorReviewCounts(List.of(dto));
-        User user = findUser(email);
         applyReviewLiked(List.of(dto), user);
         applyAuthorFollowing(List.of(dto), user);
         return dto;
@@ -361,6 +371,46 @@ public class ReviewService {
     }
 
     @Transactional
+    public void hideOwn(Long id, String email) {
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        if (!review.getAuthor().getEmail().equals(email)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not owner");
+        }
+        if (review.getStatus() == ReviewStatus.HIDDEN) {
+            return;
+        }
+        review.setStatus(ReviewStatus.HIDDEN);
+        review.setPublishedAt(null);
+        review.setUpdatedAt(Instant.now());
+        reviewRepository.save(review);
+    }
+
+    @Transactional
+    public void unhideOwn(Long id, String email) {
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        if (!review.getAuthor().getEmail().equals(email)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not owner");
+        }
+        if (review.getStatus() != ReviewStatus.HIDDEN) {
+            return;
+        }
+        review.setStatus(ReviewStatus.APPROVED);
+        review.setUpdatedAt(Instant.now());
+        review.setPublishedAt(Instant.now());
+        reviewRepository.save(review);
+    }
+
+    @Transactional
+    public void deleteOwn(Long id, String email) {
+        Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
+        if (!review.getAuthor().getEmail().equals(email)) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Not owner");
+        }
+        commentRepository.deleteByReview(review);
+        reviewRepository.delete(review);
+    }
+
+    @Transactional
     public void setStatus(Long id, String approverEmail, ReviewStatus status) {
         Review review = reviewRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
         User approver = userRepository.findByEmail(approverEmail).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
@@ -433,7 +483,9 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public List<CommentDto> listComments(Long reviewId, int page, int size, String sort, String email) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Review not found"));
-        if (review.getStatus() != ReviewStatus.APPROVED) {
+        User user = findUser(email);
+        boolean isOwner = user != null && review.getAuthor() != null && email != null && email.equals(review.getAuthor().getEmail());
+        if (review.getStatus() != ReviewStatus.APPROVED && !isOwner) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Comments unavailable for unapproved review");
         }
         PageRequest pageable = PageRequest.of(page, size);

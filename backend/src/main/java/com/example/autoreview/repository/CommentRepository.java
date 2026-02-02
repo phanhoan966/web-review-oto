@@ -18,4 +18,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     Page<Comment> findByReviewAndParentIsNullOrderByCreatedAtDesc(Review review, Pageable pageable);
 
     List<Comment> findByParentInOrderByCreatedAtAsc(List<Comment> parents);
+
+    void deleteByReview(Review review);
 }

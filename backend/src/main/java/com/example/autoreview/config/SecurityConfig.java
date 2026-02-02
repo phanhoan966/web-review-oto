@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/reviews", "/reviews/most-viewed", "/reviews/*/comments", "/reviews/*", "/brands/**", "/reviewers/**", "/users/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/reviews").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/reviews/**").hasAuthority(Roles.USER)
+                        .requestMatchers(HttpMethod.DELETE, "/reviews/**").hasAuthority(Roles.USER)
                         .requestMatchers(HttpMethod.POST, "/reviews/*/comments").permitAll()
                         .requestMatchers(HttpMethod.POST, "/reviews/*/like", "/reviews/*/unlike").authenticated()
                         .requestMatchers(HttpMethod.POST, "/comments/*/like", "/comments/*/unlike").authenticated()

@@ -14,6 +14,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -117,6 +118,27 @@ public class ReviewController {
     public ResponseEntity<ReviewDto> updateBySlug(@PathVariable String slug, @AuthenticationPrincipal Object principal, HttpServletRequest request, @Valid @RequestBody UpdateReviewRequest requestBody) {
         String email = currentUserResolver.resolveEmail(principal, request);
         return ResponseEntity.ok(reviewService.updateOwnBySlug(slug, email, requestBody));
+    }
+
+    @PutMapping("/{id}/hide")
+    public ResponseEntity<Void> hide(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.hideOwn(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/unhide")
+    public ResponseEntity<Void> unhide(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.unhideOwn(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        reviewService.deleteOwn(id, email);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/pending")
