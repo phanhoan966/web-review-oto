@@ -36,6 +36,7 @@ const notifications = ref<NotificationItem[]>([])
 const unreadCount = ref(0)
 const notifyOpen = ref(false)
 const notificationsLoading = ref(false)
+const markingAll = ref(false)
 
 if (typeof window !== 'undefined') {
   ui.initTheme()
@@ -159,6 +160,20 @@ async function markRead(id: number) {
   }
 }
 
+async function markAllRead() {
+  if (!auth.isAuthenticated || !notifications.value.length) return
+  markingAll.value = true
+  try {
+    await client.post('/notifications/read-all')
+    notifications.value = notifications.value.map((item) => ({ ...item, read: true }))
+    unreadCount.value = 0
+  } catch (error) {
+    // ignore
+  } finally {
+    markingAll.value = false
+  }
+}
+
 async function handleNotificationClick(item: NotificationItem) {
   await markRead(item.id)
   notifyOpen.value = false
@@ -197,7 +212,10 @@ async function logout() {
               <span v-if="unreadCount" class="badge">{{ unreadCount }}</span>
             </button>
             <div v-if="notifyOpen" class="notify-dropdown surface">
-              <div class="notify-head">Thông báo</div>
+              <div class="notify-head">
+                <span>Thông báo</span>
+                <button class="mark-all" type="button" @click.stop="markAllRead" :disabled="markingAll || !unreadCount">Đã đọc hết</button>
+              </div>
               <div v-if="notificationsLoading" class="notify-status">Đang tải...</div>
               <div v-else-if="!notifications.length" class="notify-status">Chưa có thông báo</div>
               <ul v-else class="notify-list">
@@ -374,6 +392,23 @@ async function logout() {
   padding: 12px 14px;
   font-weight: 700;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mark-all {
+  border: none;
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mark-all:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .notify-status {

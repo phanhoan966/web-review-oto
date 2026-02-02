@@ -112,6 +112,17 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
+    public void markAllRead(String email) {
+        User user = requireUser(email);
+        List<Notification> unread = notificationRepository.findByRecipientAndReadFlagFalse(user);
+        if (unread.isEmpty()) {
+            return;
+        }
+        unread.forEach(n -> n.setReadFlag(true));
+        notificationRepository.saveAll(unread);
+    }
+
     @Transactional(readOnly = true)
     public long countUnread(String email) {
         User user = requireUser(email);

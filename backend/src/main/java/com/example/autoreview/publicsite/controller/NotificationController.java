@@ -46,4 +46,11 @@ public class NotificationController {
         notificationService.markRead(id, email);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/read-all")
+    public ResponseEntity<Void> markAllRead(@AuthenticationPrincipal Object principal, HttpServletRequest request) {
+        String email = currentUserResolver.resolveEmail(principal, request);
+        notificationService.markAllRead(email);
+        return ResponseEntity.noContent().build();
+    }
 }
