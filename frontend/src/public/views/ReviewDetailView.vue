@@ -1218,21 +1218,24 @@ function shouldShowMention(comment?: CommentDetail | null) {
   color: var(--text);
 }
 
-.body {
+:deep(.body) {
   color: var(--text);
   line-height: 1.7;
   white-space: pre-wrap;
 }
 
-.body img {
+:deep(.body img) {
   max-width: 100%;
+  width: auto;
   height: auto;
+  max-height: 520px;
   border-radius: 12px;
   display: block;
   margin: 12px auto;
+  object-fit: contain;
 }
 
-.body figure.table {
+:deep(.body figure.table) {
   display: block;
   overflow-x: auto;
   margin: 16px 0;
@@ -1242,25 +1245,26 @@ function shouldShowMention(comment?: CommentDetail | null) {
   padding: 12px;
 }
 
-.body table {
-  width: 100%;
+:deep(.body table) {
+  min-width: 600px;
+  width: max-content;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.body th,
-.body td {
+:deep(.body th),
+:deep(.body td) {
   padding: 10px;
   text-align: left;
   border: 1px solid var(--border);
 }
 
-.body th {
+:deep(.body th) {
   background: var(--chip-bg);
   font-weight: 700;
 }
 
-.body tr:nth-child(odd) {
+:deep(.body tr:nth-child(odd)) {
   background: var(--pill-bg);
 }
 
