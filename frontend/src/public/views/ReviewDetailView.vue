@@ -27,6 +27,7 @@ interface ReviewDetail {
   commentsCount?: number
   views?: number
   publishedAt?: string
+  status?: string
   authorId?: number
   authorName?: string
   authorAvatar?: string
