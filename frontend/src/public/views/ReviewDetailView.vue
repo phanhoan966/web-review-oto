@@ -358,6 +358,17 @@ async function loadComments(reset = false, autoScroll = true, highlightNew = tru
   }
 }
 
+async function rootIdOf(commentId: number | null) {
+  if (!commentId) return null
+  let current = commentMap.value[commentId]
+  let guard = 0
+  while (current?.parentId && guard < 100) {
+    current = commentMap.value[current.parentId]
+    guard += 1
+  }
+  return current?.id || null
+}
+
 async function submitComment() {
   const target = replyTarget.value
   const content = target ? (replyDrafts.value[target.id] || '').trim() : rootComment.value.trim()
@@ -394,8 +405,13 @@ async function submitComment() {
     }
     comments.value = mergeComments([data], false)
     if (parentId) {
+      const rootId = rootIdOf(parentId)
       const expanded = new Set(expandedThreads.value)
-      expanded.add(parentId)
+      if (rootId) {
+        expanded.add(rootId)
+      } else {
+        expanded.add(parentId)
+      }
       expandedThreads.value = expanded
     }
     initLikes([data])
