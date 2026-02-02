@@ -6,6 +6,7 @@ import com.example.autoreview.mapper.DtoMapper;
 import com.example.autoreview.repository.ReviewRepository;
 import com.example.autoreview.repository.UserFollowRepository;
 import com.example.autoreview.repository.UserRepository;
+import com.example.autoreview.publicsite.service.NotificationService;
 import com.example.autoreview.domain.User;
 import com.example.autoreview.domain.UserFollow;
 import java.time.Instant;
@@ -24,11 +25,13 @@ public class ReviewerService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final UserFollowRepository userFollowRepository;
+    private final NotificationService notificationService;
 
-    public ReviewerService(UserRepository userRepository, ReviewRepository reviewRepository, UserFollowRepository userFollowRepository) {
+    public ReviewerService(UserRepository userRepository, ReviewRepository reviewRepository, UserFollowRepository userFollowRepository, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.reviewRepository = reviewRepository;
         this.userFollowRepository = userFollowRepository;
+        this.notificationService = notificationService;
     }
 
     public List<ReviewerDto> topReviewers(int limit, String email) {
@@ -75,6 +78,7 @@ public class ReviewerService {
         userFollowRepository.save(follow);
         target.setFollowers((target.getFollowers() == null ? 0 : target.getFollowers()) + 1);
         userRepository.save(target);
+        notificationService.notifyFollow(target, actor);
     }
 
     @Transactional

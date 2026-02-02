@@ -592,6 +592,7 @@ public class ReviewService {
         reviewLikeRepository.save(like);
         review.setLikes((review.getLikes() == null ? 0 : review.getLikes()) + 1);
         reviewRepository.save(review);
+        notificationService.notifyReviewLike(review, user);
     }
 
     @Transactional

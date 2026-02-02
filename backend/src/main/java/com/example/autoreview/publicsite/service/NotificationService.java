@@ -36,6 +36,25 @@ public class NotificationService {
     }
 
     @Transactional
+    public void notifyFollow(User target, User actor) {
+        if (actor == null || target == null || target.getId() == null || actor.getId().equals(target.getId())) {
+            return;
+        }
+        createNotification(target, actor, null, null, "FOLLOW", actor.getUsername() + " đã theo dõi bạn");
+    }
+
+    @Transactional
+    public void notifyReviewLike(Review review, User actor) {
+        if (actor == null || review == null || review.getAuthor() == null || review.getAuthor().getId() == null) {
+            return;
+        }
+        if (review.getAuthor().getId().equals(actor.getId())) {
+            return;
+        }
+        createNotification(review.getAuthor(), actor, review, null, "LIKE_REVIEW", actor.getUsername() + " đã thích bài viết của bạn");
+    }
+
+    @Transactional
     public void notifyNewComment(Review review, Comment comment, User actor) {
         if (actor == null) {
             return;
@@ -64,17 +83,9 @@ public class NotificationService {
             if (recipient == null) {
                 continue;
             }
-            Notification notification = new Notification();
-            notification.setRecipient(recipient);
-            notification.setActor(actor);
-            notification.setReview(review);
-            notification.setComment(comment);
-            notification.setCreatedAt(now);
-            notification.setReadFlag(false);
             String type = resolveType(recipientId, review, comment);
-            notification.setType(type);
-            notification.setMessage(resolveMessage(type, actor.getUsername()));
-            notificationRepository.save(notification);
+            String message = resolveMessage(type, actor.getUsername());
+            createNotification(recipient, actor, review, comment, type, message, now);
         }
     }
 
@@ -125,7 +136,30 @@ public class NotificationService {
         if ("COMMENT_ON_OWN_REVIEW".equals(type)) {
             return name + " đã bình luận bài viết của bạn";
         }
+        if ("FOLLOW".equals(type)) {
+            return name + " đã theo dõi bạn";
+        }
+        if ("LIKE_REVIEW".equals(type)) {
+            return name + " đã thích bài viết của bạn";
+        }
         return name + " đã bình luận bài viết bạn đang theo dõi";
+    }
+
+    private void createNotification(User recipient, User actor, Review review, Comment comment, String type, String message) {
+        createNotification(recipient, actor, review, comment, type, message, Instant.now());
+    }
+
+    private void createNotification(User recipient, User actor, Review review, Comment comment, String type, String message, Instant createdAt) {
+        Notification notification = new Notification();
+        notification.setRecipient(recipient);
+        notification.setActor(actor);
+        notification.setReview(review);
+        notification.setComment(comment);
+        notification.setCreatedAt(createdAt);
+        notification.setReadFlag(false);
+        notification.setType(type);
+        notification.setMessage(message);
+        notificationRepository.save(notification);
     }
 
     private User requireUser(String email) {
