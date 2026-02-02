@@ -52,6 +52,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/reviews/*/like", "/reviews/*/unlike").authenticated()
                         .requestMatchers(HttpMethod.POST, "/comments/*/like", "/comments/*/unlike").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/comments/**").hasAnyAuthority(Roles.USER, Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/notifications/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/notifications/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/reviews/*/approve", "/reviews/*/reject").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
                         .requestMatchers("/admin/users/**").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)
                         .requestMatchers("/admin/**").hasAnyAuthority(Roles.ADMIN, Roles.MANAGER, Roles.SYSTEM_ADMIN)

@@ -22,6 +22,7 @@ import com.example.autoreview.repository.ReviewRepository;
 import com.example.autoreview.repository.UserFollowRepository;
 import com.example.autoreview.repository.UserRepository;
 import com.example.autoreview.repository.VehicleBrandRepository;
+import com.example.autoreview.publicsite.service.NotificationService;
 import com.example.autoreview.security.Roles;
 import java.time.Instant;
 import java.util.List;
@@ -47,8 +48,9 @@ public class ReviewService {
     private final CommentLikeRepository commentLikeRepository;
     private final ReviewLikeRepository reviewLikeRepository;
     private final UserFollowRepository userFollowRepository;
+    private final NotificationService notificationService;
 
-    public ReviewService(ReviewRepository reviewRepository, VehicleBrandRepository vehicleBrandRepository, UserRepository userRepository, CommentRepository commentRepository, CommentLikeRepository commentLikeRepository, ReviewLikeRepository reviewLikeRepository, UserFollowRepository userFollowRepository) {
+    public ReviewService(ReviewRepository reviewRepository, VehicleBrandRepository vehicleBrandRepository, UserRepository userRepository, CommentRepository commentRepository, CommentLikeRepository commentLikeRepository, ReviewLikeRepository reviewLikeRepository, UserFollowRepository userFollowRepository, NotificationService notificationService) {
         this.reviewRepository = reviewRepository;
         this.vehicleBrandRepository = vehicleBrandRepository;
         this.userRepository = userRepository;
@@ -56,6 +58,7 @@ public class ReviewService {
         this.commentLikeRepository = commentLikeRepository;
         this.reviewLikeRepository = reviewLikeRepository;
         this.userFollowRepository = userFollowRepository;
+        this.notificationService = notificationService;
     }
 
     private void applyAuthorReviewCounts(List<ReviewDto> dtos) {
@@ -472,6 +475,7 @@ public class ReviewService {
             Comment saved = commentRepository.save(comment);
             review.setCommentsCount((review.getCommentsCount() == null ? 0 : review.getCommentsCount()) + 1);
             reviewRepository.save(review);
+            notificationService.notifyNewComment(review, saved, author);
             CommentDto dto = DtoMapper.toCommentDto(saved);
             applyCommentAuthorReviewCounts(List.of(dto));
             return dto;

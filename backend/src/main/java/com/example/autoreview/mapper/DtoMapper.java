@@ -2,10 +2,12 @@ package com.example.autoreview.mapper;
 
 import com.example.autoreview.publicsite.dto.response.BrandDto;
 import com.example.autoreview.publicsite.dto.response.CommentDto;
+import com.example.autoreview.publicsite.dto.response.NotificationDto;
 import com.example.autoreview.publicsite.dto.response.ReviewDto;
 import com.example.autoreview.publicsite.dto.response.ReviewerDto;
 import com.example.autoreview.publicsite.dto.response.UserProfileDto;
 import com.example.autoreview.domain.Comment;
+import com.example.autoreview.domain.Notification;
 import com.example.autoreview.domain.Review;
 import com.example.autoreview.domain.User;
 import com.example.autoreview.domain.VehicleBrand;
@@ -95,6 +97,29 @@ public class DtoMapper {
         dto.setId(brand.getId());
         dto.setName(brand.getName());
         dto.setLogoUrl(brand.getLogoUrl());
+        return dto;
+    }
+
+    public static NotificationDto toNotificationDto(Notification notification) {
+        NotificationDto dto = new NotificationDto();
+        dto.setId(notification.getId());
+        dto.setType(notification.getType());
+        dto.setMessage(notification.getMessage());
+        dto.setRead(notification.isReadFlag());
+        dto.setCreatedAt(notification.getCreatedAt());
+        if (notification.getReview() != null) {
+            dto.setReviewId(notification.getReview().getId());
+            dto.setReviewSlug(notification.getReview().getSlug());
+            dto.setReviewTitle(notification.getReview().getTitle());
+        }
+        if (notification.getComment() != null) {
+            dto.setCommentId(notification.getComment().getId());
+        }
+        if (notification.getActor() != null) {
+            dto.setActorName(notification.getActor().getUsername());
+            dto.setActorUsername(notification.getActor().getUsername());
+            dto.setActorAvatar(notification.getActor().getAvatarUrl());
+        }
         return dto;
     }
 }

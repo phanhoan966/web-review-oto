@@ -3,7 +3,23 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useUiStore } from './stores/ui'
+import client from './api/client'
 import brandLogo from './assets/autoreview-logo.png'
+
+type NotificationItem = {
+  id: number
+  type?: string
+  message?: string
+  read?: boolean
+  createdAt?: string
+  reviewId?: number
+  reviewSlug?: string
+  reviewTitle?: string
+  commentId?: number
+  actorName?: string
+  actorUsername?: string
+  actorAvatar?: string
+}
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -12,9 +28,14 @@ const route = useRoute()
 const initials = computed(() => auth.user?.username?.[0]?.toUpperCase() || 'U')
 const menuOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
+const notifyRef = ref<HTMLElement | null>(null)
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const showSearchBar = computed(() => !isAdminRoute.value && (route.name === 'feed' || route.name === 'search'))
 const searchTerm = ref(route.query.q ? String(route.query.q) : '')
+const notifications = ref<NotificationItem[]>([])
+const unreadCount = ref(0)
+const notifyOpen = ref(false)
+const notificationsLoading = ref(false)
 
 if (typeof window !== 'undefined') {
   ui.initTheme()
@@ -28,9 +49,23 @@ function toggleTheme() {
   ui.toggleTheme()
 }
 
+function toggleNotify() {
+  if (!auth.isAuthenticated) {
+    router.push({ name: 'login', query: { redirect: route.fullPath } })
+    return
+  }
+  notifyOpen.value = !notifyOpen.value
+  if (notifyOpen.value) {
+    loadNotifications()
+  }
+}
+
 function handleClickOutside(event: MouseEvent) {
   if (menuRef.value && !menuRef.value.contains(event.target as Node)) {
     menuOpen.value = false
+  }
+  if (notifyRef.value && !notifyRef.value.contains(event.target as Node)) {
+    notifyOpen.value = false
   }
 }
 
@@ -39,6 +74,21 @@ watch(
   (val) => {
     searchTerm.value = val ? String(val) : ''
   }
+)
+
+watch(
+  () => auth.user,
+  (user) => {
+    if (user) {
+      loadUnreadCount()
+      loadNotifications()
+    } else {
+      notifyOpen.value = false
+      notifications.value = []
+      unreadCount.value = 0
+    }
+  },
+  { immediate: true }
 )
 
 onMounted(() => {
@@ -57,6 +107,68 @@ function submitSearch() {
   }
   router.push({ name: 'search', query: { q: term } })
   menuOpen.value = false
+}
+
+async function loadUnreadCount() {
+  if (!auth.isAuthenticated) {
+    unreadCount.value = 0
+    return
+  }
+  try {
+    const { data } = await client.get<{ count: number }>('/notifications/unread-count')
+    unreadCount.value = data?.count ?? 0
+  } catch (error) {
+    unreadCount.value = 0
+  }
+}
+
+async function loadNotifications() {
+  if (!auth.isAuthenticated) {
+    notifications.value = []
+    return
+  }
+  notificationsLoading.value = true
+  try {
+    const { data } = await client.get<NotificationItem[]>('/notifications', { params: { limit: 20 } })
+    notifications.value = Array.isArray(data) ? data : []
+    unreadCount.value = notifications.value.filter((item) => !item.read).length
+  } catch (error) {
+    notifications.value = []
+  } finally {
+    notificationsLoading.value = false
+  }
+}
+
+function formatTime(value?: string) {
+  if (!value) return ''
+  return new Date(value).toLocaleString('vi-VN')
+}
+
+async function markRead(id: number) {
+  if (!auth.isAuthenticated) return
+  const target = notifications.value.find((item) => item.id === id)
+  if (!target || target.read) {
+    return
+  }
+  try {
+    await client.post(`/notifications/${id}/read`)
+    notifications.value = notifications.value.map((item) => (item.id === id ? { ...item, read: true } : item))
+    unreadCount.value = Math.max(0, unreadCount.value - 1)
+  } catch (error) {
+    return
+  }
+}
+
+async function handleNotificationClick(item: NotificationItem) {
+  await markRead(item.id)
+  notifyOpen.value = false
+  if (item.reviewSlug) {
+    router.push({ name: 'review-detail', params: { slug: item.reviewSlug } })
+    return
+  }
+  if (item.reviewId) {
+    router.push({ name: 'review-detail-legacy', params: { id: item.reviewId } })
+  }
 }
 
 async function logout() {
@@ -79,9 +191,28 @@ async function logout() {
         </form>
         <div class="actions">
           <button class="icon-btn" aria-label="Chuyển chế độ" @click="toggleTheme">{{ ui.theme === 'dark' ? '☀' : '☾' }}</button>
-          <div class="notify">
-            <button class="icon-btn" aria-label="Thông báo">🔔</button>
-            <span class="badge"></span>
+          <div class="notify" ref="notifyRef">
+            <button class="icon-btn" aria-label="Thông báo" @click.stop="toggleNotify">
+              🔔
+              <span v-if="unreadCount" class="badge">{{ unreadCount }}</span>
+            </button>
+            <div v-if="notifyOpen" class="notify-dropdown surface">
+              <div class="notify-head">Thông báo</div>
+              <div v-if="notificationsLoading" class="notify-status">Đang tải...</div>
+              <div v-else-if="!notifications.length" class="notify-status">Chưa có thông báo</div>
+              <ul v-else class="notify-list">
+                <li v-for="item in notifications" :key="item.id" :class="{ unread: !item.read }">
+                  <button type="button" class="notify-item" @click="handleNotificationClick(item)">
+                    <div class="notify-msg">{{ item.message || 'Thông báo mới' }}</div>
+                    <div class="notify-meta">
+                      <span>{{ item.reviewTitle || 'Bài viết' }}</span>
+                      <span>·</span>
+                      <span>{{ formatTime(item.createdAt) }}</span>
+                    </div>
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
           <RouterLink v-if="!auth.isAuthenticated" class="ghost" to="/login">Đăng nhập</RouterLink>
           <RouterLink v-if="!auth.isAuthenticated" class="primary" to="/register">Đăng ký</RouterLink>
@@ -225,6 +356,74 @@ async function logout() {
   position: relative;
 }
 
+.notify-dropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  width: 320px;
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+  z-index: 20;
+}
+
+.notify-head {
+  padding: 12px 14px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+
+.notify-status {
+  padding: 14px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.notify-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notify-list li {
+  border-bottom: 1px solid var(--border);
+}
+
+.notify-list li:last-child {
+  border-bottom: none;
+}
+
+.notify-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 12px 14px;
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.notify-list li.unread .notify-item {
+  background: var(--chip-bg);
+}
+
+.notify-msg {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notify-meta {
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .icon-btn {
   width: 38px;
   height: 38px;
@@ -239,14 +438,21 @@ async function logout() {
 }
 
 .badge {
-  width: 10px;
-  height: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
   background: var(--accent);
-  border-radius: 50%;
+  border-radius: 999px;
   position: absolute;
-  top: -2px;
-  right: -2px;
-  box-shadow: 0 0 0 4px var(--surface);
+  top: -4px;
+  right: -4px;
+  box-shadow: 0 0 0 3px var(--surface);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ghost,
