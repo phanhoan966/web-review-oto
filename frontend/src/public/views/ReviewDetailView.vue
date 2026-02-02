@@ -110,6 +110,7 @@ const replyInputs: Record<number, HTMLTextAreaElement | null> = {}
 const depthMap = ref<Record<number, number>>({})
 const expandedThreads = ref<Set<number>>(new Set())
 const showFullContent = ref(false)
+const menuOpen = ref(false)
 const contentPreview = computed(() => {
   const raw = review.value?.content || ''
   const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -245,6 +246,7 @@ watch(
     errorMsg.value = ''
     expandedThreads.value = new Set()
     showFullContent.value = false
+    menuOpen.value = false
     reloadWithComments()
   }
 )
@@ -590,6 +592,33 @@ function goRegister() {
   router.push({ name: 'register', query: { redirect: route.fullPath } })
 }
 
+async function hideReview() {
+  const id = reviewId.value
+  if (!id) return
+  await client.put(`/reviews/${id}/hide`)
+  if (review.value) {
+    review.value.status = 'HIDDEN'
+  }
+  menuOpen.value = false
+}
+
+async function unhideReview() {
+  const id = reviewId.value
+  if (!id) return
+  await client.put(`/reviews/${id}/unhide`)
+  if (review.value) {
+    review.value.status = 'APPROVED'
+  }
+  menuOpen.value = false
+}
+
+async function deleteReview() {
+  const id = reviewId.value
+  if (!id) return
+  await client.delete(`/reviews/${id}`)
+  router.push({ name: 'feed' })
+}
+
 const visibleRoots = computed(() => {
   const list = comments.value || []
   const sortByDate = (a: CommentDetail, b: CommentDetail) => (b.createdAt || '').localeCompare(a.createdAt || '')
@@ -734,7 +763,15 @@ function shouldShowMention(comment?: CommentDetail | null) {
               >
                 {{ followLabel }}
               </button>
-              <div class="dots">⋯</div>
+              <div v-else class="menu">
+                <button class="dots" type="button" @click="menuOpen = !menuOpen">⋯</button>
+                <div v-if="menuOpen" class="menu-list">
+                  <RouterLink class="menu-item" :to="{ name: 'review-detail-legacy', params: { id: reviewId } }">Sửa bài</RouterLink>
+                  <button v-if="review?.status === 'HIDDEN'" class="menu-item" type="button" @click="unhideReview">Hiện bài</button>
+                  <button v-else class="menu-item" type="button" @click="hideReview">Ẩn bài</button>
+                  <button class="menu-item danger" type="button" @click="deleteReview">Xoá bài</button>
+                </div>
+              </div>
             </div>
           </header>
 
@@ -1197,6 +1234,10 @@ function shouldShowMention(comment?: CommentDetail | null) {
   background: var(--chip-bg);
 }
 
+.menu {
+  position: relative;
+}
+
 .dots {
   font-size: 20px;
   line-height: 1;
@@ -1204,6 +1245,39 @@ function shouldShowMention(comment?: CommentDetail | null) {
   border-radius: 999px;
   background: var(--chip-bg);
   cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.menu-list {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  display: grid;
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.menu-item {
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.menu-item:hover {
+  background: var(--pill-bg);
+}
+
+.menu-item.danger {
+  color: var(--error);
 }
 
 .title {
