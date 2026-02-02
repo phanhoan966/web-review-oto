@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { onBeforeUnmount, onMounted, ref, watch, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import client from '../../api/client'
 import { buildAssetUrl } from '../utils/assetUrl'
@@ -11,6 +11,9 @@ interface BrandOption {
 }
 
 const router = useRouter()
+const route = useRoute()
+const reviewId = computed(() => (route.params.id ? Number(route.params.id) : null))
+const isEdit = computed(() => Boolean(reviewId.value))
 const loading = ref(false)
 const brands = ref<BrandOption[]>([])
 const form = ref({
@@ -59,6 +62,7 @@ watch(
 
 onMounted(async () => {
   await loadBrands()
+  await loadExisting()
   await initEditor()
 })
 
@@ -74,6 +78,32 @@ async function loadBrands() {
     brands.value = data || []
   } catch (error) {
     brands.value = []
+  }
+}
+
+async function loadExisting() {
+  if (!isEdit.value || !reviewId.value) return
+  try {
+    const { data } = await client.get(`/reviews/${reviewId.value}`)
+    form.value.title = data.title || ''
+    form.value.slug = data.slug || ''
+    form.value.excerpt = data.excerpt || ''
+    form.value.content = data.content || ''
+    form.value.heroImageUrl = data.heroImageUrl || ''
+    form.value.vehicleModel = data.vehicleModel || ''
+    form.value.vehicleYear = data.vehicleYear ? String(data.vehicleYear) : ''
+    form.value.fuelType = data.fuelType || ''
+    form.value.priceSegment = data.priceSegment || ''
+    form.value.brandId = data.brandId ? String(data.brandId) : ''
+    slugEdited.value = true
+    if (form.value.heroImageUrl) {
+      heroPreview.value = buildAssetUrl(form.value.heroImageUrl)
+    }
+    if (editorInstance && form.value.content) {
+      editorInstance.setData(form.value.content)
+    }
+  } catch (error: any) {
+    errorMsg.value = error.response?.data?.message || 'Không tải được bài viết'
   }
 }
 
@@ -197,21 +227,39 @@ async function submit() {
   loading.value = true
   errorMsg.value = ''
   try {
-    await client.post('/reviews', {
-      title: form.value.title,
-      slug: form.value.slug,
-      excerpt: form.value.excerpt,
-      content: form.value.content,
-      heroImageUrl: heroUrl || null,
-      vehicleModel: form.value.vehicleModel,
-      vehicleYear: form.value.vehicleYear ? Number(form.value.vehicleYear) : null,
-      fuelType: form.value.fuelType,
-      priceSegment: form.value.priceSegment,
-      brandId
-    })
-    router.push({ name: 'feed' })
+    if (isEdit.value && reviewId.value) {
+      const { data } = await client.put(`/reviews/${reviewId.value}`, {
+        title: form.value.title,
+        slug: form.value.slug,
+        excerpt: form.value.excerpt,
+        content: form.value.content,
+        heroImageUrl: heroUrl || null,
+        vehicleModel: form.value.vehicleModel,
+        vehicleYear: form.value.vehicleYear ? Number(form.value.vehicleYear) : null,
+        fuelType: form.value.fuelType,
+        priceSegment: form.value.priceSegment,
+        brandId
+      })
+      const nextSlug = data?.slug || form.value.slug
+      router.push({ name: 'review-detail', params: { slug: nextSlug } })
+    } else {
+      const { data } = await client.post('/reviews', {
+        title: form.value.title,
+        slug: form.value.slug,
+        excerpt: form.value.excerpt,
+        content: form.value.content,
+        heroImageUrl: heroUrl || null,
+        vehicleModel: form.value.vehicleModel,
+        vehicleYear: form.value.vehicleYear ? Number(form.value.vehicleYear) : null,
+        fuelType: form.value.fuelType,
+        priceSegment: form.value.priceSegment,
+        brandId
+      })
+      const nextSlug = data?.slug || form.value.slug
+      router.push({ name: 'review-detail', params: { slug: nextSlug } })
+    }
   } catch (error: any) {
-    errorMsg.value = error.response?.data?.message || 'Tạo bài viết thất bại'
+    errorMsg.value = error.response?.data?.message || (isEdit.value ? 'Cập nhật bài viết thất bại' : 'Tạo bài viết thất bại')
   } finally {
     loading.value = false
   }
@@ -221,8 +269,8 @@ async function submit() {
 <template>
   <div class="container page">
     <div class="form-card surface">
-      <h1>Tạo bài review</h1>
-      <p class="sub">Bài viết sẽ ở trạng thái chờ duyệt.</p>
+      <h1>{{ isEdit ? 'Chỉnh sửa bài review' : 'Tạo bài review' }}</h1>
+      <p class="sub">{{ isEdit ? 'Cập nhật nội dung bài viết của bạn.' : 'Bài viết sẽ ở trạng thái chờ duyệt.' }}</p>
       <form @submit.prevent="submit">
         <label>Tiêu đề<span class="required">*</span></label>
         <input v-model="form.title" required maxlength="200" placeholder="Nhập tiêu đề...."/>
@@ -230,6 +278,7 @@ async function submit() {
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
         <input v-model="form.slug" required maxlength="200" @input="handleSlugInput" @blur="normalizeSlug" placeholder="Slug SEO (tự sinh từ tiêu đề)" />
         <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}</p>
+        <p v-if="isEdit" class="muted small">Bạn đang chỉnh sửa bài #{{ reviewId }}</p>
 
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
         <div class="hero-row">

@@ -596,6 +596,7 @@ function goRegister() {
 async function hideReview() {
   const id = reviewId.value
   if (!id) return
+  if (!window.confirm('Ẩn bài viết này?')) return
   await client.put(`/reviews/${id}/hide`)
   if (review.value) {
     review.value.status = 'HIDDEN'
@@ -606,6 +607,7 @@ async function hideReview() {
 async function unhideReview() {
   const id = reviewId.value
   if (!id) return
+  if (!window.confirm('Hiện lại bài viết này?')) return
   await client.put(`/reviews/${id}/unhide`)
   if (review.value) {
     review.value.status = 'APPROVED'
@@ -616,6 +618,7 @@ async function unhideReview() {
 async function deleteReview() {
   const id = reviewId.value
   if (!id) return
+  if (!window.confirm('Bạn chắc chắn muốn xoá bài viết này?')) return
   await client.delete(`/reviews/${id}`)
   router.push({ name: 'feed' })
 }
@@ -767,7 +770,7 @@ function shouldShowMention(comment?: CommentDetail | null) {
               <div v-else class="menu">
                 <button class="dots" type="button" @click="menuOpen = !menuOpen">⋯</button>
                 <div v-if="menuOpen" class="menu-list">
-                  <RouterLink class="menu-item" :to="{ name: 'review-detail-legacy', params: { id: reviewId } }">Sửa bài</RouterLink>
+                  <RouterLink class="menu-item" :to="{ name: 'review-edit', params: { id: reviewId } }">Sửa bài</RouterLink>
                   <button v-if="review?.status === 'HIDDEN'" class="menu-item" type="button" @click="unhideReview">Hiện bài</button>
                   <button v-else class="menu-item" type="button" @click="hideReview">Ẩn bài</button>
                   <button class="menu-item danger" type="button" @click="deleteReview">Xoá bài</button>
