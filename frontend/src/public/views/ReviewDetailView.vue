@@ -742,8 +742,8 @@ function shouldShowMention(comment?: CommentDetail | null) {
           <i><p class="excerpt">{{ review.excerpt }}</p></i>
           <div v-if="showFullContent || !hasMoreContent" class="body" v-html="review.content" />
           <div v-else class="body truncated">{{ contentPreview }}</div>
-          <button v-if="hasMoreContent && !showFullContent" class="read-more" type="button" @click="showFullContent = true">
-            Xem thêm
+          <button v-if="hasMoreContent" class="read-more" type="button" @click="showFullContent = !showFullContent">
+            {{ showFullContent ? 'Thu gọn' : 'Xem thêm' }}
           </button>
 
           <div class="hero" v-if="review.heroImageUrl">
@@ -1222,6 +1222,46 @@ function shouldShowMention(comment?: CommentDetail | null) {
   color: var(--text);
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  margin: 12px auto;
+}
+
+.body figure.table {
+  display: block;
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px;
+}
+
+.body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.body th,
+.body td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+.body th {
+  background: var(--chip-bg);
+  font-weight: 700;
+}
+
+.body tr:nth-child(odd) {
+  background: var(--pill-bg);
 }
 
 .body.truncated {
