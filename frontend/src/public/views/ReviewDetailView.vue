@@ -393,6 +393,11 @@ async function submitComment() {
       data.authorAvatar = auth.user.avatarUrl
     }
     comments.value = mergeComments([data], false)
+    if (parentId) {
+      const expanded = new Set(expandedThreads.value)
+      expanded.add(parentId)
+      expandedThreads.value = expanded
+    }
     initLikes([data])
     if (target?.id) {
       const nextDrafts = { ...replyDrafts.value }
