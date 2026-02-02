@@ -11,5 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByRecipientOrderByCreatedAtDesc(User recipient, Pageable pageable);
 
+    List<Notification> findByRecipientAndReadFlagFalse(User recipient);
+
     long countByRecipientAndReadFlagFalse(User recipient);
 }
