@@ -12,8 +12,8 @@ interface BrandOption {
 
 const router = useRouter()
 const route = useRoute()
-const reviewId = computed(() => (route.params.id ? Number(route.params.id) : null))
-const isEdit = computed(() => Boolean(reviewId.value))
+const reviewSlug = computed(() => (route.params.slug ? String(route.params.slug) : null))
+const isEdit = computed(() => Boolean(reviewSlug.value))
 const loading = ref(false)
 const brands = ref<BrandOption[]>([])
 const form = ref({
@@ -82,9 +82,9 @@ async function loadBrands() {
 }
 
 async function loadExisting() {
-  if (!isEdit.value || !reviewId.value) return
+  if (!isEdit.value || !reviewSlug.value) return
   try {
-    const { data } = await client.get(`/reviews/${reviewId.value}`)
+    const { data } = await client.get(`/reviews/slug/${reviewSlug.value}`)
     form.value.title = data.title || ''
     form.value.slug = data.slug || ''
     form.value.excerpt = data.excerpt || ''
@@ -227,8 +227,8 @@ async function submit() {
   loading.value = true
   errorMsg.value = ''
   try {
-    if (isEdit.value && reviewId.value) {
-      const { data } = await client.put(`/reviews/${reviewId.value}`, {
+    if (isEdit.value && reviewSlug.value) {
+      const { data } = await client.put(`/reviews/slug/${reviewSlug.value}`, {
         title: form.value.title,
         slug: form.value.slug,
         excerpt: form.value.excerpt,

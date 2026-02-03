@@ -46,7 +46,7 @@ const router = createRouter({
       ]
     },
     { path: '/reviews/new', name: 'review-create', component: CreateReviewView, meta: { requiresAuth: true } },
-    { path: '/reviews/:id/edit', name: 'review-edit', component: CreateReviewView, meta: { requiresAuth: true } },
+    { path: '/reviews/:slug/edit', name: 'review-edit', component: CreateReviewView, meta: { requiresAuth: true } },
     { path: '/post/:slug', name: 'review-detail', component: ReviewDetailView },
     { path: '/post/:slug/:id', name: 'review-detail-legacy-path', redirect: (to) => ({ name: 'review-detail', params: { slug: to.params.slug } }) },
     { path: '/reviews/:id', name: 'review-detail-legacy', component: ReviewDetailView },
