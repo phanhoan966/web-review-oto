@@ -1,0 +1,249 @@
+package com.example.autoreview.publicsite.dto.response;
+
+import java.time.Instant;
+
+public class ReviewDto {
+    private Long id;
+    private Long authorId;
+    private String title;
+    private String excerpt;
+    private String content;
+    private String heroImageUrl;
+    private String slug;
+    private String authorName;
+    private String authorAvatar;
+    private String authorUsername;
+    private Integer authorFollowers;
+    private Integer authorReviewCount;
+    private Double authorRating;
+    private String authorBio;
+    private Boolean authorFollowing;
+    private String brand;
+    private String vehicleModel;
+    private Integer vehicleYear;
+    private Integer likes;
+    private Boolean liked;
+    private Integer commentsCount;
+    private Integer views;
+    private String fuelType;
+    private String priceSegment;
+    private Instant createdAt;
+    private Instant publishedAt;
+    private String status;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getExcerpt() {
+        return excerpt;
+    }
+
+    public void setExcerpt(String excerpt) {
+        this.excerpt = excerpt;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getHeroImageUrl() {
+        return heroImageUrl;
+    }
+
+    public void setHeroImageUrl(String heroImageUrl) {
+        this.heroImageUrl = heroImageUrl;
+    }
+
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
+    }
+
+    public String getAuthorAvatar() {
+        return authorAvatar;
+    }
+
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
+    }
+
+    public String getAuthorUsername() {
+        return authorUsername;
+    }
+
+    public void setAuthorUsername(String authorUsername) {
+        this.authorUsername = authorUsername;
+    }
+
+    public Integer getAuthorFollowers() {
+        return authorFollowers;
+    }
+
+    public void setAuthorFollowers(Integer authorFollowers) {
+        this.authorFollowers = authorFollowers;
+    }
+
+    public Integer getAuthorReviewCount() {
+        return authorReviewCount;
+    }
+
+    public void setAuthorReviewCount(Integer authorReviewCount) {
+        this.authorReviewCount = authorReviewCount;
+    }
+
+    public Double getAuthorRating() {
+        return authorRating;
+    }
+
+    public void setAuthorRating(Double authorRating) {
+        this.authorRating = authorRating;
+    }
+
+    public String getAuthorBio() {
+        return authorBio;
+    }
+
+    public void setAuthorBio(String authorBio) {
+        this.authorBio = authorBio;
+    }
+
+    public Boolean getAuthorFollowing() {
+        return authorFollowing;
+    }
+
+    public void setAuthorFollowing(Boolean authorFollowing) {
+        this.authorFollowing = authorFollowing;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getVehicleModel() {
+        return vehicleModel;
+    }
+
+    public void setVehicleModel(String vehicleModel) {
+        this.vehicleModel = vehicleModel;
+    }
+
+    public Integer getVehicleYear() {
+        return vehicleYear;
+    }
+
+    public void setVehicleYear(Integer vehicleYear) {
+        this.vehicleYear = vehicleYear;
+    }
+
+    public Integer getLikes() {
+        return likes;
+    }
+
+    public void setLikes(Integer likes) {
+        this.likes = likes;
+    }
+
+    public Boolean getLiked() {
+        return liked;
+    }
+
+    public void setLiked(Boolean liked) {
+        this.liked = liked;
+    }
+
+    public Integer getCommentsCount() {
+        return commentsCount;
+    }
+
+    public void setCommentsCount(Integer commentsCount) {
+        this.commentsCount = commentsCount;
+    }
+
+    public Integer getViews() {
+        return views;
+    }
+
+    public void setViews(Integer views) {
+        this.views = views;
+    }
+
+    public String getFuelType() {
+        return fuelType;
+    }
+
+    public void setFuelType(String fuelType) {
+        this.fuelType = fuelType;
+    }
+
+    public String getPriceSegment() {
+        return priceSegment;
+    }
+
+    public void setPriceSegment(String priceSegment) {
+        this.priceSegment = priceSegment;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(Instant publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Long getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(Long authorId) {
+        this.authorId = authorId;
+    }
+}

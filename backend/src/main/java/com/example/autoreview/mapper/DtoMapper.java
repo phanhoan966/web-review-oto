@@ -1,0 +1,125 @@
+package com.example.autoreview.mapper;
+
+import com.example.autoreview.publicsite.dto.response.BrandDto;
+import com.example.autoreview.publicsite.dto.response.CommentDto;
+import com.example.autoreview.publicsite.dto.response.NotificationDto;
+import com.example.autoreview.publicsite.dto.response.ReviewDto;
+import com.example.autoreview.publicsite.dto.response.ReviewerDto;
+import com.example.autoreview.publicsite.dto.response.UserProfileDto;
+import com.example.autoreview.domain.Comment;
+import com.example.autoreview.domain.Notification;
+import com.example.autoreview.domain.Review;
+import com.example.autoreview.domain.User;
+import com.example.autoreview.domain.VehicleBrand;
+
+public class DtoMapper {
+
+    private DtoMapper() {
+    }
+
+    public static UserProfileDto toUserProfile(User user) {
+        UserProfileDto dto = new UserProfileDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setFollowers(user.getFollowers());
+        dto.setRating(user.getRating());
+        dto.setRoles(user.getRoles());
+        return dto;
+    }
+
+    public static ReviewDto toReviewDto(Review review) {
+        ReviewDto dto = new ReviewDto();
+        dto.setId(review.getId());
+        dto.setTitle(review.getTitle());
+        dto.setExcerpt(review.getExcerpt());
+        dto.setContent(review.getContent());
+        dto.setHeroImageUrl(review.getHeroImageUrl());
+        dto.setSlug(review.getSlug());
+        dto.setBrand(review.getBrand() != null ? review.getBrand().getName() : null);
+        dto.setVehicleModel(review.getVehicleModel());
+        dto.setVehicleYear(review.getVehicleYear());
+        dto.setLikes(review.getLikes());
+        dto.setCommentsCount(review.getCommentsCount());
+        dto.setViews(review.getViews());
+        dto.setFuelType(review.getFuelType());
+        dto.setPriceSegment(review.getPriceSegment());
+        dto.setCreatedAt(review.getCreatedAt());
+        dto.setPublishedAt(review.getPublishedAt());
+        dto.setStatus(review.getStatus() != null ? review.getStatus().name() : null);
+        if (review.getAuthor() != null) {
+            dto.setAuthorId(review.getAuthor().getId());
+            dto.setAuthorName(review.getAuthor().getUsername());
+            dto.setAuthorAvatar(review.getAuthor().getAvatarUrl());
+            dto.setAuthorUsername(review.getAuthor().getUsername());
+            dto.setAuthorFollowers(review.getAuthor().getFollowers());
+            dto.setAuthorRating(review.getAuthor().getRating());
+            dto.setAuthorBio(null);
+        }
+        return dto;
+    }
+
+    public static CommentDto toCommentDto(Comment comment) {
+        CommentDto dto = new CommentDto();
+        dto.setId(comment.getId());
+        dto.setContent(comment.getContent());
+        dto.setCreatedAt(comment.getCreatedAt());
+        dto.setAnonymous(comment.isAnonymous());
+        dto.setParentId(comment.getParent() != null ? comment.getParent().getId() : null);
+        dto.setLikes(comment.getLikes());
+        if (!comment.isAnonymous() && comment.getAuthor() != null) {
+            dto.setAuthorName(comment.getAuthor().getUsername());
+            dto.setAuthorAvatar(comment.getAuthor().getAvatarUrl());
+            dto.setAuthorUsername(comment.getAuthor().getUsername());
+            dto.setAuthorFollowers(comment.getAuthor().getFollowers());
+            dto.setAuthorRating(comment.getAuthor().getRating());
+//            TODO BIO
+            dto.setAuthorBio(null);
+        }
+        return dto;
+    }
+
+    public static ReviewerDto toReviewerDto(User user) {
+        ReviewerDto dto = new ReviewerDto();
+        dto.setId(user.getId());
+        dto.setDisplayName(user.getUsername());
+        dto.setUsername(user.getUsername());
+        dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setFollowers(user.getFollowers());
+        dto.setRating(user.getRating());
+        dto.setBio(null);
+        return dto;
+    }
+
+    public static BrandDto toBrandDto(VehicleBrand brand) {
+        BrandDto dto = new BrandDto();
+        dto.setId(brand.getId());
+        dto.setName(brand.getName());
+        dto.setLogoUrl(brand.getLogoUrl());
+        return dto;
+    }
+
+    public static NotificationDto toNotificationDto(Notification notification) {
+        NotificationDto dto = new NotificationDto();
+        dto.setId(notification.getId());
+        dto.setType(notification.getType());
+        dto.setMessage(notification.getMessage());
+        dto.setRead(notification.isReadFlag());
+        dto.setCreatedAt(notification.getCreatedAt());
+        if (notification.getReview() != null) {
+            dto.setReviewId(notification.getReview().getId());
+            dto.setReviewSlug(notification.getReview().getSlug());
+            dto.setReviewTitle(notification.getReview().getTitle());
+        }
+        if (notification.getComment() != null) {
+            dto.setCommentId(notification.getComment().getId());
+        }
+        if (notification.getActor() != null) {
+            dto.setActorName(notification.getActor().getUsername());
+            dto.setActorUsername(notification.getActor().getUsername());
+            dto.setActorAvatar(notification.getActor().getAvatarUrl());
+        }
+        return dto;
+    }
+}

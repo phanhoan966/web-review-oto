@@ -1,0 +1,1822 @@
+<script setup lang="ts">
+import { onMounted, ref, nextTick, computed, watch } from 'vue'
+import { useRoute, RouterLink, useRouter } from 'vue-router'
+import client from '../../api/client'
+import { useAuthStore } from '../../stores/auth'
+import { slugify } from '../utils/slugify'
+import { buildAssetUrl } from '../utils/assetUrl'
+import HoverPopover from '../components/common/HoverPopover.vue'
+import ReviewerPopoverCard from '../components/common/ReviewerPopoverCard.vue'
+import TopReviewers, { type ReviewerItem } from '../components/Sidebar/TopReviewers.vue'
+import FeaturedBrands, { type BrandItem } from '../components/Sidebar/FeaturedBrands.vue'
+import MostViewed, { type ViewedItem } from '../components/Sidebar/MostViewed.vue'
+
+interface ReviewDetail {
+  id: number
+  title: string
+  excerpt: string
+  content: string
+  heroImageUrl: string
+  brand?: string
+  vehicleModel?: string
+  vehicleYear?: number
+  fuelType?: string
+  priceSegment?: string
+  likes?: number
+  liked?: boolean
+  commentsCount?: number
+  views?: number
+  publishedAt?: string
+  status?: string
+  authorId?: number
+  authorName?: string
+  authorAvatar?: string
+  authorUsername?: string
+  authorFollowers?: number
+  authorReviewCount?: number
+  authorRating?: number
+  authorBio?: string
+  authorFollowing?: boolean
+}
+
+interface CommentDetail {
+  id: number
+  content: string
+  authorName?: string
+  authorAvatar?: string
+  authorUsername?: string
+  authorFollowers?: number
+  authorReviewCount?: number
+  authorRating?: number
+  authorBio?: string
+  anonymous?: boolean
+  createdAt?: string
+  likes?: number
+  liked?: boolean
+  parentId?: number | null
+  children?: CommentDetail[]
+}
+
+const defaultAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
+const anonAvatar = 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'
+
+const route = useRoute()
+const router = useRouter()
+const review = ref<ReviewDetail | null>(null)
+const reviewLike = ref<{ count: number; liked: boolean }>({ count: 0, liked: false })
+const authorFollow = ref<{ following: boolean; followers: number }>({ following: false, followers: 0 })
+const followHover = ref(false)
+const heroSrc = computed(() => buildAssetUrl(review.value?.heroImageUrl || ''))
+const reviewId = computed(() => review.value?.id ?? (route.params.id ? Number(route.params.id) : null))
+const profilePath = computed(() =>
+  review.value?.authorUsername ? `/user/${encodeURIComponent(review.value.authorUsername)}` : ''
+)
+const loading = ref(false)
+const errorMsg = ref('')
+
+const reviewers = ref<ReviewerItem[]>([])
+const brands = ref<BrandItem[]>([])
+const mostViewed = ref<ViewedItem[]>([])
+
+watch(
+  () => review.value?.title,
+  (title: string | undefined) => {
+    document.title = title ? `${title} | Đánh Giá Xe` : 'Đánh Giá Xe'
+  },
+  { immediate: true }
+)
+
+const comments = ref<CommentDetail[]>([])
+const commentsVisible = ref(false)
+const commentsLoading = ref(false)
+const commentsError = ref('')
+const formError = ref('')
+const rootComment = ref('')
+const replyDrafts = ref<Record<number, string>>({})
+const submitting = ref(false)
+
+const page = ref(0)
+const pageSize = 10
+const hasMore = ref(true)
+
+const commentsSection = ref<HTMLElement | null>(null)
+const commentList = ref<HTMLElement | null>(null)
+const highlightedIds = ref<Set<number>>(new Set())
+const slideIds = ref<Set<number>>(new Set())
+const likesState = ref<Record<number, { count: number; liked: boolean }>>({})
+const commentTab = ref<'top' | 'newest'>('top')
+const replyTarget = ref<CommentDetail | null>(null)
+const rootComposerVisible = ref(true)
+const replyInputs: Record<number, HTMLTextAreaElement | null> = {}
+const depthMap = ref<Record<number, number>>({})
+const expandedThreads = ref<Set<number>>(new Set())
+const showFullContent = ref(false)
+const menuOpen = ref(false)
+const contentPreview = computed(() => {
+  const raw = review.value?.content || ''
+  const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (text.length <= 400) return text
+  return `${text.slice(0, 400).trimEnd()}…`
+})
+const hasMoreContent = computed(() => {
+  const raw = review.value?.content || ''
+  const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  return text.length > 400
+})
+let highlightTimer: number | undefined
+let slideTimer: number | undefined
+
+function replyCount(root: CommentDetail) {
+  return childRows(root).length
+}
+
+function flattenComments(list: CommentDetail[]): CommentDetail[] {
+  return list.flatMap((item) => [item, ...(item.children ? flattenComments(item.children) : [])])
+}
+
+function mergeComments(items: CommentDetail[], reset = false) {
+  const map = new Map<number, CommentDetail>()
+  const sources = reset ? [] : flattenComments(comments.value)
+  const upsert = (entry: CommentDetail) => {
+    const existing = map.get(entry.id) || {}
+    map.set(entry.id, { ...existing, ...entry, children: [] })
+  }
+  sources.forEach(upsert)
+  items.forEach(upsert)
+  map.forEach((node) => {
+    if (!node.parentId) return
+    const parent = map.get(node.parentId)
+    if (parent) {
+      parent.children = parent.children || []
+      if (!parent.children.some((child) => child.id === node.id)) {
+        parent.children.push(node)
+      }
+    }
+  })
+  const sortByDate = (a: CommentDetail, b: CommentDetail) => (a.createdAt || '').localeCompare(b.createdAt || '')
+  map.forEach((node) => {
+    if (node.children?.length) {
+      node.children.sort(sortByDate)
+    }
+  })
+  const roots: CommentDetail[] = []
+  map.forEach((node) => {
+    if (!node.parentId) {
+      roots.push(node)
+    }
+  })
+  roots.sort(sortByDate)
+  const nextDepth: Record<number, number> = {}
+  const stack: { node: CommentDetail; depth: number }[] = roots.map((node) => ({ node, depth: 1 }))
+  while (stack.length) {
+    const { node, depth } = stack.pop() as { node: CommentDetail; depth: number }
+    nextDepth[node.id] = depth
+    if (node.children?.length) {
+      node.children.forEach((child) => stack.push({ node: child, depth: depth + 1 }))
+    }
+  }
+  depthMap.value = nextDepth
+  totalComments.value = map.size
+  return roots
+}
+
+const auth = useAuthStore()
+const modalVisible = ref(false)
+
+const isAuthorSelf = computed(() => {
+  if (!auth.user || !review.value?.authorId) return false
+  return auth.user.id === review.value.authorId
+})
+
+const followLabel = computed(() =>
+  authorFollow.value.following ? (followHover.value ? 'Unfollow' : 'Following') : 'Follow'
+)
+
+const followButtonClass = computed(() => {
+  if (!authorFollow.value.following) return ''
+  return followHover.value ? 'danger' : 'following'
+})
+
+const totalComments = ref(0)
+
+const commentMap = computed(() => {
+  const map: Record<number, CommentDetail> = {}
+  flattenComments(comments.value).forEach((c) => {
+    map[c.id] = c
+  })
+  return map
+})
+
+function childRows(root: CommentDetail) {
+  const list = root.children || []
+  const sortByDate = (a: CommentDetail, b: CommentDetail) => (a.createdAt || '').localeCompare(b.createdAt || '')
+  const walk = (node: CommentDetail): CommentDetail[] => {
+    const children = (node.children || []).sort(sortByDate)
+    return [node, ...children.flatMap(walk)]
+  }
+  return [...list].sort(sortByDate).flatMap(walk)
+}
+
+async function reloadWithComments() {
+  await load()
+  await loadComments(true, false)
+}
+
+onMounted(() => {
+  reloadWithComments()
+  loadSidebar()
+})
+
+watch(
+  () => [route.params.id, route.params.slug],
+  () => {
+    review.value = null
+    comments.value = []
+    likesState.value = {}
+    reviewLike.value = { count: 0, liked: false }
+    authorFollow.value = { following: false, followers: 0 }
+    followHover.value = false
+    highlightedIds.value = new Set()
+    slideIds.value = new Set()
+    page.value = 0
+    hasMore.value = true
+    rootComment.value = ''
+    replyDrafts.value = {}
+    replyTarget.value = null
+    rootComposerVisible.value = true
+    errorMsg.value = ''
+    expandedThreads.value = new Set()
+    showFullContent.value = false
+    menuOpen.value = false
+    reloadWithComments()
+  }
+)
+
+async function load() {
+  loading.value = true
+  errorMsg.value = ''
+  const slugParam = (route.params.slug as string) || ''
+  const idParam = route.params.id as string
+  const idNumber = idParam ? Number(idParam) : null
+  try {
+    let data
+    if (slugParam) {
+      try {
+        const res = await client.get(`/reviews/slug/${encodeURIComponent(slugParam)}`)
+        data = res.data
+      } catch (error) {
+        if (!idNumber) {
+          throw error
+        }
+        const fallback = await client.get(`/reviews/${idNumber}`)
+        data = fallback.data
+      }
+    } else {
+      if (!idNumber) {
+        throw new Error('Missing review id')
+      }
+      const res = await client.get(`/reviews/${idNumber}`)
+      data = res.data
+    }
+    if (data?.id) {
+      const canonicalSlug = data.slug || slugify(data.title || '')
+      const currentSlug = route.params.slug as string | undefined
+      if (canonicalSlug && (route.name !== 'review-detail' || currentSlug !== canonicalSlug)) {
+        router.replace({ name: 'review-detail', params: { slug: canonicalSlug } })
+      }
+    }
+    review.value = data
+    reviewLike.value = { count: data?.likes ?? 0, liked: Boolean(data?.liked) }
+    authorFollow.value = { following: Boolean(data?.authorFollowing), followers: data?.authorFollowers ?? 0 }
+  } catch (error: any) {
+    errorMsg.value = error.response?.data?.message || 'Không tìm thấy bài viết'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadSidebar() {
+  try {
+    const [reviewersRes, brandsRes, viewedRes] = await Promise.all([
+      client.get('/reviewers/top', { params: { limit: 3 } }),
+      client.get('/brands/featured'),
+      client.get('/reviews/most-viewed', { params: { limit: 3 } })
+    ])
+    reviewers.value = reviewersRes.data || []
+    brands.value = brandsRes.data || []
+    mostViewed.value = viewedRes.data || []
+  } catch (error) {
+    reviewers.value = []
+    brands.value = []
+    mostViewed.value = []
+  }
+}
+
+function onBrandSelect(brand: BrandItem) {
+  router.push({ name: 'feed-brand', params: { brand: brand.name } })
+}
+
+async function loadComments(reset = false, autoScroll = true, highlightNew = true) {
+  if (reset) {
+    page.value = 0
+    hasMore.value = true
+    comments.value = []
+    rootComposerVisible.value = true
+    replyTarget.value = null
+  }
+  if (!hasMore.value && !reset) {
+    return
+  }
+  commentsVisible.value = true
+  commentsLoading.value = true
+  commentsError.value = ''
+  try {
+    const id = reviewId.value
+    if (!id) {
+      throw new Error('Missing review id')
+    }
+    const { data } = await client.get<CommentDetail[]>(`/reviews/${id}/comments`, {
+      params: { page: page.value, size: pageSize, sort: commentTab.value === 'newest' ? 'latest' : 'top' }
+    })
+    const rootCount = Array.isArray(data) ? data.filter((item) => !item.parentId).length : 0
+    comments.value = mergeComments(data, reset)
+    initLikes(data)
+    if (reset) {
+      expandedThreads.value = new Set()
+    }
+    if (rootCount < pageSize) {
+      hasMore.value = false
+    } else {
+      page.value += 1
+    }
+    if (autoScroll) {
+      await nextTick()
+      requestAnimationFrame(() => {
+        const target = commentList.value?.lastElementChild as HTMLElement | null
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+        } else {
+          commentsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+        }
+      })
+    }
+    if (highlightNew) {
+      markHighlighted(data)
+    }
+    markSlide(data)
+  } catch (error: any) {
+    commentsError.value = error.response?.data?.message || 'Không tải được bình luận'
+    if (reset) {
+      comments.value = []
+    }
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+function rootIdOf(commentId: number | null) {
+  if (!commentId) return null
+  let current = commentMap.value[commentId]
+  let guard = 0
+  while (current?.parentId && guard < 100) {
+    current = commentMap.value[current.parentId]
+    guard += 1
+  }
+  return current?.id || null
+}
+
+async function submitComment() {
+  const target = replyTarget.value
+  const content = target ? (replyDrafts.value[target.id] || '').trim() : rootComment.value.trim()
+  if (!content) {
+    formError.value = 'Vui lòng nhập nội dung bình luận'
+    return
+  }
+  formError.value = ''
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
+  submitting.value = true
+  commentsError.value = ''
+  modalVisible.value = false
+  try {
+    let parentId: number | null = null
+    if (target?.id) {
+      parentId = target.id
+    }
+    const id = reviewId.value
+    if (!id) {
+      throw new Error('Missing review id')
+    }
+    const { data } = await client.post<CommentDetail>(`/reviews/${id}/comments`, {
+      content,
+      anonymous: false,
+      parentId
+    })
+    data.anonymous = false
+    if (auth.user) {
+      data.authorName = auth.user.username
+      data.authorAvatar = auth.user.avatarUrl
+    }
+    comments.value = mergeComments([data], false)
+    if (parentId) {
+      const rootId = rootIdOf(parentId)
+      const expanded = new Set(expandedThreads.value)
+      if (rootId) {
+        expanded.add(rootId)
+      } else {
+        expanded.add(parentId)
+      }
+      expandedThreads.value = expanded
+    }
+    initLikes([data])
+    if (target?.id) {
+      const nextDrafts = { ...replyDrafts.value }
+      delete nextDrafts[target.id]
+      replyDrafts.value = nextDrafts
+    } else {
+      rootComment.value = ''
+    }
+    replyTarget.value = null
+    rootComposerVisible.value = true
+    commentsVisible.value = true
+    markHighlighted([data])
+    markSlide([data])
+    if (review.value) {
+      review.value.commentsCount = (review.value.commentsCount ?? 0) + 1
+    }
+  } catch (error: any) {
+    formError.value = error.response?.data?.message || 'Gửi bình luận thất bại'
+  } finally {
+    submitting.value = false
+  }
+}
+
+function markHighlighted(items: CommentDetail[]) {
+  if (!items.length) return
+  highlightedIds.value = new Set(items.map((c) => c.id))
+  if (highlightTimer) {
+    clearTimeout(highlightTimer)
+  }
+  highlightTimer = window.setTimeout(() => {
+    highlightedIds.value = new Set()
+  }, 3000)
+}
+
+function initLikes(items: CommentDetail[]) {
+  const next = { ...likesState.value }
+  items.forEach((c) => {
+    const existing = next[c.id]
+    const liked = c.liked ?? existing?.liked ?? false
+    const count = c.likes ?? existing?.count ?? 0
+    next[c.id] = { count, liked }
+  })
+  likesState.value = next
+}
+
+async function toggleLike(id: number) {
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
+  const current = likesState.value[id] || { count: 0, liked: false }
+  const liked = !current.liked
+  const count = Math.max(0, current.count + (liked ? 1 : -1))
+  likesState.value = { ...likesState.value, [id]: { count, liked } }
+  try {
+    if (liked) {
+      await client.post(`/comments/${id}/like`)
+    } else {
+      await client.post(`/comments/${id}/unlike`)
+    }
+  } catch (error: any) {
+    likesState.value = { ...likesState.value, [id]: current }
+    commentsError.value = error.response?.data?.message || 'Không thể cập nhật lượt thích'
+  }
+}
+
+function setReplyInputRef(id: number, el: HTMLTextAreaElement | null) {
+  if (el) {
+    replyInputs[id] = el
+  } else {
+    delete replyInputs[id]
+  }
+}
+
+function canReply() {
+  return true
+}
+
+async function toggleReviewLike() {
+  if (!review.value) return
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
+  const current = reviewLike.value
+  const liked = !current.liked
+  const count = Math.max(0, current.count + (liked ? 1 : -1))
+  reviewLike.value = { count, liked }
+  if (review.value) {
+    review.value.likes = count
+  }
+  try {
+    if (liked) {
+      await client.post(`/reviews/${review.value.id}/like`)
+    } else {
+      await client.post(`/reviews/${review.value.id}/unlike`)
+    }
+  } catch (error: any) {
+    reviewLike.value = current
+    if (review.value) {
+      review.value.likes = current.count
+    }
+    errorMsg.value = error.response?.data?.message || 'Không thể cập nhật lượt thích'
+  }
+}
+
+async function toggleFollowAuthor() {
+  if (!review.value?.authorId) return
+  if (isAuthorSelf.value) return
+  if (!auth.user) {
+    modalVisible.value = true
+    return
+  }
+  const current = { ...authorFollow.value }
+  const following = !current.following
+  const followers = Math.max(0, current.followers + (following ? 1 : -1))
+  authorFollow.value = { following, followers }
+  if (review.value) {
+    review.value.authorFollowers = followers
+    review.value.authorFollowing = following
+  }
+  try {
+    if (following) {
+      await client.post(`/users/${review.value.authorId}/follow`)
+    } else {
+      await client.post(`/users/${review.value.authorId}/unfollow`)
+    }
+  } catch (error: any) {
+    authorFollow.value = current
+    if (review.value) {
+      review.value.authorFollowers = current.followers
+      review.value.authorFollowing = current.following
+    }
+    errorMsg.value = error.response?.data?.message || 'Không thể cập nhật theo dõi'
+  }
+}
+
+function startReply(comment: CommentDetail) {
+  if (!canReply()) return
+  if (!isThreadExpanded(comment.id) && comment.children?.length) {
+    toggleReplies(comment.id)
+  }
+  replyTarget.value = comment
+  rootComposerVisible.value = false
+  const prefix = comment.authorUsername || comment.authorName || 'người dùng'
+  replyDrafts.value = { ...replyDrafts.value, [comment.id]: `@${prefix} ` }
+  nextTick(() => {
+    const input = replyInputs[comment.id]
+    input?.focus()
+    input?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+  })
+}
+
+function goLogin() {
+  modalVisible.value = false
+  router.push({ name: 'login', query: { redirect: route.fullPath } })
+}
+
+function goRegister() {
+  modalVisible.value = false
+  router.push({ name: 'register', query: { redirect: route.fullPath } })
+}
+
+async function hideReview() {
+  const id = reviewId.value
+  if (!id) return
+  if (!window.confirm('Ẩn bài viết này?')) return
+  await client.put(`/reviews/${id}/hide`)
+  if (review.value) {
+    review.value.status = 'HIDDEN'
+  }
+  menuOpen.value = false
+}
+
+async function unhideReview() {
+  const id = reviewId.value
+  if (!id) return
+  if (!window.confirm('Hiện lại bài viết này?')) return
+  await client.put(`/reviews/${id}/unhide`)
+  if (review.value) {
+    review.value.status = 'APPROVED'
+  }
+  menuOpen.value = false
+}
+
+async function deleteReview() {
+  const id = reviewId.value
+  if (!id) return
+  if (!window.confirm('Bạn chắc chắn muốn xoá bài viết này?')) return
+  await client.delete(`/reviews/${id}`)
+  router.push({ name: 'feed' })
+}
+
+const visibleRoots = computed(() => {
+  const list = comments.value || []
+  const sortByDate = (a: CommentDetail, b: CommentDetail) => (b.createdAt || '').localeCompare(a.createdAt || '')
+  if (commentTab.value === 'newest') {
+    return [...list].sort(sortByDate)
+  }
+  return [...list].sort((a, b) => {
+    const likeA = likesState.value[a.id]?.count ?? 0
+    const likeB = likesState.value[b.id]?.count ?? 0
+    if (likeB !== likeA) return likeB - likeA
+    return sortByDate(a, b)
+  })
+})
+
+function toggleReplies(id: number) {
+  const next = new Set(expandedThreads.value)
+  if (next.has(id)) {
+    next.delete(id)
+  } else {
+    next.add(id)
+  }
+  expandedThreads.value = next
+}
+
+function isThreadExpanded(id: number) {
+  return expandedThreads.value.has(id)
+}
+
+function markSlide(items: CommentDetail[]) {
+  if (!items.length) return
+  slideIds.value = new Set(items.map((c) => c.id))
+  if (slideTimer) {
+    clearTimeout(slideTimer)
+  }
+  slideTimer = window.setTimeout(() => {
+    slideIds.value = new Set()
+  }, 600)
+}
+
+function cancelReply() {
+  if (replyTarget.value?.id) {
+    const draft = { ...replyDrafts.value }
+    delete draft[replyTarget.value.id]
+    replyDrafts.value = draft
+  }
+  replyTarget.value = null
+  rootComposerVisible.value = true
+  formError.value = ''
+}
+
+function formatDate(value?: string) {
+  if (!value) return ''
+  return new Date(value).toLocaleString('vi-VN')
+}
+
+function displayContent(body?: string, parentLabel?: string) {
+  if (!body) return ''
+  if (!parentLabel) return body
+  const trimmed = body.trimStart()
+  const lowerLabel = parentLabel.toLowerCase()
+  const prefixed = trimmed.toLowerCase()
+  if (prefixed.startsWith(`@${lowerLabel}`)) {
+    const sliced = trimmed.slice(parentLabel.length + 1).replace(/^[:\s]+/, '')
+    return sliced.trimStart()
+  }
+  return body
+}
+
+function getParent(comment?: CommentDetail | null) {
+  if (!comment?.parentId) return null
+  return commentMap.value[comment.parentId] || null
+}
+
+function mentionLabel(comment?: CommentDetail | null) {
+  const parent = getParent(comment)
+  if (!parent) return ''
+  return parent.authorName || parent.authorUsername || ''
+}
+
+function shouldShowMention(comment?: CommentDetail | null) {
+  const parent = getParent(comment)
+  if (!parent) return false
+  return Boolean(parent.parentId)
+}
+
+</script>
+
+<template>
+  <div class="container page">
+    <div class="layout" v-if="!loading && !errorMsg && review">
+      <div class="main">
+        <article class="card">
+          <header class="post-head">
+            <div class="author-block">
+              <HoverPopover v-if="profilePath">
+                <template #trigger>
+                  <div class="author-trigger">
+                    <RouterLink class="avatar-link" :to="profilePath">
+                      <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+                    </RouterLink>
+                    <div>
+                      <div class="name-row">
+                        <RouterLink class="name-link" :to="profilePath">{{ review.authorName || 'Reviewer' }}</RouterLink>
+                        <span class="muted">· {{ formatDate(review.publishedAt) || 'Vừa đăng' }}</span>
+                      </div>
+                      <div class="eyebrow">{{ review.brand || 'Xe' }}</div>
+                    </div>
+                  </div>
+                </template>
+                <ReviewerPopoverCard
+                  :name="review.authorName || 'Reviewer'"
+                  :username="review.authorUsername"
+                  :avatar-url="review.authorAvatar"
+                  :bio="review.authorBio"
+                  :followers="review.authorFollowers"
+                  :review-count="review.authorReviewCount"
+                  :rating="review.authorRating"
+                />
+              </HoverPopover>
+              <div v-else class="author-trigger">
+                <div class="avatar-link">
+                  <img class="avatar" :src="review.authorAvatar || 'https://as1.ftcdn.net/v2/jpg/16/50/75/40/1000_F_1650754099_NnbV1a2Cgvj26kogaurRePYoipRlFEao.jpg'" alt="avatar" />
+                </div>
+                <div>
+                  <div class="name-row">
+                    <strong>{{ review.authorName || 'Reviewer' }}</strong>
+                    <span class="muted">· {{ formatDate(review.publishedAt) || 'Vừa đăng' }}</span>
+                  </div>
+                  <div class="eyebrow">{{ review.brand || 'Xe' }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="head-actions">
+              <button
+                v-if="!isAuthorSelf"
+                class="follow-btn"
+                :class="followButtonClass"
+                type="button"
+                @click="toggleFollowAuthor"
+                @mouseenter="followHover = true"
+                @mouseleave="followHover = false"
+              >
+                {{ followLabel }}
+              </button>
+              <div v-else class="menu">
+                <button class="dots" type="button" @click="menuOpen = !menuOpen">⋯</button>
+                <div v-if="menuOpen" class="menu-list">
+                  <RouterLink class="menu-item" :to="{ name: 'review-edit', params: { id: reviewId } }">Sửa bài</RouterLink>
+                  <button v-if="review?.status === 'HIDDEN'" class="menu-item" type="button" @click="unhideReview">Hiện bài</button>
+                  <button v-else class="menu-item" type="button" @click="hideReview">Ẩn bài</button>
+                  <button class="menu-item danger" type="button" @click="deleteReview">Xoá bài</button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div class="title">{{ review.title }}</div>
+          <i><p class="excerpt">{{ review.excerpt }}</p></i>
+          <div v-if="showFullContent || !hasMoreContent" class="body" v-html="review.content" />
+          <div v-else class="body truncated">{{ contentPreview }}</div>
+          <button v-if="hasMoreContent" class="read-more" type="button" @click="showFullContent = !showFullContent">
+            {{ showFullContent ? 'Thu gọn' : 'Xem thêm' }}
+          </button>
+
+          <div class="hero" v-if="review.heroImageUrl">
+            <img :src="heroSrc" :alt="review.title" />
+          </div>
+
+          <div class="meta-row">
+            <div class="chips">
+              <span v-if="review.vehicleYear" class="chip">{{ review.vehicleYear }}</span>
+              <span v-if="review.fuelType" class="chip">{{ review.fuelType }}</span>
+              <span v-if="review.priceSegment" class="chip">{{ review.priceSegment }}</span>
+            </div>
+            <div class="muted">{{ review.views ?? 0 }} lượt xem</div>
+          </div>
+
+          <div class="actions">
+            <button class="pill" :class="{ liked: reviewLike.liked }" type="button" @click="toggleReviewLike">❤ {{ reviewLike.count ?? review.likes ?? 0 }}</button>
+            <button class="pill">💬 {{ review.commentsCount ?? 0 }}</button>
+            <button class="pill">🔁 Chia sẻ</button>
+            <button class="pill">🔖 Lưu</button>
+          </div>
+        </article>
+
+        <section class="card comments" ref="commentsSection">
+          <div class="comments-head">
+            <div class="tabs">
+              <button class="tab" :class="{ active: commentTab === 'top' }" type="button" @click="commentTab = 'top'">Quan tâm nhất</button>
+              <button class="tab" :class="{ active: commentTab === 'newest' }" type="button" @click="commentTab = 'newest'">Mới nhất</button>
+            </div>
+            <h3>Bình luận ({{ totalComments }})</h3>
+          </div>
+          <div v-if="commentsLoading" class="status">Đang tải bình luận...</div>
+          <div v-else-if="commentsError" class="status error">{{ commentsError }}</div>
+          <div v-else-if="commentsVisible">
+            <div class="inline-form">
+              <form class="comment-form" @submit.prevent>
+                <textarea v-model="rootComment" rows="3" placeholder="Viết bình luận của bạn..." />
+                <div v-if="formError" class="form-error">{{ formError }}</div>
+                <div class="comment-actions">
+                  <button class="ghost" type="button" @click="loadComments(true)" :disabled="commentsLoading">Tải lại bình luận</button>
+                  <div class="action-group">
+                    <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                      {{ submitting ? 'Đang gửi...' : 'Đăng bình luận' }}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div v-if="!totalComments" class="status">Chưa có bình luận</div>
+            <div v-else class="comment-list" ref="commentList">
+              <div
+                v-for="comment in visibleRoots"
+                :key="comment.id"
+                class="comment-item"
+                :class="{ flash: highlightedIds.has(comment.id), 'slide-in': slideIds.has(comment.id) }"
+              >
+                <div v-if="!comment.anonymous && (comment.authorUsername || comment.authorName)" class="comment-row">
+                  <div class="comment-line">
+                    <HoverPopover>
+                      <template #trigger>
+                        <div class="comment-avatar">
+                          <img :src="comment.authorAvatar || defaultAvatar" alt="avatar" />
+                        </div>
+                      </template>
+                      <ReviewerPopoverCard
+                        :name="comment.authorName || comment.authorUsername || 'Reviewer'"
+                        :username="comment.authorUsername"
+                        :avatar-url="comment.authorAvatar"
+                        :bio="comment.authorBio"
+                        :followers="comment.authorFollowers"
+                        :review-count="comment.authorReviewCount"
+                        :rating="comment.authorRating"
+                      />
+                    </HoverPopover>
+                    <p class="comment-line-text">
+                      <strong class="comment-name-inline">
+                        <RouterLink v-if="comment.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(comment.authorUsername)}`">
+                          {{ comment.authorName || comment.authorUsername }}
+                        </RouterLink>
+                        <span v-else>{{ comment.authorName }}</span>
+                      </strong>
+                      <span class="comment-text">{{ comment.content }}</span>
+                    </p>
+                  </div>
+                  <div class="comment-actions-row">
+                    <div class="actions-left">
+                      <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                        ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                      </button>
+                      <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <button
+                        v-if="replyCount(comment) > 0"
+                        class="chip-btn secondary"
+                        type="button"
+                        @click="toggleReplies(comment.id)"
+                      >
+                        {{ replyCount(comment) }} trả lời
+                      </button>
+                    </div>
+                    <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
+                  </div>
+                  <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
+                      <form class="comment-form" @submit.prevent>
+                        <textarea
+                          :ref="(el) => setReplyInputRef(comment.id, el as HTMLTextAreaElement | null)"
+                          v-model="replyDrafts[comment.id]"
+                          rows="3"
+                          placeholder="Phản hồi bình luận này..."
+                        />
+                        <div class="replying">Đang trả lời {{ comment.authorName || comment.authorUsername || 'bình luận' }}</div>
+                        <div v-if="formError" class="form-error">{{ formError }}</div>
+                        <div class="comment-actions">
+                          <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                          <div class="action-group">
+                            <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                              {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                <div v-else class="comment-row">
+                  <div class="comment-line">
+                    <div class="comment-avatar">
+                      <img :src="comment.anonymous ? anonAvatar : comment.authorAvatar || defaultAvatar" alt="avatar" />
+                    </div>
+                    <p class="comment-line-text">
+                      <strong class="comment-name-inline">{{ comment.anonymous ? 'Ẩn danh' : comment.authorName || 'Ẩn danh' }}</strong>
+                      <span class="comment-text">{{ comment.content }}</span>
+                    </p>
+                  </div>
+                  <div class="comment-actions-row">
+                    <div class="actions-left">
+                      <button class="chip-btn" type="button" :class="{ liked: likesState[comment.id]?.liked }" @click="toggleLike(comment.id)">
+                        ❤ {{ likesState[comment.id]?.count ?? 0 }}
+                      </button>
+                      <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(comment)">Trả lời</button>
+                      <button
+                        v-if="comment.children?.length"
+                        class="chip-btn secondary"
+                        type="button"
+                        @click="toggleReplies(comment.id)"
+                      >
+                        {{ comment.children.length }} trả lời
+                      </button>
+                    </div>
+                    <span class="date-time-comment muted">{{ formatDate(comment.createdAt) }}</span>
+                  </div>
+                    <div v-if="replyTarget?.id === comment.id" class="inline-form nested">
+                      <form class="comment-form" @submit.prevent>
+                        <textarea
+                          :ref="(el) => setReplyInputRef(comment.id, el as HTMLTextAreaElement | null)"
+                          v-model="replyDrafts[comment.id]"
+                          rows="3"
+                          placeholder="Phản hồi bình luận này..."
+                        />
+                        <div class="replying">Đang trả lời bình luận</div>
+                        <div v-if="formError" class="form-error">{{ formError }}</div>
+                        <div class="comment-actions">
+                          <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                          <div class="action-group">
+                            <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                              {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                <div v-if="replyCount(comment) > 0 && isThreadExpanded(comment.id)" class="child-list">
+                  <div
+                    v-for="child in childRows(comment)"
+                    :key="child.id"
+                    class="comment-child"
+                    :class="{ flash: highlightedIds.has(child.id), 'slide-in': slideIds.has(child.id) }"
+                  >
+                    <div v-if="!child.anonymous && (child.authorUsername || child.authorName)" class="comment-row child-row">
+                      <div class="comment-line">
+                        <HoverPopover>
+                          <template #trigger>
+                            <div class="comment-avatar">
+                              <img :src="child.authorAvatar || defaultAvatar" alt="avatar" />
+                            </div>
+                          </template>
+                          <ReviewerPopoverCard
+                            :name="child.authorName || child.authorUsername || 'Reviewer'"
+                            :username="child.authorUsername"
+                            :avatar-url="child.authorAvatar"
+                            :bio="child.authorBio"
+                            :followers="child.authorFollowers"
+                            :review-count="child.authorReviewCount"
+                            :rating="child.authorRating"
+                          />
+                        </HoverPopover>
+                        <p class="comment-line-text">
+                          <strong class="comment-name-inline">
+                            <RouterLink v-if="child.authorUsername" class="comment-name" :to="`/user/${encodeURIComponent(child.authorUsername)}`">
+                              {{ child.authorName || child.authorUsername }}
+                            </RouterLink>
+                            <span v-else>{{ child.authorName }}</span>
+                          </strong>
+                          <span v-if="shouldShowMention(child)" class="mention-inline">
+                            <RouterLink
+                              v-if="getParent(child)?.authorUsername"
+                              class="mention-link"
+                              :to="`/user/${encodeURIComponent(getParent(child)?.authorUsername || '')}`"
+                              >@{{ getParent(child)?.authorName || getParent(child)?.authorUsername }}</RouterLink
+                            >
+                            <span v-else>@{{ getParent(child)?.authorName }}</span>
+                          </span>
+                          <span class="comment-text">{{ displayContent(child.content, mentionLabel(child)) }}</span>
+                        </p>
+                      </div>
+                      <div class="comment-actions-row">
+                        <div class="actions-left">
+                          <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
+                            ❤ {{ likesState[child.id]?.count ?? 0 }}
+                          </button>
+                          <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
+                        </div>
+                        <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
+                      </div>
+                      <div v-if="replyTarget?.id === child.id" class="inline-form nested">
+                        <form class="comment-form" @submit.prevent>
+                          <textarea
+                            :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                            v-model="replyDrafts[child.id]"
+                            rows="3"
+                            placeholder="Phản hồi bình luận này..."
+                          />
+                          <div class="replying">Đang trả lời {{ child.authorName || child.authorUsername || 'bình luận' }}</div>
+                          <div v-if="formError" class="form-error">{{ formError }}</div>
+                          <div class="comment-actions">
+                            <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                            <div class="action-group">
+                              <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                                {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                    <div v-else class="comment-row child-row">
+                      <div class="comment-line">
+                        <div class="comment-avatar">
+                          <img :src="child.anonymous ? anonAvatar : child.authorAvatar || defaultAvatar" alt="avatar" />
+                        </div>
+                        <p class="comment-line-text">
+                          <strong class="comment-name-inline">{{ child.anonymous ? 'Ẩn danh' : child.authorName || 'Ẩn danh' }}</strong>
+                          <span v-if="shouldShowMention(child)" class="mention-inline">
+                            <RouterLink
+                              v-if="getParent(child)?.authorUsername"
+                              class="mention-link"
+                              :to="`/user/${encodeURIComponent(getParent(child)?.authorUsername || '')}`"
+                              >@{{ getParent(child)?.authorName || getParent(child)?.authorUsername }}</RouterLink
+                            >
+                            <span v-else>@{{ getParent(child)?.authorName }}</span>
+                          </span>
+                          <span class="comment-text">{{ displayContent(child.content, mentionLabel(child)) }}</span>
+                        </p>
+                      </div>
+                      <div class="comment-actions-row">
+                        <div class="actions-left">
+                          <button class="chip-btn" type="button" :class="{ liked: likesState[child.id]?.liked }" @click="toggleLike(child.id)">
+                            ❤ {{ likesState[child.id]?.count ?? 0 }}
+                          </button>
+                          <button v-if="canReply()" class="chip-btn" type="button" @click="startReply(child)">Trả lời</button>
+                        </div>
+                        <span class="date-time-comment muted">{{ formatDate(child.createdAt) }}</span>
+                      </div>
+                      <div v-if="replyTarget?.id === child.id" class="inline-form nested">
+                        <form class="comment-form" @submit.prevent>
+                          <textarea
+                            :ref="(el) => setReplyInputRef(child.id, el as HTMLTextAreaElement | null)"
+                            v-model="replyDrafts[child.id]"
+                            rows="3"
+                            placeholder="Phản hồi bình luận này..."
+                          />
+                          <div class="replying">Đang trả lời bình luận</div>
+                          <div v-if="formError" class="form-error">{{ formError }}</div>
+                          <div class="comment-actions">
+                            <button class="ghost" type="button" @click="cancelReply" :disabled="submitting">Huỷ</button>
+                            <div class="action-group">
+                              <button class="primary" type="button" @click="submitComment" :disabled="submitting">
+                                {{ submitting ? 'Đang gửi...' : 'Trả lời' }}
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+              <button v-if="hasMore && !commentsLoading" class="ghost load-more" type="button" @click="loadComments(false, true)">Xem thêm bình luận</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <aside class="side">
+        <MostViewed :items="mostViewed" />
+        <FeaturedBrands :brands="brands" @select="onBrandSelect" />
+        <TopReviewers :reviewers="reviewers" title="Top Reviewers" />
+      </aside>
+    </div>
+
+    <div v-else class="status" :class="{ error: Boolean(errorMsg) }">
+      {{ loading ? 'Đang tải...' : errorMsg || 'Không tìm thấy bài viết' }}
+    </div>
+
+    <div v-if="modalVisible" class="modal">
+      <div class="modal-card">
+        <h4>Cần đăng nhập</h4>
+        <p class="muted">Vui lòng đăng nhập hoặc đăng ký để bình luận</p>
+        <div class="modal-actions">
+          <button class="ghost" type="button" @click="modalVisible = false">Đóng</button>
+          <button class="ghost" type="button" @click="goRegister">Đăng ký</button>
+          <button class="primary" type="button" @click="goLogin">Đăng nhập</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.page {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 20px 0 40px;
+  display: grid;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.main {
+  display: grid;
+  gap: 16px;
+  word-break: break-word;
+}
+
+.post-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.author-block {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.author-trigger {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar-link {
+  display: block;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name-link {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 700;
+}
+
+.name-link:hover {
+  text-decoration: underline;
+}
+
+.name-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.eyebrow {
+  margin-top: 2px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.follow-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: var(--pill-bg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: 108px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.follow-btn.primary {
+  color: var(--text);
+}
+
+.follow-btn.following {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.follow-btn.danger {
+  border-color: #d72638;
+  color: #d72638;
+  background: #ffecec;
+}
+
+.follow-btn:hover {
+  background: var(--chip-bg);
+}
+
+.menu {
+  position: relative;
+}
+
+.dots {
+  font-size: 20px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.menu-list {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  display: grid;
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.menu-item {
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.menu-item:hover {
+  background: var(--pill-bg);
+}
+
+.menu-item.danger {
+  color: var(--error);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.excerpt {
+  margin: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+:deep(.body) {
+  color: var(--text);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+:deep(.body img) {
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: 520px;
+  border-radius: 12px;
+  display: block;
+  margin: 12px auto;
+  object-fit: contain;
+}
+
+:deep(.body figure.table) {
+  display: block;
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px;
+}
+
+:deep(.body table) {
+  min-width: 600px;
+  width: max-content;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+:deep(.body th),
+:deep(.body td) {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+:deep(.body th) {
+  background: var(--chip-bg);
+  font-weight: 700;
+}
+
+:deep(.body tr:nth-child(odd)) {
+  background: var(--pill-bg);
+}
+
+.body.truncated {
+  white-space: normal;
+}
+
+.read-more {
+  margin-top: 8px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hero {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-top: 10px;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: smaller;
+}
+
+.chip {
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 1px solid var(--pill-border);
+  background: var(--pill-bg);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pill.liked {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.reply-head {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.comment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  font-size: 15px;
+  resize: vertical;
+  background: var(--pill-bg);
+  color: var(--text);
+}
+
+.form-error {
+  color: var(--error);
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-group {
+  display: flex;
+  gap: 8px;
+}
+
+.replying {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: -4px;
+}
+
+.primary,
+.ghost,
+.pill {
+  cursor: pointer;
+}
+
+.primary {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.ghost {
+  background: var(--chip-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.comments {
+  display: grid;
+  gap: 12px;
+}
+
+.comments-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.inline-form {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+}
+
+.inline-form.nested {
+  margin-top: 10px;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+
+.comment-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 12px 12px 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.child-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+}
+
+.comment-child {
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.comment-trigger {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.chip-btn {
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip-btn.secondary {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--chip-bg);
+}
+
+.comment-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+  padding-left: 50px;
+}
+
+.comment-list button,
+.comment-list a,
+.comment-list .comment-name,
+.comment-list .mention-link {
+  cursor: pointer;
+}
+
+.actions-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comment-name-inline {
+  margin-right: 6px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.comment-text {
+  white-space: pre-line;
+  color: var(--text);
+}
+
+.chip-btn.liked {
+  color: #d81b60;
+}
+
+.comment-name {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.comment-name:hover {
+  text-decoration: underline;
+}
+
+.comment-item.flash {
+  animation: flash 3s ease;
+}
+
+.comment-item.slide-in {
+  animation: slideUp 0.5s ease;
+}
+
+.comment-item:last-of-type {
+  border-bottom: none;
+}
+
+.comment-actions-row .chip-btn svg,
+.comment-actions-row .chip-btn i {
+  color: #6b7280;
+}
+
+@keyframes flash {
+  0% {
+    background: var(--highlight);
+  }
+  40% {
+    background: var(--highlight);
+  }
+  100% {
+    background: var(--chip-bg);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.comment-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.comment-line > :first-child {
+  display: inline-flex;
+  align-items: flex-start;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
+}
+
+.comment-line-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  color: #111827;
+  flex: 1;
+  flex-wrap: wrap;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.comment-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+}
+
+.comment-content {
+  display: grid;
+  gap: 6px;
+}
+
+.mention-link {
+  color: #16a34a;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mention-link:hover {
+  text-decoration: underline;
+}
+
+.mention-inline {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.mention-inline::after {
+  content: ':';
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.comment-content p {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.comment-meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.comment-content p {
+  margin: 0;
+  color: var(--text);
+}
+
+.side {
+  display: flow;
+  gap: 12px;
+}
+
+.status {
+  text-align: center;
+  color: var(--muted);
+  padding: 12px 0;
+}
+
+.error {
+  color: var(--error);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-backdrop);
+  display: grid;
+  place-items: center;
+  z-index: 20;
+}
+
+.modal-card {
+  background: var(--surface);
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  width: min(420px, 90vw);
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--border);
+}
+
+.modal-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--pill-bg);
+  color: var(--text);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-error {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.date-time-comment {
+  font-size: smaller;
+  color: #9ca3af;
+}
+
+</style>
