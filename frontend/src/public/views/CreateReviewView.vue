@@ -94,7 +94,7 @@ async function loadExisting() {
     form.value.vehicleYear = data.vehicleYear ? String(data.vehicleYear) : ''
     form.value.fuelType = data.fuelType || ''
     form.value.priceSegment = data.priceSegment || ''
-    form.value.brandId = data.brandId ? String(data.brandId) : ''
+    form.value.brandId = data.brandId ? String(data.brandId) : data.brand || ''
     slugEdited.value = true
     if (form.value.heroImageUrl) {
       heroPreview.value = buildAssetUrl(form.value.heroImageUrl)
