@@ -278,7 +278,7 @@ async function submit() {
         <label>Slug SEO (tự sinh từ tiêu đề)</label>
         <input v-model="form.slug" required maxlength="200" @input="handleSlugInput" @blur="normalizeSlug" placeholder="Slug SEO (tự sinh từ tiêu đề)" />
         <p class="muted small">Đường dẫn xem trước: http://localhost:5173/post/{{ form.slug || 'tieu-de' }}</p>
-        <p v-if="isEdit" class="muted small">Bạn đang chỉnh sửa bài #{{ reviewId }}</p>
+        <p v-if="isEdit" class="muted small">Bạn đang chỉnh sửa bài #{{ reviewSlug }}</p>
 
         <label>Ảnh đại diện (upload hoặc dán URL)</label>
         <div class="hero-row">
