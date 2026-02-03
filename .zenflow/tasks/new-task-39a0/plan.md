@@ -69,3 +69,8 @@ Implement the task according to the technical specification and general engineer
 <!-- chat-id: dd5cb378-43f8-4370-82db-8601c25c78bf -->
 
 Sửa lại comment nếu là trả lời comment to nhất thì không cần @adminUser, chỉ khi cấp con trả lời cho nhau thì mới cần hiễn thị @adminUser
+
+### [x] Step: Detail
+<!-- chat-id: e4d58ffb-5f4f-4b62-97e3-be5de12ab097 -->
+
+khi tôi thực hiện docker-compose up -d --build thì ảnh ở trong bài post nếu đính kèm theo sẽ bị mất, ảnh thumbail thì vẫn giữ được, phân tích nguyên nhân và xử lý cho tôi
